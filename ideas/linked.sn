@@ -1,0 +1,53 @@
+class LinkedList {
+    Pool pool;
+    type noodle = pool.Noodle;
+    noodle head = null;
+    
+    class Node {
+        int data;
+        noodle next;
+
+        method init(int data, noodle next) {
+            self.data = data;
+            self.next = next;
+        }
+    }
+
+    method init(int first) {
+        self.pool = new Pool();
+        self.head = pool.create Node(first, null);
+    }
+
+    method addFirst(int a) {
+        self.head = pool.create Node(a, self.head);
+    }
+
+    method addLast(int a) {
+        choice (self.head == null): {
+            self.head = pool.create Node(a, null);
+        }
+        default: {
+            var x = pool[self.head];
+            while (x.next != null) {
+                x = pool[x.next];
+            }
+            x.next = pool.create Node(a, null);
+        }
+    }
+
+    method deleteFirst() {
+        choice (self.head == null): return;
+        var x = self.head;
+        self.head = pool[self.head].next;
+        pool.delete x;
+    }
+
+    method deleteLast() {
+        choice (self.head == null): return;
+        var x = pool[self.head];
+        while (x.next != null) {
+            x = pool[x.next];
+        }
+        pool.delete x;
+    }
+}

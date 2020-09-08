@@ -1,0 +1,30 @@
+import std.typecons;
+
+function pop(out Type[] t) {
+    Type a = t[$-1];
+    t.length -= 1;
+    return a;
+}
+
+function append(out Type[] t, Type a) {
+    t ~= a;
+}
+
+function myTuple() {
+    return tuple(4, 6.5, "Canada", [0,2,4,6,8]);
+}
+
+function main() {
+    var x = 7.5;
+    var a = [1,2,3];
+    var b = a;
+    print(a);
+    print(a.pop());
+    print(a);
+    a.append(5);
+    print(a);
+    print(myTuple());
+
+    Mixed[str] maybeThisWorks = ["A": [1,2,3], "B": "igloo"];
+    print(maybeThisWorks);
+}

@@ -1,0 +1,35 @@
+function max(int a, int b) {
+    if (a > b) {
+        return a;
+    }
+    else {
+        return b;
+    }
+}
+
+function middleChar(str s, out char c) {
+    # Find the character at the middle index of a string
+    let length = s.length;
+    let middle = length // 2;
+    c = s[middle];
+}
+
+function removeChar(out strbuf s, char c) {
+    # Remove all instances of a character in a string
+    let i = 0;
+    while (i < s.length) {
+        if (s[i] == c) {
+            s.delete(i);
+        }
+        else {
+            i += 1;
+        }
+    }
+}
+
+let name = str('Matthew');
+let c = char(' ');
+middleChar(name, out c);
+
+let nameBuf = strbuf(name);
+removeChar(out nameBuf, c);
