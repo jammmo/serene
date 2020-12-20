@@ -24,7 +24,7 @@ type WeddingInvitation with
     struct from Card
 }
 
-- implement Invitation {
+- specifics (implements Invitation) {
     method send(recipient: Person) {
         recipient.receive(copy self);
     }
