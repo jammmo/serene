@@ -1,0 +1,101 @@
+//Version 1 ___________________________________________________________________
+
+interface Invitation {
+    struct {
+        date: String,
+        location: String,
+        numGuests: Int,
+        accepted: Bool
+    }
+    
+    signatures {
+        method send(recipient: Person),
+        method accept(guests: Int)
+    }
+}
+
+type WeddingInvitation {
+    struct {
+        bride: String,
+        groom: String,
+        struct from Invitation
+    }
+
+    implement Invitation {
+        method send(recipient: Person) {
+            recipient.receive(copy self);
+        }
+
+        method accept(guests: Int) {
+            self.accepted = True;
+        }      
+    }
+}
+
+
+//Version 2 ___________________________________________________________________
+
+interface Invitation
+    with struct {
+        date: String,
+        location: String,
+        numGuests: Int,
+        accepted: Bool
+    }
+    
+    with signatures {
+        method send(recipient: Person),
+        method accept(guests: Int)
+    }
+end;
+
+type WeddingInvitation
+    with struct {
+        bride: String,
+        groom: String,
+        struct from Invitation
+    }
+
+    with impl(Invitation) {
+        method send(recipient: Person) {
+            recipient.receive(copy self);
+        }
+
+        method accept(guests: Int) {
+            self.accepted = True;
+        }      
+    }
+end;
+
+
+//Version 3 ___________________________________________________________________
+
+interface Invitation
+- struct {
+    date: String,
+    location: String,
+    numGuests: Int,
+    accepted: Bool
+}
+
+- signatures {
+    method send(recipient: Person),
+    method accept(guests: Int)
+}
+
+type WeddingInvitation
+- struct {
+    bride: String,
+    groom: String,
+    struct from Invitation
+}
+
+- implement Invitation {
+    method send(recipient: Person) {
+        recipient.receive(copy self);
+    }
+
+    method accept(guests: Int) {
+        self.accepted = True;
+    }
+}
