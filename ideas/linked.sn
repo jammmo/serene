@@ -23,10 +23,10 @@ class LinkedList {
     }
 
     method addLast(int a) {
-        choice (self.head == null): {
+        if (self.head == null) {
             self.head = pool.create Node(a, null);
         }
-        default: {
+        else {
             var x = pool[self.head];
             while (x.next != null) {
                 x = pool[x.next];
@@ -36,14 +36,14 @@ class LinkedList {
     }
 
     method deleteFirst() {
-        choice (self.head == null): return;
+        if (self.head == null) return;
         var x = self.head;
         self.head = pool[self.head].next;
         pool.delete x;
     }
 
     method deleteLast() {
-        choice (self.head == null): return;
+        if (self.head == null) return;
         var x = pool[self.head];
         while (x.next != null) {
             x = pool[x.next];
