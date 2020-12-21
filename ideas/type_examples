@@ -6,28 +6,8 @@ type Person: struct {
         Female
     },
     nickname: enum {
-        Some: struct {String},
+        Some (String),
         None
     },
 }
-
-type Person: {
-    age: Int,
-    name: String,
-    gender: {Male | Female},
-    nickname: {
-      Some: {String}
-    | None
-    },
-}
-
-type Person: [
-    age: Int,
-    name: String,
-    gender: {Male, Female},
-    nickname: {
-      Some: [String],
-      None
-    },
-]
 
