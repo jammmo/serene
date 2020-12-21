@@ -1,0 +1,2 @@
+alias g = LinkedList.get;
+LinkedList.head{g?}.next{g?}.next{g?};

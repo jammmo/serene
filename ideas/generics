@@ -1,0 +1,40 @@
+// Idea: plug in type variable to function instead of value to yield return type?
+// Potentially some ambiguity/confusion there but definitely useful
+
+// Could use 'A instead of #A
+
+func elementInArray(move elem: #T, arr: Array(#T)) -> Option(#T) {
+    for i in range(arr.length) {
+        if arr[i] == elem {
+            return elem;
+        }
+    }
+
+    return None;
+}
+
+// Where statement
+func elementInArray(move elem: #A, arr: #B) -> #A where
+    #A: Simple,
+    #B: Array(#A) {
+
+    for i in range(arr.length) {
+        if arr[i] == elem {
+            return elem;
+        }
+    }
+
+    return None;
+}
+
+//This one is ugly - too many things in one line
+func elementInArray(move elem: #A --Simple, arr: #B --Array(#A)) -> #A {
+    for i in range(arr.length) {
+        if arr[i] == elem {
+            return elem;
+        }
+    }
+
+    return None;
+}
+
