@@ -1,2 +1,7 @@
-alias g = LinkedList.get;
-LinkedList.head{g?}.next{g?}.next{g?};
+// Still some problems here
+
+[alias L = LinkedList].get(get(L.head).next)
+
+let head = LinkedList.head;
+let next = LinkedList[head].next
+LinkedList[next]

@@ -40,27 +40,16 @@ type WeddingInvitation with
 
 
 
-// Older example
+// Interfaces with generics?
 
-interface CompareAndIndex(self: type X) {
+interface CompareAndIndex(self: type X) with
+- signatures {
     method lessThan(other: X) -> bool;
     method greaterThan(other: X) -> bool;
 
-    self[index: int] -> Option(X);
+    subscript get(index: int) -> Option(X);
 }
-
-//or for regular functions
-
-interface CompareAndIndex(self: type X) {
-    function lessThan(self: X, other: X) -> bool;
-    function greaterThan(self: X, other: X) -> bool;
-
-    self[index: int] -> Option(X);
-}
-
-
-
-implement CompareAndIndex(self: Array(int)) {
+- specifics where X: Array(int) {
     method lessThan(other: Array(int)) {
         for (i in 0 .. min(self.length, other.length)) {
             if (self[i] != other[i]) {
@@ -79,5 +68,5 @@ implement CompareAndIndex(self: Array(int)) {
         return self.length > other.length;
     }
 
-    self[index: int] from Index(self: Array(type X));
+    subscript get(index: int) -> Option(int) from Index(self: Array(type X));
 }

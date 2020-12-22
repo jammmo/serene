@@ -1,10 +1,7 @@
-// Idea: plug in type variable to function instead of value to yield return type?
-// Potentially some ambiguity/confusion there but definitely useful
+// Could use #A instead of 'A
 
-// Could use 'A instead of #A
-
-function elementInArray(move elem: #T, arr: Array(#T)) -> Option(#T) {
-    for i in range(arr.length) {
+function elementInArray(move elem: 'T, arr: Array('T)) -> Option('T) {
+    for (i = 0, arr.length) {
         if arr[i] == elem {
             return elem;
         }
@@ -14,11 +11,11 @@ function elementInArray(move elem: #T, arr: Array(#T)) -> Option(#T) {
 }
 
 // Where statement
-function elementInArray(move elem: #A, arr: #B) -> #A where
-    #A: Simple,
-    #B: Array(#A) {
+function elementInArray(move elem: 'A, arr: 'B) -> 'A where
+    'A: Simple,
+    'B: Array('A) {
 
-    for i in range(arr.length) {
+    for (i = 0, arr.length) {
         if arr[i] == elem {
             return elem;
         }
@@ -27,14 +24,5 @@ function elementInArray(move elem: #A, arr: #B) -> #A where
     return None;
 }
 
-//This one is ugly - too many things in one line
-function elementInArray(move elem: #A --Simple, arr: #B --Array(#A)) -> #A {
-    for i in range(arr.length) {
-        if arr[i] == elem {
-            return elem;
-        }
-    }
-
-    return None;
-}
-
+// Idea: plug in type variable to function instead of value to yield return type?
+// Potentially some ambiguity/confusion there but definitely useful
