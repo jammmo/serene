@@ -4,7 +4,7 @@ function findTail(L: LinkedList) -> Noodle {
     either (let currentObject = L[L.head]) or return None;
     while (True) {
         let currentIndex = currentObject.next;
-        either (let currentObject = objects[currentIndex]) or return currentIndex;
+        either (let currentObject = L[currentIndex]) or return currentIndex;
     }
 }
 
@@ -21,9 +21,9 @@ function removeTail(mutate L: LinkedList) {
     either (let currentObject = L[L.head]) or return;
     while (True) {
         let currentIndex = currentObject.next;
-        either (let currentObject = objects[currentIndex]) or break;
+        either (let currentObject = L[currentIndex]) or break;
     }
-    L.delete(currentIndex);
+    L.delete!(currentIndex);
 }
 
-// Error: what happens to currentObject after L.delete(currentIndex) ?
+// Error: what happens to currentObject after L.delete!(currentIndex) ?
