@@ -1,7 +1,29 @@
-// Still some problems here
+// Assume that the LinkedList struct redirects it subscripting to LinkedList.objects
 
-[alias L = LinkedList].get(get(L.head).next)
+function findTail(L: LinkedList) -> Noodle {
+    either (let currentObject = L[L.head]) or return None;
+    while (True) {
+        let currentIndex = currentObject.next;
+        either (let currentObject = objects[currentIndex]) or return currentIndex;
+    }
+}
 
-let head = LinkedList.head;
-let next = LinkedList[head].next
-LinkedList[next]
+/* Really, modifying a simple object in place is the same as replacing it.
+   So, simple objects don't really need single ownership within a single scope,
+   as you can use immutable variables and shadowing to avoid shared mutability.
+   What's more important is the way modifying compound objects (eg. arrays, structs) is handled.
+
+   When a compound object is stored in a "let", its members cannot be replaced. 
+ */
+
+
+function removeTail(mutate L: LinkedList) {
+    either (let currentObject = L[L.head]) or return;
+    while (True) {
+        let currentIndex = currentObject.next;
+        either (let currentObject = objects[currentIndex]) or break;
+    }
+    L.delete(currentIndex);
+}
+
+// Error: what happens to currentObject after L.delete(currentIndex) ?
