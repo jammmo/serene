@@ -3,11 +3,11 @@
 function elementInArray(move elem: 'T, arr: Array('T)) -> Option('T) {
     for (i = 0, arr.length) {
         if arr[i] == elem {
-            return elem;
+            return elem
         }
     }
 
-    return None;
+    return None
 }
 
 // Where statement
@@ -17,11 +17,11 @@ function elementInArray(move elem: 'A, arr: 'B) -> 'A where
 
     for (i = 0, arr.length) {
         if arr[i] == elem {
-            return elem;
+            return elem
         }
     }
 
-    return None;
+    return None
 }
 
 // Idea: plug in type variable to function instead of value to yield return type?

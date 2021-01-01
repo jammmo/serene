@@ -1,4 +1,4 @@
-import AddressModule;
+import AddressModule
 
 interface Card with
 - struct {
@@ -28,14 +28,14 @@ type WeddingInvitation with
 
 - specifics (implements Invitation) {
     method send(recipient: Person) {
-        recipient.receive(copy self);
+        run recipient.receive(copy self)
     }
 
     method accept(guests: Int) {
-        self.accepted = True;
+        set self.accepted = True
     }
 
-    method parseLocation(address: String) from AddressModule;
+    method parseLocation(address: String) from AddressModule
 }
 
 
@@ -44,29 +44,29 @@ type WeddingInvitation with
 
 interface CompareAndIndex(self: type X) with
 - signatures {
-    method lessThan(other: X) -> bool;
-    method greaterThan(other: X) -> bool;
+    method lessThan(other: X) -> bool
+    method greaterThan(other: X) -> bool
 
-    subscript get(index: int) -> Option(X);
+    subscript get(index: int) -> Option(X)
 }
 - specifics where X: Array(int) {
     method lessThan(other: Array(int)) {
         for (i in 0 .. min(self.length, other.length)) {
             if (self[i] != other[i]) {
-                return self[i] < other[i];
+                return self[i] < other[i]
             }
         }
-        return self.length < other.length;
+        return self.length < other.length
     }
 
     method lessThan(other: Array(int)) {
         for (i in 0 .. min(self.length, other.length)) {
             if (self[i] != other[i]) {
-                return self[i] > other[i];
+                return self[i] > other[i]
             }
         }
-        return self.length > other.length;
+        return self.length > other.length
     }
 
-    subscript get(index: int) -> Option(int) from Index(self: Array(type X));
+    subscript get(index: int) -> Option(int) from Index(self: Array(type X))
 }

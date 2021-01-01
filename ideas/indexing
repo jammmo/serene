@@ -1,10 +1,10 @@
 // Assume that the LinkedList struct redirects it subscripting to LinkedList.objects
 
 function findTail(L: LinkedList) -> Noodle {
-    either (let currentObject = L[L.head]) or return None;
+    either (let currentObject = L[L.head]) or return None
     while (True) {
-        let currentIndex = currentObject.next;
-        either (let currentObject = L[currentIndex]) or return currentIndex;
+        let currentIndex = currentObject.next
+        either (let currentObject = L[currentIndex]) or return currentIndex
     }
 }
 
@@ -18,12 +18,12 @@ function findTail(L: LinkedList) -> Noodle {
 
 
 function removeTail(mutate L: LinkedList) {
-    either (let currentObject = L[L.head]) or return;
+    either (let currentObject = L[L.head]) or return
     while (True) {
-        let currentIndex = currentObject.next;
-        either (let currentObject = L[currentIndex]) or break;
+        let currentIndex = currentObject.next
+        either (let currentObject = L[currentIndex]) or break
     }
-    L.delete!(currentIndex);
+    run L.delete!(currentIndex)
 }
 
 // Error: what happens to currentObject after L.delete!(currentIndex) ?
