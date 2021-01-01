@@ -1,0 +1,81 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Serene",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#block_comments"
+		},
+		{
+			"include": "#function_names"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.serene",
+				"match": "\\b(if|else|while|for|return|break|either)\\b"
+			},
+			{
+				"name": "keyword.other.serene",
+				"match": "\\b(let|set|var|const|run|import|or|and)\\b"
+			},
+			{
+				"name": "storage.type.serene",
+				"match": "\\b(function|method|interface|type|subscript)\\b"
+			},
+			{
+				"name": "storage.type.modifier",
+				"match": "\\b(mut|mutate|move|copy)\\b"
+			},
+			{
+				"name": "variable.parameter",
+				"match": "(?<=^-\\s)(struct|signatures|specifics)"
+			},
+			{
+				"name": "entity.name.type",
+				"match": "(?<=:\\s*)'?\\w+"
+			},
+			{
+				"name": "entity.name.type",
+				"match": "(?<=->\\s*)'?\\w+"
+			},
+			{
+				"name": "variable.parameter",
+				"match": "(?<=^\\s*(function|method) \\w+\\((.*,\\s*)*(\\w+|)\\s*)\\w+(?=\\s*:)"
+			}]
+		},
+		"function_names": {
+			"name": "entity.name.function",
+			"match": "((?<=function\\s)|(?<=method\\s)|(?<=subscript\\s))\\w+"
+		},
+		"strings": {
+			"name": "string.quoted.double.serene",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [{
+				"name": "constant.character.escape.serene",
+				"match": "\\\\."
+			}]
+		},
+		"comments": {
+			"name": "comment.line.double-slash",
+			"begin": "//",
+			"end": "\n"
+		},
+		"block_comments": {
+			"name": "comment.block",
+			"begin": "/\\*",
+			"end": "\\*/"
+		}
+	},
+	"scopeName": "source.serene"
+}
