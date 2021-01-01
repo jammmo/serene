@@ -1,0 +1,41 @@
+// Potential implementation of the Pool and Noodle system as a standard library module
+// Assume that array is variable length
+
+// needs to be an Optional type
+
+
+type Pool with
+--prelude {
+    type Noodle with
+    --constructor('MyPool) {
+
+    }
+    --struct {
+        index: int
+    }
+    --specifics {
+
+    }
+}
+--constructor('Type) {
+    set self.array = Array('Type)
+}
+--struct {
+    noodle: Noodle(typeof self),
+    private array: Array('Type),
+}
+--specifics {
+    method add(NewValue: 'Type) -> self.noodle {
+        self.array.append(NewValue)
+        new noodle = Noodle()
+        return noodle
+    }
+
+    method delete(IndexToDelete: self.noodle) {
+        self.array.pop(IndexToDelete)
+    }
+
+    subscript get(MyNoodle: self.noodle) -> self.noodle {
+        return self.array[MyNoodle.index] //index is private, this won't work!
+    }
+}

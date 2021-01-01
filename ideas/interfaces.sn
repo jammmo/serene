@@ -1,32 +1,32 @@
 import AddressModule
 
 interface Card with
-- struct {
+--struct {
     returnAddress: String
 }
 
 interface Invitation with
-- struct {
+--struct {
     date: String,
     location: Address,
     numGuests: Int,
     accepted: Bool
 }
 
-- signatures {
+--signatures {
     method send(recipient: Person),
     method accept(guests: Int)
 }
 
 type WeddingInvitation with
-- struct {
+--struct {
     bride: String,
     groom: String,
     struct from Invitation,
     struct from Card
 }
 
-- specifics (implements Invitation) {
+--specifics (implements Invitation) {
     method send(recipient: Person) {
         run recipient.receive(copy self)
     }
@@ -43,13 +43,13 @@ type WeddingInvitation with
 // Interfaces with generics?
 
 interface CompareAndIndex(self: type X) with
-- signatures {
+--signatures {
     method lessThan(other: X) -> bool
     method greaterThan(other: X) -> bool
 
     subscript get(index: int) -> Option(X)
 }
-- specifics where X: Array(int) {
+--specifics where X: Array(int) {
     method lessThan(other: Array(int)) {
         for (i in 0 .. min(self.length, other.length)) {
             if (self[i] != other[i]) {

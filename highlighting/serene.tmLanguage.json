@@ -16,6 +16,9 @@
 		},
 		{
 			"include": "#function_names"
+		},
+		{
+			"include": "#nocompile"
 		}
 	],
 	"repository": {
@@ -38,7 +41,7 @@
 			},
 			{
 				"name": "variable.parameter",
-				"match": "(?<=^-\\s)(struct|signatures|specifics)"
+				"match": "(?<=^--)\\w+"
 			},
 			{
 				"name": "entity.name.type",
@@ -75,6 +78,11 @@
 			"name": "comment.block",
 			"begin": "/\\*",
 			"end": "\\*/"
+		},
+		"nocompile": {
+			"name": "string.regexp",
+			"begin": "\\$",
+			"end": "\\$"
 		}
 	},
 	"scopeName": "source.serene"
