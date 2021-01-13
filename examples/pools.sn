@@ -5,26 +5,26 @@
 
 
 type Pool with
---prelude {
+~ prelude {
     type Noodle with
-    --constructor('MyPool) {
+    ~ constructor('MyPool) {
 
     }
-    --struct {
+    ~ struct {
         index: int
     }
-    --specifics {
+    ~ specifics {
 
     }
 }
---constructor('Type) {
+~ constructor('Type) {
     set self.array = Array('Type)
 }
---struct {
+~ struct {
     noodle: Noodle(typeof self),
     private array: Array('Type),
 }
---specifics {
+~ specifics {
     method add(NewValue: 'Type) -> self.noodle {
         self.array.append(NewValue)
         new noodle = Noodle()

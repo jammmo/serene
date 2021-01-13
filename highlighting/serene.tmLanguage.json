@@ -41,7 +41,7 @@
 			},
 			{
 				"name": "variable.parameter",
-				"match": "(?<=^--)\\w+"
+				"match": "(?<=^~\\s*)\\w+"
 			},
 			{
 				"name": "entity.name.type",

@@ -4,19 +4,19 @@ struct Node('N) {
 }
 
 type LinkedList with
---struct {
+~ struct {
     nodes: Pool(Node),
     private Noodle: Type,
     head: Noodle
 }
 
---constructor(first: int) {
+~ constructor(first: int) {
         self.nodes = new Pool{Node}();
         self.Noodle = nodes.Noodle;
         self.head = nodes.newObject(first, null);
     }
 
---specifics {
+~ specifics {
     method addFirst(a: int) {
         self.head = nodes.newObject(a, self.head);
     }
