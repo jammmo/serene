@@ -2,7 +2,7 @@
 
 function elementInArray(move elem: 'T, arr: Array('T)) -> Option('T) {
     for (i = 0, arr.length) {
-        if arr[i] == elem {
+        if (arr[i] == elem) {
             return elem
         }
     }
@@ -16,7 +16,7 @@ function elementInArray(move elem: 'A, arr: 'B) -> 'A where
     'B: Array('A) {
 
     for (i = 0, arr.length) {
-        if arr[i] == elem {
+        if (arr[i] == elem) {
             return elem
         }
     }

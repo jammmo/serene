@@ -1,22 +1,24 @@
 import AddressModule
 
+
 interface Card with
 ~ struct {
     returnAddress: String
 }
 
+
 interface Invitation with
 ~ struct {
     date: String,
     location: Address,
-    numGuests: Int,
+    numGuests: int,
     accepted: Bool
 }
-
 ~ signatures {
     method send(recipient: Person),
-    method accept(guests: Int)
+    method accept(guests: int)
 }
+
 
 type WeddingInvitation with
 ~ struct {
@@ -25,13 +27,12 @@ type WeddingInvitation with
     struct from Invitation,
     struct from Card
 }
-
 ~ specifics (implements Invitation) {
     method send(recipient: Person) {
         run recipient.receive(copy self)
     }
 
-    method accept(guests: Int) {
+    method accept(guests: int) {
         set self.accepted = True
     }
 
