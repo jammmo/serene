@@ -1,0 +1,10 @@
+type constructor Rectangle(width: typename T [Number], length: T)
+~ do {
+    run println("I'm a rectangle!")
+    let area = width * length
+}
+~ struct {
+    width,
+    length,
+    area: T private,
+}
