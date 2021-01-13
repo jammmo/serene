@@ -4,25 +4,23 @@
 // needs to be an Optional type
 
 
-type Pool with
-~ prelude {
-    type Noodle with
-    ~ constructor('MyPool) {
+type Noodle with
+~ friend Pool
+~ constructor('MyPool) {
 
-    }
-    ~ struct {
-        index: int
-    }
-    ~ specifics {
-
-    }
 }
+~ struct {
+    index: int private
+}
+
+
+type Pool with
 ~ constructor('Type) {
     set self.array = Array('Type)
 }
 ~ struct {
     noodle: Noodle(typeof self),
-    private array: Array('Type),
+    array: Array('Type) private,
 }
 ~ specifics {
     method add(NewValue: 'Type) -> self.noodle {
@@ -36,6 +34,6 @@ type Pool with
     }
 
     subscript get(MyNoodle: self.noodle) -> self.noodle {
-        return self.array[MyNoodle.index] //index is private, this won't work!
+        return self.array[MyNoodle.index]
     }
 }
