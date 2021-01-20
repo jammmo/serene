@@ -1,6 +1,6 @@
-type Node('N) is struct {
+type Node(type N) is struct {
     data: int,
-    next: 'N,
+    next: N,
 }
 
 type LinkedList with

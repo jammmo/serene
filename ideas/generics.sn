@@ -1,6 +1,4 @@
-// Could use #A instead of 'A
-
-function elementInArray(move elem: 'T, arr: Array('T)) -> Option('T) {
+function elementInArray(move elem: type T, arr: Array(type T)) -> Option(type T) {
     for (i = 0, arr.length) {
         if (arr[i] == elem) {
             return elem
@@ -11,9 +9,9 @@ function elementInArray(move elem: 'T, arr: Array('T)) -> Option('T) {
 }
 
 // Where statement
-function elementInArray(move elem: 'A, arr: 'B) -> 'A where
-    'A: Simple,
-    'B: Array('A) {
+function elementInArray(move elem: type A, arr: type B) -> type A where
+    type A: Simple,
+    type B: Array(A) {
 
     for (i = 0, arr.length) {
         if (arr[i] == elem) {
@@ -26,3 +24,5 @@ function elementInArray(move elem: 'A, arr: 'B) -> 'A where
 
 // Idea: plug in type variable to function instead of value to yield return type?
 // Potentially some ambiguity/confusion there but definitely useful
+
+// Is "type" needed everywhere in the signature or only the first time the name is referenced?
