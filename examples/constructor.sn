@@ -1,4 +1,4 @@
-type constructor Rectangle(width: typename T [Number], length: T)
+type constructor Rectangle(width: type T, length: type T) where type T: Number 
 ~ do {
     run println("I'm a rectangle!")
     let area = width * length

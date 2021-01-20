@@ -4,36 +4,40 @@
 // needs to be an Optional type
 
 
-type Noodle with
+type Noodle(type MyPool) with
 ~ friend Pool
-~ constructor('MyPool) {
-
-}
 ~ struct {
     index: int private
 }
 
 
 type Pool with
-~ constructor('Type) {
-    set self.array = Array('Type)
+~ constructor(type T) {
+    set self.array = Array(T)
+    type Noodle = Noodle(typeof self)
 }
 ~ struct {
-    noodle: Noodle(typeof self),
-    array: Array('Type) private,
+    array: Array(T) private,
 }
 ~ specifics {
-    method add(NewValue: 'Type) -> self.noodle {
-        self.array.append(NewValue)
-        new noodle = Noodle()
+    method add(NewValue: type T) -> Noodle {
+        run array.append(NewValue)
+        let noodle = Noodle()
         return noodle
     }
 
-    method delete(IndexToDelete: self.noodle) {
-        self.array.pop(IndexToDelete)
+    method delete(IndexToDelete: Noodle) {
+        run array.pop!(IndexToDelete)
     }
 
-    subscript get(MyNoodle: self.noodle) -> self.noodle {
-        return self.array[MyNoodle.index]
+    subscript get(MyNoodle: Noodle) -> Noodle {
+        return array[MyNoodle.index]
     }
 }
+
+// Note that all T's here are the same. Need a better way to make that clear...
+
+
+// Which to use?
+type Noodle = something()
+const Noodle: type = something()
