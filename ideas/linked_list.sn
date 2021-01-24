@@ -5,14 +5,14 @@ type Node(type N) is struct {
 
 type LinkedList with
 ~ struct {
-    nodes: Pool(Node),
-    Noodle: Type private,
-    head: Noodle,
+    nodes: Region(Node),
+    Handle: Type private,
+    head: Handle,
 }
 
 ~ constructor(first: int) {
-    set self.nodes = Pool(Node)
-    set self.Noodle = nodes.Noodle
+    set self.nodes = Region(Node)
+    set self.Handle = nodes.Handle
     set self.head = nodes.add!(Node(first, None))
 }
 

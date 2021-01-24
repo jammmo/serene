@@ -1,6 +1,6 @@
 // Assume that the LinkedList struct redirects it subscripting to LinkedList.objects
 
-function findTail(L: LinkedList) -> Noodle {
+function findTail(L: LinkedList) -> Handle {
     either (let currentObject = L[L.head]) or return None
     while (True) {
         let currentIndex = currentObject.next

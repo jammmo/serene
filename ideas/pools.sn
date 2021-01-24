@@ -1,37 +1,37 @@
-// Potential implementation of the Pool and Noodle system as a standard library module
+// Potential implementation of the Region and Handle system as a standard library module
 // Assume that array is variable length
 
 // needs to be an Optional type
 
 
-type Noodle(type MyPool) with
-~ friend Pool
+type Handle(type MyRegion) with
+~ friend Region
 ~ struct {
     index: int private
 }
 
 
-type Pool with
+type Region with
 ~ constructor(type T) {
     set self.array = Array(T)
-    type Noodle = Noodle(typeof self)
+    type Region = Region(typeof self)
 }
 ~ struct {
     array: Array(T) private,
 }
 ~ specifics {
-    method add(NewValue: type T) -> Noodle {
+    method add(NewValue: type T) -> Region {
         run array.append(NewValue)
-        let noodle = Noodle()
-        return noodle
+        let handle = Handle()
+        return handle
     }
 
-    method delete(IndexToDelete: Noodle) {
+    method delete(IndexToDelete: Handle) {
         run array.pop!(IndexToDelete)
     }
 
-    subscript get(MyNoodle: Noodle) -> Noodle {
-        return array[MyNoodle.index]
+    subscript get(MyHandle: Handle) -> Handle {
+        return array[MyHandle.index]
     }
 }
 
@@ -39,5 +39,5 @@ type Pool with
 
 
 // Which to use?
-type Noodle = something()
-const Noodle: type = something()
+type Handle = something()
+const Handle: type = something()
