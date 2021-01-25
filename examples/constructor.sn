@@ -1,7 +1,7 @@
 type constructor Rectangle(width: type T, length: type T) where type T: Number 
 ~ do {
     run println("I'm a rectangle!")
-    let area = width * length
+    var area = width * length
 }
 ~ struct {
     width,

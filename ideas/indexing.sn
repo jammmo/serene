@@ -1,27 +1,19 @@
-// Assume that the LinkedList struct redirects it subscripting to LinkedList.objects
+// Assume that the LinkedList struct redirects its subscripting to LinkedList.objects
 
 function findTail(L: LinkedList) -> Handle {
-    either (let currentObject = L[L.head]) or return None
+    either (var currentObject = L[L.head]) or return None
     while (True) {
-        let currentIndex = currentObject.next
-        either (let currentObject = L[currentIndex]) or return currentIndex
+        var currentIndex = currentObject.next
+        either (set currentObject = L[currentIndex]) or return currentIndex
     }
 }
 
-/* Really, modifying a simple object in place is the same as replacing it.
-   So, simple objects don't really need single ownership within a single scope,
-   as you can use immutable variables and shadowing to avoid shared mutability.
-   What's more important is the way modifying compound objects (eg. arrays, structs) is handled.
-
-   When a compound object is stored in a "let", its members cannot be replaced. 
- */
-
 
 function removeTail(mutate L: LinkedList) {
-    either (let currentObject = L[L.head]) or return
+    either (var currentObject = L[L.head]) or return
     while (True) {
-        let currentIndex = currentObject.next
-        either (let currentObject = L[currentIndex]) or break
+        var currentIndex = currentObject.next
+        either (set currentObject = L[currentIndex]) or break
     }
     run L.delete!(currentIndex)
 }

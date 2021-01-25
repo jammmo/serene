@@ -22,7 +22,7 @@ type Region with
 ~ specifics {
     method add(NewValue: type T) -> Region {
         run array.append(NewValue)
-        let handle = Handle()
+        const handle = Handle()
         return handle
     }
 

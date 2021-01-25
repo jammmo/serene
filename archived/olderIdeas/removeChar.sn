@@ -1,13 +1,13 @@
 function middleChar(str s, out char c) {
     // Find the character at the middle index of a string
-    let length = s.length
-    let middle = int(length / 2)
+    const length = s.length
+    const middle = int(length / 2)
     set c = s[middle]
 }
 
 function removeChar(out strbuf s, char c) {
     // Remove all instances of a character in a string
-    let i = 0
+    var i = 0
     while (i < s.length) {
         if (s[i] == c) {
             run s.delete(i)
@@ -19,10 +19,10 @@ function removeChar(out strbuf s, char c) {
 }
 
 function main() {
-    let name = str('Matthew')
-    let c = char(' ')
+    const name = str('Matthew')
+    var c = char(' ')
     run middleChar(name, out c)
 
-    let nameBuf = strbuf(name)
+    var nameBuf = strbuf(name)
     run removeChar(out nameBuf, c)
 }

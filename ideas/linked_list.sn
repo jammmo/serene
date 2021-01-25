@@ -26,7 +26,7 @@ type LinkedList with
             set self.head = nodes.add!(Node(a, None))
         }
         else {
-            let x = nodes[self.head]
+            var x = nodes[self.head]
             while (x.next != None) {
                 set x = nodes[x.next]
             }
@@ -36,14 +36,14 @@ type LinkedList with
 
     method deleteFirst() {
         if (self.head == None) return
-        let x = self.head
+        const x = self.head
         set self.head = nodes[self.head].next
         run nodes.delete!(x)
     }
 
     method deleteLast() {
         if (self.head == None) return
-        let x = nodes[self.head]
+        var x = nodes[self.head]
         while (x.next != None) {
             set x = nodes[x.next]
         }
