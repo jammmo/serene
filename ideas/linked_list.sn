@@ -1,5 +1,5 @@
 type Node(type N) is struct {
-    data: int,
+    data: Int,
     next: N,
 }
 
@@ -10,18 +10,18 @@ type LinkedList with
     head: Handle,
 }
 
-~ constructor(first: int) {
+~ constructor(first: Int) {
     set self.nodes = Region(Node)
     set self.Handle = nodes.Handle
     set self.head = nodes.add!(Node(first, None))
 }
 
 ~ specifics {
-    method addFirst(a: int) {
+    method addFirst(a: Int) {
         set self.head = nodes.add!(Node(a, self.head))
     }
 
-    method addLast(a: int) {
+    method addLast(a: Int) {
         if (self.head == None) {
             set self.head = nodes.add!(Node(a, None))
         }

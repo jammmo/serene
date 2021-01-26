@@ -5,11 +5,11 @@
 
 
 type Handle with
-~ constructor(type MyRegion, index: int) {
+~ constructor(type MyRegion, index: Int) {
     set self.index = index
 }
 ~ struct {
-    index: int private
+    index: Int private
 }
 ~ friend Region
 
