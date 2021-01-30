@@ -2,7 +2,7 @@
 
 Types in Serene can be defined using the `type` keyword, as shown below. Serene supports multiple forms of "compound types", including structs, enums, and tuples.
 
-```
+```serene
 type Person is struct {
     age: Int,
     name: String,

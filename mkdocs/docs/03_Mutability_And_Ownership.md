@@ -2,7 +2,7 @@
 
 All values in Serene are owned by a single variable.
 
-```
+```serene
 function middleChar(s: String, mutate c: Char) {
     // Find the character at the middle index of a string
     const length = s.length

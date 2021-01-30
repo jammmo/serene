@@ -1,7 +1,7 @@
 # Example: Linked List
 Here is an example of a singly linked list implementation in Serene:
 
-```
+```serene
 type Node(type N) is struct {
     data: Int,
     next: N,

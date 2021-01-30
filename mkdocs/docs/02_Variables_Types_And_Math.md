@@ -2,7 +2,7 @@
 
 A new variable can be created with either the keyword `const` (short for "constant") or the keyword `var` (short for "variable"). 
 
-```
+```serene
 function test1() {
     const age: Int = 20
     run printLine(age)

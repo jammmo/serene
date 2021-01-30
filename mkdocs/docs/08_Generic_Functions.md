@@ -2,7 +2,7 @@
 
 Serene supports both generic functions and generic types. A generic parameter is specified using the `type` keyword, like in the example below.
 
-```
+```serene
 function elementInArray(move elem: type T, arr: Array(type T)) -> Option(type T) {
     for (i = 0, arr.length) {
         if (arr[i] == elem) {

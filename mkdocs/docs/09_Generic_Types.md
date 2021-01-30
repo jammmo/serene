@@ -9,7 +9,7 @@ If you have a bunch of objects of the same type that all refer to each other (sa
 
 Below is a reference implementation of the `Region` and `Handle` types.
 
-```
+```serene
 // Potential implementation of the Region and Handle system as a standard library module
 // Assume that array is variable length
 

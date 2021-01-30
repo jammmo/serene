@@ -1,3 +1,7 @@
 site_name: "Basics of Serene"
 theme:
   name: material
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
