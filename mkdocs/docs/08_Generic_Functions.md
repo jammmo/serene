@@ -1,4 +1,4 @@
-# Generics
+# 8. Generics
 
 Serene supports both generic functions and generic types. A generic parameter is specified using the `type` keyword, like in the example below.
 

@@ -1,4 +1,4 @@
-# Types
+# 6. Custom Types
 
 Types in Serene can be defined using the `type` keyword, as shown below. Serene supports multiple forms of "compound types", including structs, enums, and tuples.
 

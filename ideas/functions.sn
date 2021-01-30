@@ -1,0 +1,3 @@
+function main() {
+    run printLine("Hello world!")
+}

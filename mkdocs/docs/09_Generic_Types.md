@@ -1,4 +1,8 @@
-# Regions
+# 9. Generic Types
+We will introduce generic types through an example using Regions and Handles, two commonly used built-in types.
+
+## Regions and Handles
+
 Serene does not have references or pointers. So how does one object refer to another object? The idiom that is most commonly used in Serene is region-based memory management, with the types `Region` and `Handle`. A `Region` is a dynamically-sized block of memory where objects of the same type can be stored. Those objects are accessed using an index, referred to as a `Handle`.
 
 If you have a bunch of objects of the same type that all refer to each other (say, in a data structure like a linked list), then the typical way to handle it is to store all of the objects inside one `Region`.  Then an object can access another object by storing its `Handle` in one of its fields. The other object would be accessed with an indexing operator, like `my_region[my_handle]`. Note that the indexing operator returns an `Option` type here because it is possible that there is no valid object for that handle.

@@ -1,11 +1,11 @@
-function middleChar(str s, out char c) {
+function middleChar(s: String, mutate c: Char) {
     // Find the character at the middle index of a string
     const length = s.length
-    const middle = int(length / 2)
+    const middle = Int(length / 2)
     set c = s[middle]
 }
 
-function removeChar(out strbuf s, char c) {
+function removeChar(mutate s: String, c: Char) {
     // Remove all instances of a character in a string
     var i = 0
     while (i < s.length) {
@@ -19,10 +19,10 @@ function removeChar(out strbuf s, char c) {
 }
 
 function main() {
-    const name = str('Matthew')
-    var c = char(' ')
-    run middleChar(name, out c)
+    const name = "Matthew"
+    var letter = Char(' ')
+    run middleChar(name, mutate letter)
 
-    var nameBuf = strbuf(name)
-    run removeChar(out nameBuf, c)
+    var nameBuf = copy name
+    run removeChar(mutate nameBuf, c)
 }
