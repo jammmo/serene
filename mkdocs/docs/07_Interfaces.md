@@ -55,9 +55,9 @@ interface CompareAndIndex(self: type X) with
 
     subscript get(index: Int) -> Option(X)
 }
-~ specifics where X: Array(::Int) {
-    method lessThan(other: Array(::Int)) {
-        for (i in 0 .. min(self.length, other.length)) {
+~ specifics where X: Array[Int] {
+    method lessThan(other: Array[Int]) {
+        for (i = 0, min(self.length, other.length)) {
             if (self[i] != other[i]) {
                 return self[i] < other[i]
             }
@@ -65,8 +65,8 @@ interface CompareAndIndex(self: type X) with
         return self.length < other.length
     }
 
-    method lessThan(other: Array(::Int)) {
-        for (i in 0 .. min(self.length, other.length)) {
+    method lessThan(other: Array[Int]) {
+        for (i = 0, min(self.length, other.length)) {
             if (self[i] != other[i]) {
                 return self[i] > other[i]
             }
@@ -74,7 +74,7 @@ interface CompareAndIndex(self: type X) with
         return self.length > other.length
     }
 
-    subscript get(index: Int) -> Option(Int) from Index(self: Array(type X))
+    subscript get(index: Int) -> Optional[Int] from Index(self: Array[type X])
 }
 ```
 

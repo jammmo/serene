@@ -11,14 +11,10 @@ Below is a reference implementation of the `Region` and `Handle` types.
 
 ```serene
 // Potential implementation of the Region and Handle system as a standard library module
-// Assume that array is variable length
-
-// needs to be an Option type
-
 
 type Handle with
 ~ constructor(type MyRegion, index: Int) {
-    set self.index = index
+    set index = index
 }
 ~ struct {
     index: Int private
@@ -30,33 +26,28 @@ type Handle with
 
 type Region with
 ~ constructor(type T) {
-    set self.array = Array(::T)
+    set vector = Vector[T]
     type R = typeof(self)
 }
 ~ struct {
-    array: Array(::T) private,
+    vector: Vector[T] private,
 }
 ~ specifics {
-    method add(NewValue: T) -> Handle(::R) {
-        run array.append(NewValue)
+    method add(NewValue: T) -> Handle[R] {
+        run vector.append(NewValue)
         const handle = Handle(Region, array.length)
         return handle
     }
 
-    method delete(IndexToDelete: Handle(::R)) {
-        run array.pop!(IndexToDelete)
+    method delete(IndexToDelete: Handle[R]) {
+        run vector.pop!(IndexToDelete)
     }
 
-    subscript get(MyHandle: Handle(::R)) -> Option(::T) {
-        return array[MyHandle.index]
+    subscript get(MyHandle: Handle[R]) -> Optional[T] {
+        return vector[MyHandle.index]
     }
 }
 
 // Note that all T's here are the same and they come from the constructor. Need a better way to make that clear...
-
-
-// Which to use?
-type NewType = something()
-const NewType: type = something()
 ```
 

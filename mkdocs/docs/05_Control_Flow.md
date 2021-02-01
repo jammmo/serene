@@ -21,7 +21,7 @@ function absoluteValue(x: Int) {
 Serene has two looping constructs: For Loops and While Loops.
 
 ```serene
-function findMax(u: Vector(::Int)) -> Int {
+function findMax(u: Vector[Int]) -> Int {
 	var max: Int = INT_MIN
 	for (x in u) {
 		if (x > max) {
@@ -30,7 +30,7 @@ function findMax(u: Vector(::Int)) -> Int {
 	}
 }
 
-function findMax2(u: Vector(::Int)) -> Int {
+function findMax2(u: Vector[Int]) -> Int {
 	var max: Int = INT_MIN
 	var i: Int = 0
 	while (i < u.length) {
@@ -84,7 +84,7 @@ function removeTail(mutate u: LinkedList) {
         var currentIndex = currentObject.next
         either (set currentObject = u[currentIndex]) or break
     }
-    run u.delete!(currentIndex)
+    run u.delete!(currentIndex)		//methods that mutate the object are called with a "!"
 }
 ```
 

@@ -28,8 +28,8 @@ function main() {
     var letter = Char(' ')
     run middleChar(name, mutate letter)
 
-    var nameBuf = copy name
-    run removeChar(mutate nameBuf, c)
+    var newname = name		//copies name
+    run removeChar(mutate newname, c)
 }
 ```
 
