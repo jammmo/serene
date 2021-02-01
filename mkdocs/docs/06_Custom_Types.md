@@ -3,7 +3,7 @@
 Types in Serene can be defined using the `type` keyword, as shown below. Serene supports multiple forms of "compound types", including structs, enums, and tuples.
 
 ```serene
-type Person is struct {
+type Person struct {
     age: Int,
     name: String,
     gender: enum {
@@ -16,18 +16,18 @@ type Person is struct {
     },
 }
 
-type Point3D is tuple {
+type Point3D tuple {
     Int,
     Int,
     Int
 }
 
-type Address is tuple {
+type Address tuple {
     Int,    // House number
     String, // Street name
 }
 
-type RainbowColors is enum {
+type RainbowColors enum {
     Red,
     Orange,
     Yellow,

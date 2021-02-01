@@ -30,24 +30,24 @@ type Handle with
 
 type Region with
 ~ constructor(type T) {
-    set self.array = Array(T)
+    set self.array = Array(::T)
     type R = typeof(self)
 }
 ~ struct {
-    array: Array(T) private,
+    array: Array(::T) private,
 }
 ~ specifics {
-    method add(NewValue: T) -> Handle(R) {
+    method add(NewValue: T) -> Handle(::R) {
         run array.append(NewValue)
         const handle = Handle(Region, array.length)
         return handle
     }
 
-    method delete(IndexToDelete: Handle(R)) {
+    method delete(IndexToDelete: Handle(::R)) {
         run array.pop!(IndexToDelete)
     }
 
-    subscript get(MyHandle: Handle(R)) -> Option(T) {
+    subscript get(MyHandle: Handle(::R)) -> Option(::T) {
         return array[MyHandle.index]
     }
 }
