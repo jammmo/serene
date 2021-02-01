@@ -33,18 +33,18 @@ type Region with
     vector: Vector[T] private,
 }
 ~ specifics {
-    method add(NewValue: T) -> Handle[R] {
+    method add(new_value: T) -> Handle[R] {
         run vector.append(NewValue)
-        const handle = Handle(Region, array.length)
+        const handle = Handle(Region, vector.length)
         return handle
     }
 
-    method delete(IndexToDelete: Handle[R]) {
-        run vector.pop!(IndexToDelete)
+    method delete(index_to_delete: Handle[R]) {
+        run vector.pop!(index_to_delete)
     }
 
-    subscript get(MyHandle: Handle[R]) -> Optional[T] {
-        return vector[MyHandle.index]
+    subscript get(my_handle: Handle[R]) -> Optional[T] {
+        return vector[my_handle.index]
     }
 }
 
