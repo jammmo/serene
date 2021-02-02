@@ -1,4 +1,4 @@
-# Example: Linked List
+# Example A: Linked List
 Here is an example of a singly linked list implementation in Serene:
 
 ```serene
