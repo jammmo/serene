@@ -1,5 +1,9 @@
 # 0. What is Unique about Serene?
 
+> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
+>
+> -- Martin Fowler, 1999
+
 Serene's biggest innovation is its memory management model. In general, most high level programming languages (like JavaScript, Python, and Java) use a tracing garbage collector, while systems programming languages have traditionally relied on manual memory management. Both approaches have their disadvantages: manual memory management is more complex from the programmer's perspective and is prone to small errors that can cause serious bugs, while tracing garbage collectors can introduce runtime overhead and unpredictability that are undesirable for systems programming.
 
 In recent years, a third approach has gained popularity: ownership.

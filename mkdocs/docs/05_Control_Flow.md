@@ -62,29 +62,6 @@ function makeChoice() -> Bool {
 }
 ```
 
-## Either
+## More Control Flow
 
-Here is an example of using the indexing operator on a `Handle`. To deal with the `Option` type that is returned, we use the `either` construct. `either` will try to execute the statement in parentheses, and if any part of it returns `None`, then it will stop executing that statement (in this case, it would stop without mutating `currentObject`) and it would instead execute the second statement, after the keyword `or`.
-
-```serene
-// Assume that the LinkedList struct redirects its subscripting to LinkedList.objects
-
-function findTail(u: LinkedList) -> Handle {
-    either (var currentObject = u[u.head]) or return None
-    while (True) {
-        var currentIndex = currentObject.next
-        either (set currentObject = L[currentIndex]) or return currentIndex
-    }
-}
-
-
-function removeTail(mutate u: LinkedList) {
-    either (var currentObject = u[u.head]) or return	//This copies u[u.head] so it might not be efficient
-    while (True) {
-        var currentIndex = currentObject.next
-        either (set currentObject = u[currentIndex]) or break
-    }
-    run u.delete!(currentIndex)		//methods that mutate the object are called with a "!"
-}
-```
-
+There is one more control flow construct in Serene, named `either`. But there's a bit of background explanation as to why `either` is necessary, so you can explore that in the next section.
