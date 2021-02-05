@@ -4,7 +4,7 @@ Clearly, the topics described up to this point don't exhaust every feature neces
 
 ## Concurrency
 
-This is an important one, and it's probably the biggest unknown at this point. The concurrency system will likely be closely to mutability and ownership, since there will need to be some way of passing data between threads. It won't be as simple as putting a mutex on a shared variable, since the language doesn't have any shared mutable state to begin with. Because of this, concurrency will likely have to be native to the language rather than being a standard library module. (Also, it would benefit readability to have some kind of special syntax that makes the thread synchronization clear.) Perhaps some sort of message passing system will work, but I really haven't started researching anything yet.
+This is an important one, and it's probably the biggest unknown at this point. The concurrency system will likely be closely linked to mutability and ownership, since there will need to be some way of passing data between threads. It won't be as simple as putting a mutex on a shared variable, since the language doesn't have any shared mutable state to begin with. Because of this, concurrency will likely have to be native to the language rather than being a standard library module. (Also, it would benefit readability to have some kind of special syntax that makes the thread synchronization clear.) Perhaps some sort of message passing system will work, but I really haven't started researching anything yet.
 
 ## Hardware Interrupts
 
