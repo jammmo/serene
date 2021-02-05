@@ -1,6 +1,6 @@
 # 2. Variables, Types, and Math
 
-A new variable can be created with either the keyword `const` (short for "constant") or the keyword `var` (short for "variable"). 
+You can store a value with either the keyword `const` (short for "constant") or the keyword `var` (short for "variable"). The value of a variable can be modified after it is created with the keyword `set`, but the value of a constant can never change. Note that variables and constants must be defined inside of functions, and they are locally scoped: that is, they are only valid in the scope in which they are declared. When that scope ends, all of its local values will be deleted and the associated memory will be freed.
 
 ```serene
 function test1() {

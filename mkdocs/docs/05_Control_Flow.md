@@ -7,7 +7,7 @@ So far, we have learned several key components to how programs are structured in
 A conditional statement (or an if/else statement) allows a program to check a condition and do something different based on the value of that condition.
 
 ```serene
-function absoluteValue(x: Int) {
+function absoluteValue(x: Int) -> Int {
 	if (x < 0) {
 		return -x
 	} else {
@@ -34,7 +34,7 @@ function findMax2(u: Vector[Int]) -> Int {
 	var max: Int = INT_MIN
 	var i: Int = 0
 	while (i < u.length) {
-		if (u[i] > max) {	// Do you need to check if u[i] is None?
+		if (u[i] > max) {	// Do you need to check if u[i] is undefined?
 			set max = u[i]
 		}
 	}

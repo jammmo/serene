@@ -10,6 +10,20 @@ Serene takes inspiration from Rust's memory management system, but it aims to ma
 
 Without pointers or references, program logic is much easier for a reader to follow, as you can clearly see whether any value is being mutated and where. In Serene, function parameters are passed immutably by default, but you can also create a function that will `move`, `copy`, or `mutate` its parameters, and there are keywords at both the definition site and calling site to make this behavior obvious. Serene's ownership model keeps the language simple and readable, while maintaining the low overhead and efficiency that is necessary for systems programming.
 
+## How to Manage Mutability and Ownership
+
+You've already seen `const`, which allows you to create a locally-scoped constant, and `var`, which allows to create a locally-scoped variable (that can be mutated with `set`). Now let's talk about the other place where mutability is important: function parameters.
+
+When passing a value to a function, there are four ways you can do it. You need to specify which one to use both where the function is defined and where it is called, using accessor keywords. Let's look at the four different accessors one by one.
+
+`look`: Look is the default behavior for function parameters, so there's no keyword required. It passes a value to a function immutably, meaning that the value cannot be altered anywhere in the function, regardless of whether the value you are passing is a literal value, a `var`, or a `const`. This also means that if function `a()` takes a value by `look`, function `a()` can't pass that value to a function `b()` that takes it by `mutate` or `move`. It can, however, pass that value to another function by `copy`, as copying a value leaves the original value unaffected.
+
+`mutate`: Mutate effectively "borrows" the value from its original scope, allowing it to be mutated within the function as if it is a local variable. Once the function returns, ownership of the (now modified) value will return to the original scope. `mutate` is really the only place that aliasing behavior (where mutating one variable also mutates another) exists in Serene. This behavior can be confusing in other languages (which is part of why Serene doesn't have pointers), but Serene makes the behavior explicit to the reader by requiring the keyword `mutate` both where the function is defined *and* where it is called. Note that you can't past a constant (`const`) as a `mutate` parameter, as once a constant is created, it can never be mutated. Also if function `a()` takes a value by `mutate`, function `a()` still can't pass that value to a function `b()` that takes it by `move`, as the value must still exist when the function returns.
+
+`move`: If you've used Rust or modern C++, you've probably heard of Move semantics. `move` transfers ownership of an object from one scope to another. If you pass a variable to a function by `move`, that variable won't exist anymore when the function returns. You can move both variables and constants. If you move a variable into a function, that function will be able to mutate the variable with `set`, just as if it was declared locally.
+
+`copy`: Copy does exactly what it sounds like: it copies the original value and passes the copied value to the function. The original value will be unaffected and it will still be owned by the original scope, while the new value will be owned by the new scope. It's worth mentioning at this point that all four of these accessors describe the user-level semantic behavior, but not necessarily the way that the program will execute at the hardware level. The Serene compiler will optimize the program, and part of that process is removing unnecessary copies. So if you pass a large object by copy but then you never mutate it, the compiler will be smart enough to not waste memory by copying the object and to just use a pointer to the original object.
+
 ```serene
 function middleChar(s: String, mutate c: Char) {
     // Find the character at the middle index of a string

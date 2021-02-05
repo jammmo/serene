@@ -3,9 +3,6 @@
 When writing a function, sometimes you only care about what methods the function arguments support, and not how they're implemented. You may want to write the function in a flexible way so that they can accept any type that implements the correct methods. That can be done with Interfaces. Here is an example of how you can define an Interface.
 
 ```serene
-import AddressModule
-
-
 interface Card with
 ~ struct {
     returnAddress: String
@@ -41,7 +38,7 @@ type WeddingInvitation with
         set self.accepted = True
     }
 
-    method parseLocation(address: String) from AddressModule
+    method parseLocation(address: String) from Address
 }
 
 
@@ -50,13 +47,13 @@ type WeddingInvitation with
 
 interface CompareAndIndex(self: type X) with
 ~ signatures {
-    method lessThan(other: X) -> bool
-    method greaterThan(other: X) -> bool
+    method lessThan(other: X) -> Bool
+    method greaterThan(other: X) -> Bool
 
-    subscript get(index: Int) -> Option(X)
+    subscript get(index: Int) -> maybe X
 }
 ~ specifics where X: Array[Int] {
-    method lessThan(other: Array[Int]) {
+    method lessThan(other: Array[Int]) -> Bool {
         for (i = 0, min(self.length, other.length)) {
             if (self[i] != other[i]) {
                 return self[i] < other[i]
@@ -65,7 +62,7 @@ interface CompareAndIndex(self: type X) with
         return self.length < other.length
     }
 
-    method lessThan(other: Array[Int]) {
+    method lessThan(other: Array[Int]) -> Bool {
         for (i = 0, min(self.length, other.length)) {
             if (self[i] != other[i]) {
                 return self[i] > other[i]
@@ -74,7 +71,7 @@ interface CompareAndIndex(self: type X) with
         return self.length > other.length
     }
 
-    subscript get(index: Int) -> Optional[Int] from Index(self: Array[type X])
+    subscript get(index: Int) -> maybe Int from Index[Array[type X]]
 }
 ```
 

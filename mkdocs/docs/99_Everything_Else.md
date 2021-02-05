@@ -4,7 +4,7 @@ Clearly, the topics described up to this point don't exhaust every feature neces
 
 ## Concurrency
 
-This is an important one, and it's probably the biggest unknown at this point. 
+This is an important one, and it's probably the biggest unknown at this point. The concurrency system will likely be closely to mutability and ownership, since there will need to be some way of passing data between threads. It won't be as simple as putting a mutex on a shared variable, since the language doesn't have any shared mutable state to begin with. Because of this, concurrency will likely have to be native to the language rather than being a standard library module. (Also, it would benefit readability to have some kind of special syntax that makes the thread synchronization clear.) Perhaps some sort of message passing system will work, but I really haven't started researching anything yet.
 
 ## Hardware Interrupts
 
@@ -12,7 +12,7 @@ Just like with concurrency, I think it makes sense for the compiler to have some
 
 ## Error Handling
 
-Error handling isn't the most exciting aspect of a language, but for a language to promote safety and reliability, it needs a good error handling system.
+Error handling isn't the most exciting aspect of a language, but for a language to promote safety and reliability, it needs a good error handling system. I frankly don't know that much about error handling and I'm not planning on doing anything particularly innovative here: the error handling system will likely be modeled after Rust or another modern language.
 
 ## Anonymous Functions
 
@@ -26,10 +26,6 @@ For starters, the language's strict ownership system will allow for aggressive c
 
 A design principle of the language is that *performance should be orthogonal to correctness*. While manual memory management allows more control over performance, its complexity can lead to bugs. Serene's simple but strict semantics make correctness easy to accomplish, and by allowing independent control of performance parameters, you can experiment with optimizing your code with little risk of breaking it.
 
-## Standard Library
-
-Of course, any good programming language needs a good standard library.
-
 ## Many Other Things
 
-Serene was intended from the beginning to be a "small language", and I plan on limiting the features to only what is necessary. That said, you could probably make a case that many things I haven't listed here are necessary. Programming languages generally seem to "grow" over time as people demand more features. The initial Serene compiler will likely start out with a very minimalist featureset, possibly even smaller than what I've shown in the previous sections. And if people start using it, they will almost certainly discover things that aren't possible or ergonomic with the existing features, so the language will need to adapt to address any shortcomings while hopefully keeping its original design intentions intact.
+Serene was intended from the beginning to be a "small language", and I plan on limiting the features to only what is necessary. That said, you could probably make a case that many things I haven't listed here are necessary. Programming languages generally seem to "grow" over time as people demand more features. The initial Serene compiler will likely start out with a very minimalist feature-set, possibly even smaller than what I've shown in the previous sections. And if people start using it, they will almost certainly discover things that aren't possible or ergonomic with the existing features, so the language will need to adapt to address any shortcomings while hopefully keeping its original design intentions intact.
