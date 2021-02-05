@@ -1,4 +1,4 @@
-# 0. What is Unique about Serene?
+# What is Unique about Serene?
 
 > "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
 >
