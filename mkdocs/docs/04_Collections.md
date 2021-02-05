@@ -4,7 +4,9 @@ In this section, we will learn about several more complex types that are built i
 
 ## Arrays
 
-An array is a fixed-length sequence elements, where all of the elements are the same type. Indexing an array always returns an Optional, because the index used may be outside of the valid range of indexes. If the index is invalid, the indexing operation will return `undefined`.
+An array is a fixed-length sequence elements, where all of the elements are the same type. If the index is invalid, the indexing operation will return `undefined`, which is a special value (actually, it's not a value) that will be introduced later, in the Expressing Nothing section.
+
+You specify what the types of elements are by using generics. We'll explain more about generics later, but for now it suffices to say that you put the type of the elements in square brackets. So `Array[Float]` would be an array of floating-point numbers.
 
 ```serene
 function binarySearch(u: Array[Int], x: Int) -> Int {
