@@ -1,6 +1,7 @@
 site_name: "Basics of Serene"
 theme:
   name: material
+  custom_dir: overrides
 
 markdown_extensions:
   - pymdownx.highlight
