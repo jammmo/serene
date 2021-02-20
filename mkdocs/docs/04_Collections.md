@@ -6,10 +6,10 @@ In this section, we will learn about several more complex types that are built i
 
 An array is a fixed-length sequence elements, where all of the elements are the same type. If the index is invalid, the indexing operation will return `undefined`, which is a special value (actually, it's not a value) that will be introduced later, in the Expressing Nothing section.
 
-You specify what the types of elements are by using generics. We'll explain more about generics later, but for now it suffices to say that you put the type of the elements in square brackets. So `Array[Float]` would be an array of floating-point numbers.
+You specify what the types of elements are by using generics. We'll explain more about generics later, but for now it suffices to say that you put the type of the elements in curly braces. So `Array{Float}` would be an array of floating-point numbers.
 
 ```serene
-function binarySearch(u: Array[Int], x: Int) -> Int {
+function binarySearch(u: Array{Int}, x: Int) -> Int {
 	var i = u.length / 2
 	while (True) {
 		either (u[i] is defined) or throw IndexError
@@ -31,7 +31,7 @@ function binarySearch(u: Array[Int], x: Int) -> Int {
 An vector is similar to an array, except its length can be changed after creation. Like an array, if the index is invalid, the indexing operation will return `undefined`.
 
 ```serene
-function binarySearchAndDelete(mutate u: Array[Int], x: Int) {
+function binarySearchAndDelete(mutate u: Array{Int}, x: Int) {
 	var i = u.length / 2
 	while (True) {
 		if (u[i] < x) {
@@ -55,22 +55,21 @@ Regions and Handles may sound a bit odd right now, but you'll see why they are n
 
 ```serene
 function makeNames() {
-	var reg = Region[String]
+	var reg = Region{String}
 	const firstName = reg.add!("Neil")
 	const middleName = reg.add!("Patrick")
 	const lastName = reg.add!("Harris")
 	
-	printLine(reg[firstName])
-	printLine(reg[middleName])
-	printLine(reg[lastName])
+	// You can run multiple functions on the same line
+	run printLine(reg[firstName]), printLine(reg[middleName]), printLine(reg[lastName])
 }
 
 
 // This function isn't useful, as the strings won't be accessible from the calling scope
 // but will still occupy memory within the Region. However, it's not a memory leak, because
 // reg as a whole is still accessible and can be deallocated later.
-function makeNames2() -> Region[String] {
-	var reg = Region[String]
+function makeNames2() -> Region{String} {
+	var reg = Region{String}
 	const firstName = reg.add!("Neil")
 	const middleName = reg.add!("Patrick")
 	const lastName = reg.add!("Harris")

@@ -52,8 +52,8 @@ interface CompareAndIndex(self: type X) with
 
     subscript get(index: Int) -> maybe X
 }
-~ specifics where X: Array[Int] {
-    method lessThan(other: Array[Int]) -> Bool {
+~ specifics where X: Array{Int} {
+    method lessThan(other: Array{Int}) -> Bool {
         for (i = 0, min(self.length, other.length)) {
             if (self[i] != other[i]) {
                 return self[i] < other[i]
@@ -62,7 +62,7 @@ interface CompareAndIndex(self: type X) with
         return self.length < other.length
     }
 
-    method lessThan(other: Array[Int]) -> Bool {
+    method lessThan(other: Array{Int}) -> Bool {
         for (i = 0, min(self.length, other.length)) {
             if (self[i] != other[i]) {
                 return self[i] > other[i]
@@ -71,7 +71,7 @@ interface CompareAndIndex(self: type X) with
         return self.length > other.length
     }
 
-    subscript get(index: Int) -> maybe Int from Index[Array[type X]]
+    subscript get(index: Int) -> maybe Int from Index{Array{type X}}
 }
 ```
 

@@ -53,8 +53,8 @@ type Node(type N) struct {
 
 type LinkedList with
 ~ struct {
-    nodes: Region[Node[Int]],
-    head: Cell[Handle],
+    nodes: Region{Node{Int}},
+    head: Cell{Handle},
 }
 
 ~ constructor(first: Int) {

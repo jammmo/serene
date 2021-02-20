@@ -26,24 +26,24 @@ type Handle with
 
 type Region with
 ~ constructor(type T) {
-    set vector = Vector[T]
+    set vector = Vector{T}
     type R = typeof(self)
 }
 ~ struct {
-    vector: Vector[T] private,
+    vector: Vector{T} private,
 }
 ~ specifics {
-    method add(new_value: T) -> Handle[R] {
+    method add(new_value: T) -> Handle{R} {
         run vector.append(NewValue)
         const handle = Handle(Region, vector.length)
         return handle
     }
 
-    method delete(index_to_delete: Handle[R]) {
+    method delete(index_to_delete: Handle{R}) {
         run vector.pop!(index_to_delete)
     }
 
-    subscript get(my_handle: Handle[R]) -> maybe T {
+    subscript get(my_handle: Handle{R}) -> maybe T {
         return vector[my_handle.index]
     }
 }
