@@ -28,39 +28,8 @@ type WeddingInvitation with
         set self.accepted = True
     }
 
-    method parseLocation(address: String) from Address
-}
-
-
-// Interfaces with generics?
-
-interface CompareAndIndex(self: type X) with
-~ signatures {
-    method lessThan(other: X) -> Bool
-    method greaterThan(other: X) -> Bool
-
-    subscript get(index: Int) -> maybe X
-}
-~ specifics where X: Array{Int} {
-    method lessThan(other: Array{Int}) -> Bool {
-        for (i = 0, min(self.length, other.length)) {
-            if (self[i] != other[i]) {
-                return self[i] < other[i]
-            }
-        }
-        return self.length < other.length
-    }
-
-    method lessThan(other: Array{Int}) -> Bool {
-        for (i = 0, min(self.length, other.length)) {
-            if (self[i] != other[i]) {
-                return self[i] > other[i]
-            }
-        }
-        return self.length > other.length
-    }
-
-    subscript get(index: Int) -> maybe Int from Index{Array{type X}}
+	// Use implementation of method from a separate module
+    method parseLocation(address: String) from Address	
 }
 ```
 

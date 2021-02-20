@@ -40,7 +40,7 @@ function removeTail(mutate u: LinkedList) {
         var currentIndex = currentObject.next
         either (set currentObject = u[currentIndex]) or break
     }
-    run u.delete!(currentIndex)		//methods that mutate the object are called with a "!"
+    run u.delete!(currentIndex)
 }
 ```
 

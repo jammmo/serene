@@ -3,7 +3,7 @@
 Serene supports both generic functions and generic types. A generic parameter is specified using the `type` keyword, like in the example below.
 
 ```serene
-function elementInArray(move elem: type T, arr: Array{type T}) -> maybe type T {
+function elementInArray{T: type} (move elem: T, arr: Array{T}) -> maybe T {
     for (i = 0, arr.length) {
         if (arr[i] == elem) {
             return elem
@@ -14,9 +14,9 @@ function elementInArray(move elem: type T, arr: Array{type T}) -> maybe type T {
 }
 
 // Where statement
-function elementInArray(move elem: type A, arr: type B) -> maybe type A where
-    type A: Simple,
-    type B: Array{A} {
+function elementInArray2{A: type, B type} (move elem: A, arr: B) -> maybe A where
+    A: Simple,
+    B: Array{A} {
 
     for (i = 0, arr.length) {
         if (arr[i] == elem) {
@@ -27,9 +27,10 @@ function elementInArray(move elem: type A, arr: type B) -> maybe type A where
     return undefined
 }
 
-// Idea: plug in type variable to function instead of value to yield return type?
-// Potentially some ambiguity/confusion there but definitely useful
-
-// Is "type" needed everywhere in the signature or only the first time the name is referenced?
+function main() {
+	var u = Array(1, 3, 5, 7)
+	either (run printLine(elementInArray(5, u)) or run printLine("Could not be found")
+	either (run printLine(elementInArray2(7, u)) or run printLine("Could not be found")
+}
 ```
 

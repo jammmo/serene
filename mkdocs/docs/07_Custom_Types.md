@@ -45,53 +45,55 @@ One new thing here is `private` fields, which can't be accessed from outside of 
 ```serene
 // Linked list of integers
 
-type Node{N: type} struct {
-    data: Int,
-    next: N,
+type Node{MyHandle: type} with
+~ constructor(data: Int, next: MyHandle) {
+    var self.data: Int
+    var self.next: MyHandle
 }
 
 type LinkedList with
 ~ constructor(first: Int) {
-    type self.Handle private = nodes.Handle
-    var self.head private = nodes.add!(Node(first, None))
+	var self.nodes private = Region(Int)
+    type self.Handle private = self.nodes.Handle
+    var self.head private = self.nodes.add!(Node(first, None))
 }
 
 ~ specifics {
     method addFirst(a: Int) {
-        set head = nodes.add!(Node(a, head))
+        set self.head = self.nodes.add!(Node(a, self.head))
     }
 
     method addLast(a: Int) {
-        if (head is Empty) {
-            set head = nodes.add!(Node(a, None))
+        if (self.head is Empty) {
+            set self.head = self.nodes.add!(Node(a, None))
         }
         else {
-            var x = nodes[head]
-            while (nodes[x.next] is defined) {
-                set x = nodes[x.next]
+            var x = self.nodes[self.head]
+            while (self.nodes[x.next] is defined) {
+                set x = self.nodes[x.next]
             }
-            set x.next = nodes.add!(Node(a, None))
+            set x.next = self.nodes.add!(Node(a, None))
         }
     }
 
     method deleteFirst() {
-        if (head is Empty) return
-        const x = head
-        set head = nodes[head].next
-        run nodes.delete!(x)
+        if (self.head is Empty) return
+        const x = self.head
+        set self.head = self.nodes[self.head].next
+        run self.nodes.delete!(x)
     }
 
     method deleteLast() {
-        if (head is Empty) return
-        var x = nodes[head]
-        while (nodes[x.next] is defined) {
-            set x = nodes[x.next]
+        if (self.head is Empty) return
+        var x = self.nodes[self.head]
+        while (self.nodes[x.next] is defined) {
+            set x = self.nodes[x.next]
         }
-        run nodes.delete!(x)
+        run self.nodes.delete!(x)
     }
     
-    subscript get(MyHandle: Handle) -> maybe Int {
-        return nodes[MyHandle]
+    subscript get(h: Handle) -> maybe Int {
+        return self.nodes[h]
     }
 }
 ```

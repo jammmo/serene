@@ -9,21 +9,28 @@ An array is a fixed-length sequence elements, where all of the elements are the 
 You specify what the types of elements are by using generics. We'll explain more about generics later, but for now it suffices to say that you put the type of the elements in curly braces. So `Array{Float}` would be an array of floating-point numbers.
 
 ```serene
+// returns the index of the leftmost occurence of x, or the next lowest number if x is not found
+// Array u must be already sorted
 function binarySearch(u: Array{Int}, x: Int) -> Int {
-	var i = u.length / 2
-	while (True) {
-		either (u[i] is defined) or throw IndexError
-		if (u[i] < x) {
-			set i = i / 2
-		} elseif (u[i] > x) {
-			set i = (i + u.length)/2
+	var low = 0
+    var high = u.length
+	while (low < high) {
+		var mid = (low + high) / 2	// integer division
+		either (u[mid] is defined) or throw IndexError
+		if (u[mid] < x) {
+			set high = mid
 		} else {
-			return i
+			set low = mid + 1
 		}
 	}
+	return low
 }
 
-//Where is the maybe-checking?
+function main() {
+	var u = Array(5, 1, 4, -3, 9, 0)
+	run u.sort!()
+	run printLine(binarySearch(u, 4))
+}
 ```
 
 ## Vectors
@@ -31,20 +38,35 @@ function binarySearch(u: Array{Int}, x: Int) -> Int {
 An vector is similar to an array, except its length can be changed after creation. Like an array, if the index is invalid, the indexing operation will return `undefined`.
 
 ```serene
-function binarySearchAndDelete(mutate u: Array{Int}, x: Int) {
-	var i = u.length / 2
-	while (True) {
-		if (u[i] < x) {
-			set i = i / 2
-		} elseif (u[i] > x) {
-			set i = (i + u.length)/2
+// deletes the leftmost occurence of x, or does nothing if x is not found
+// Vector u must be already sorted
+function binarySearchAndDelete(mutate u: Vector{Int}, x: Int) {
+	var low = 0
+    var high = u.length
+	while (low < high) {
+		var mid = (low + high) / 2
+		either (u[mid] is defined) or throw IndexError
+		if (u[mid] < x) {
+			set high = mid
 		} else {
-			u.delete!(i)
+			set low = mid + 1
 		}
+	}
+	if (u[low] == x) {
+		run u.delete!(low)
 	}
 }
 
-//Where is the maybe-checking?
+function main() {
+	var u = Vector(Int)		// creates an empty vector of integers
+	run printline("Length of u: %", u.length)	// Length of u: 0
+	for(i = 0, 5) {
+		u.append!(i * 2)
+	}
+	run printline("Length of u: %", u.length)	// Length of u: 5
+	run printLine(u)							// [0, 2, 4, 6, 8]
+	run printLine(binarySearch(u, 6))			// 3
+}
 ```
 
 ## Regions (and Handles)

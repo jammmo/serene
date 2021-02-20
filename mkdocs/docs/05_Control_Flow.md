@@ -32,9 +32,18 @@ function findMax(u: Vector{Int}) -> Int {
 
 function findMax2(u: Vector{Int}) -> Int {
 	var max = Int.bottom
+	for (i = 0, u.length) {	//iterates from 0 up to (but not including) the length of u
+		// Compiler automatically checks that u[i] is not undefined by verifying the loop bounds
+		if (u[i] > max) {
+			set max = u[i]
+		}
+	}
+}
+
+function findMax3(u: Vector{Int}) -> Int {
+	var max = Int.bottom
 	var i: Int = 0
 	while (i < u.length) {
-		// Compiler automatically checks that u[i] is not undefined by verifying the loop bounds
 		if (u[i] > max) {	
 			set max = u[i]
 		}
