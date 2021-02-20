@@ -16,7 +16,7 @@ It's important for Serene to have a true module system: one that works seamlessl
 
 `import Math`
 
-`run Math::sqrt()`
+`run Math::sqrt(9)`
 
 `from AsyncGUI import Window`
 
