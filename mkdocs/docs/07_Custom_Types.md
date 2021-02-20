@@ -10,10 +10,7 @@ type Person struct {
         Male,
         Female
     },
-    nickname: enum {
-        Some (String),
-        None
-    },
+    nickname: Cell{String}
 }
 
 type Point3D tuple {
@@ -41,25 +38,22 @@ type RainbowColors enum {
 
 ## Linked List Example
 
-Here is an example of a singly linked list implementation in Serene. Notice here that the definition of the `LinkedList` type has multiple parts to it: a struct, a constructor, and specifics. The struct is the "format" of the data that is stored within the type (it can also be an enum or tuple), while the constructor initializes the struct to actual values. `specifics` is used to implement methods that can be called on this type. When a type definition has multiple parts like this, each part begins with a tilde (`~`), and they are meant to look like a bulleted list of details about the type.
+Here is an example of a singly linked list implementation in Serene. Notice here that the definition of the `LinkedList` type has multiple parts to it. Internally, it stores data as a struct, but instead of passing the fields of the struct directly, the user will pass arguments to a `constructor` function which will create and initialize the struct to actual values. `specifics` is used to implement methods that can be called on this type. When a type definition has multiple parts like this, each part begins with a tilde (`~`), and they are meant to look like a bulleted list of details about the type. This format is called a "constructed type".
+
+One new thing here is `private` fields, which can't be accessed from outside of the type's definition. However, a type can give special permission for another type to access its private fields by declaring it a `friend` type, as we will see later.
 
 ```serene
 // Linked list of integers
 
-type Node(type N) struct {
+type Node{N: type} struct {
     data: Int,
     next: N,
 }
 
 type LinkedList with
-~ struct {
-    nodes: Region{Node{Int}},
-    head: Cell{Handle},
-}
-
 ~ constructor(first: Int) {
-    type Handle = nodes.Handle
-    set head = nodes.add!(Node(first, None))
+    type self.Handle private = nodes.Handle
+    var self.head private = nodes.add!(Node(first, None))
 }
 
 ~ specifics {

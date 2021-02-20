@@ -6,7 +6,7 @@ You can store a value with either the keyword `const` (short for "constant") or 
 function test1() {
     const age: Int = 20
     run printLine(age)
-    // age can't be changed here!
+    //age can't be changed here!
 }
 
 function test2() {
@@ -16,7 +16,7 @@ function test2() {
     run printLine(age)
     set age = age + 1
     run printLine(age)
-    set age += 1    // same as: set age = age + 1
+    set age += 1    //same as: set age = age + 1
     run printLine(age)
 }
 

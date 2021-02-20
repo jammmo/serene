@@ -37,7 +37,8 @@ function removeChar(mutate s: String, c: Char) {
     var i = 0
     while (i < s.length) {
         if (s[i] == c) {
-            run s.delete(i)
+        	// Exclamation marks are required for methods that mutate the object they act on
+            run s.delete!(i)
         }
         else {
             set i += 1
@@ -50,7 +51,7 @@ function main() {
     var letter = Char(' ')
     run middleChar(name, mutate letter)
 
-    var newname = name		//copies name
+    var newname = name		// copies name
     run removeChar(mutate newname, c)
 }
 ```

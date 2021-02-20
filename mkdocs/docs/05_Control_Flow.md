@@ -18,7 +18,7 @@ function absoluteValue(x: Int) -> Int {
 
 ## Loops
 
-Serene has two looping constructs: For Loops and While Loops.
+Serene has two looping constructs: "for loops" and "while loops".
 
 ```serene
 function findMax(u: Vector{Int}) -> Int {

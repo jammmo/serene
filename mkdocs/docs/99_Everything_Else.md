@@ -10,6 +10,18 @@ This is an important one, and it's probably the biggest unknown at this point. T
 
 Just like with concurrency, I think it makes sense for the compiler to have some sort of awareness of hardware interrupts. Interrupts don't come up in regular application-level programming, but they're essential to embedded programming. In C, programming interrupt service routines often involves mutating global variables that are declared `volatile`, but in Serene that would completely break the safety and "sanity" of the ownership system. So there should be some way of registering interrupts in a program so that both the reader and the compiler can clearly tell where they are enabled, and so that state is passed safely between the local scope and the interrupt service routine's scope.
 
+## Modules
+
+It's important for Serene to have a true module system: one that works seamlessly across different platforms and different versions of the language. As far as the syntax goes, I'd like to avoid having things like `std::something` everywhere. Python allows you to import standard library modules without actually writing `std`, and you can also import a module and specify whether to bring it into the current namespace in a single statement (rather than separate `#include` and `using` statements in C++, for example). I expect that the module syntax will similar to Python's, though with `Module::Something` for module prefixes instead of `Module.Something`. I'd also want a better way to differentiate between standard library modules and module files in a local directory. Put all of this together and it'll look something like this:
+
+`import Math`
+
+`run Math::sqrt()`
+
+`from AsyncGUI import Window`
+
+`import local "lib/MovieReviewTypes.sn"`
+
 ## Error Handling
 
 Error handling isn't the most exciting aspect of a language, but for a language to promote safety and reliability, it needs a good error handling system. I frankly don't know that much about error handling and I'm not planning on doing anything particularly innovative here: the error handling system will likely be modeled after Rust or another modern language.
