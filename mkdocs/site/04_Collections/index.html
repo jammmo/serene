@@ -1,0 +1,645 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      <link rel="shortcut icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.6">
+    
+    
+      
+        <title>4. Collections - Basics of Serene</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.cb6bc1d0.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.39b8e14a.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+      
+    
+    
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+      
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#4-collections" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-announce">
+          <div class="md-announce__inner md-grid md-typeset">
+            
+  <div>Return to the homepage <a style="color: hsl(231, 84%, 75%);" href="/index.html">here</a>.</div>
+
+          </div>
+        </aside>
+      
+    </div>
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href=".." title="Basics of Serene" class="md-header-nav__button md-logo" aria-label="Basics of Serene">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      <div class="md-header-nav__ellipsis">
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            Basics of Serene
+          </span>
+        </div>
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            
+              4. Collections
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Basics of Serene" class="md-nav__button md-logo" aria-label="Basics of Serene">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    Basics of Serene
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00_Why_Serene/" class="md-nav__link">
+        Why Serene?
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_Functions/" class="md-nav__link">
+        1. Functions
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_Variables_Types_And_Math/" class="md-nav__link">
+        2. Variables, Types, and Math
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03_Mutability_And_Ownership/" class="md-nav__link">
+        3. Mutability and Ownership
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          4. Collections
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        4. Collections
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#arrays" class="md-nav__link">
+    Arrays
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vectors" class="md-nav__link">
+    Vectors
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regions-and-handles" class="md-nav__link">
+    Regions (and Handles)
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05_Control_Flow/" class="md-nav__link">
+        5. Control Flow
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06_Expressing_Nothing/" class="md-nav__link">
+        6. Expressing Nothing
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07_Custom_Types/" class="md-nav__link">
+        7. Custom Types
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08_Interfaces/" class="md-nav__link">
+        8. Interfaces
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09_Generic_Functions/" class="md-nav__link">
+        9. Generic Functions
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10_Generic_Types/" class="md-nav__link">
+        10. Generic Types
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../99_Everything_Else/" class="md-nav__link">
+        Everything Else
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#arrays" class="md-nav__link">
+    Arrays
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vectors" class="md-nav__link">
+    Vectors
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regions-and-handles" class="md-nav__link">
+    Regions (and Handles)
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                <h1 id="4-collections">4. Collections</h1>
+<p>In this section, we will learn about several more complex types that are built into Serene.</p>
+<h2 id="arrays">Arrays</h2>
+<p>An array is a fixed-length sequence elements, where all of the elements are the same type. If the index is invalid, the indexing operation will return <code>undefined</code>, which is a special value (actually, it's not a value) that will be introduced later, in the Expressing Nothing section.</p>
+<p>You specify what the types of elements are by using generics. We'll explain more about generics later, but for now it suffices to say that you put the type of the elements in curly braces. So <code>Array{Float}</code> would be an array of floating-point numbers.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// returns the index of the leftmost occurence of x, or the next lowest number if x is not found</span>
+<span class="c1">// Array u must be already sorted</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">binarySearch</span><span class="err">(u:</span><span class="nc"> Array</span><span class="err">{Int}, x:</span><span class="nc"> Int</span><span class="err">) -&gt; </span><span class="nc">Int</span><span class="err"> {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> low = 0</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> high = u.length</span>
+<span class="err">    </span><span class="k">while</span><span class="err"> (low &lt; high) {</span>
+<span class="err">        </span><span class="k">var</span><span class="err"> mid = (low + high) / 2  </span><span class="c1">// integer division</span>
+<span class="err">        </span><span class="k">either</span><span class="err"> (u[mid] is defined) </span><span class="k">or</span><span class="err"> throw IndexError</span>
+<span class="err">        </span><span class="k">if</span><span class="err"> (u[mid] &lt; x) {</span>
+<span class="err">            </span><span class="k">set</span><span class="err"> high = mid</span>
+<span class="err">        } </span><span class="k">else</span><span class="err"> {</span>
+<span class="err">            </span><span class="k">set</span><span class="err"> low = mid + 1</span>
+<span class="err">        }</span>
+<span class="err">    }</span>
+<span class="err">    </span><span class="k">return</span><span class="err"> low</span>
+<span class="err">}</span>
+
+<span class="k">function</span><span class="err"> </span><span class="nf">main</span><span class="err">() {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> u = Array(5, 1, 4, -3, 9, 0)</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> u.sort!()</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> printLine(binarySearch(u, 4))</span>
+<span class="err">}</span>
+</code></pre></div>
+<h2 id="vectors">Vectors</h2>
+<p>An vector is similar to an array, except its length can be changed after creation. Like an array, if the index is invalid, the indexing operation will return <code>undefined</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// deletes the leftmost occurence of x, or does nothing if x is not found</span>
+<span class="c1">// Vector u must be already sorted</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">binarySearchAndDelete</span><span class="err">(</span><span class="kt">mutate</span><span class="err"> u:</span><span class="nc"> Vector</span><span class="err">{Int}, x:</span><span class="nc"> Int</span><span class="err">) {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> low = 0</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> high = u.length</span>
+<span class="err">    </span><span class="k">while</span><span class="err"> (low &lt; high) {</span>
+<span class="err">        </span><span class="k">var</span><span class="err"> mid = (low + high) / 2</span>
+<span class="err">        </span><span class="k">either</span><span class="err"> (u[mid] is defined) </span><span class="k">or</span><span class="err"> throw IndexError</span>
+<span class="err">        </span><span class="k">if</span><span class="err"> (u[mid] &lt; x) {</span>
+<span class="err">            </span><span class="k">set</span><span class="err"> high = mid</span>
+<span class="err">        } </span><span class="k">else</span><span class="err"> {</span>
+<span class="err">            </span><span class="k">set</span><span class="err"> low = mid + 1</span>
+<span class="err">        }</span>
+<span class="err">    }</span>
+<span class="err">    </span><span class="k">if</span><span class="err"> (u[low] == x) {</span>
+<span class="err">        </span><span class="k">run</span><span class="err"> u.delete!(low)</span>
+<span class="err">    }</span>
+<span class="err">}</span>
+
+<span class="k">function</span><span class="err"> </span><span class="nf">main</span><span class="err">() {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> u = Vector(Int)     </span><span class="c1">// creates an empty vector of integers</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> printline(</span><span class="s">&quot;Length of u: %&quot;</span><span class="err">, u.length)   </span><span class="c1">// Length of u: 0</span>
+<span class="err">    </span><span class="k">for</span><span class="err">(i = 0, 5) {</span>
+<span class="err">        u.append!(i * 2)</span>
+<span class="err">    }</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> printline(</span><span class="s">&quot;Length of u: %&quot;</span><span class="err">, u.length)   </span><span class="c1">// Length of u: 5</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> printLine(u)                            </span><span class="c1">// [0, 2, 4, 6, 8]</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> printLine(binarySearch(u, 6))           </span><span class="c1">// 3</span>
+<span class="err">}</span>
+</code></pre></div>
+<h2 id="regions-and-handles">Regions (and Handles)</h2>
+<p>A Region is a dynamically-sized block of memory where objects of the same type can be stored. Those objects are accessed using an index, referred to as a Handle. You can think of a Region as somewhat similar to a hash map, as it is effectively a mapping of keys to values. But unlike a hash map, the keys, called Handles in this case, are a special opaque type and are assigned by the Region when new values are added, rather than being assigned by the programmer. Once again, if the Handle doesn't refer to a valid object, the indexing operation will return <code>undefined</code>.</p>
+<p>Regions and Handles may sound a bit odd right now, but you'll see why they are necessary once you learn how to define your own types. For now, here is a simple demonstration of how they work.</p>
+<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">makeNames</span><span class="err">() {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> reg = Region{String}</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> firstName = reg.add!(</span><span class="s">&quot;Neil&quot;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> middleName = reg.add!(</span><span class="s">&quot;Patrick&quot;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> lastName = reg.add!(</span><span class="s">&quot;Harris&quot;</span><span class="err">)</span>
+
+<span class="err">    </span><span class="c1">// You can run multiple functions on the same line</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> printLine(reg[firstName]), printLine(reg[middleName]), printLine(reg[lastName])</span>
+<span class="err">}</span>
+
+
+<span class="c1">// This function isn&#39;t useful, as the strings won&#39;t be accessible from the calling scope</span>
+<span class="c1">// but will still occupy memory within the Region. However, it&#39;s not a memory leak, because</span>
+<span class="c1">// reg as a whole is still accessible and can be deallocated later.</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">makeNames2</span><span class="err">() -&gt; </span><span class="nc">Region</span><span class="err">{String} {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> reg = Region{String}</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> firstName = reg.add!(</span><span class="s">&quot;Neil&quot;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> middleName = reg.add!(</span><span class="s">&quot;Patrick&quot;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> lastName = reg.add!(</span><span class="s">&quot;Harris&quot;</span><span class="err">)</span>
+
+<span class="err">    </span><span class="k">return</span><span class="err"> reg</span>
+<span class="err">}</span>
+</code></pre></div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+        
+          <a href="../03_Mutability_And_Ownership/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            </div>
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                3. Mutability and Ownership
+              </div>
+            </div>
+          </a>
+        
+        
+          <a href="../05_Control_Flow/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                5. Control Flow
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../assets/javascripts/vendor.53cc9318.min.js"></script>
+      <script src="../assets/javascripts/bundle.e9c9f54f.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      
+      <script>
+        app = initialize({
+          base: "..",
+          features: [],
+          search: Object.assign({
+            worker: "../assets/javascripts/worker/search.9c0e82ba.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+    
+  </body>
+</html>
