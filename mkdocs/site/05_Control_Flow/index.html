@@ -493,7 +493,7 @@
 <p>So far, we have learned several key components to how programs are structured in Serene. However, it would be hard to implement anything practical with only what we have shown so far, as we haven't shown much of the logic necessary for describing any form of procedure. Here we discuss the control flow constructs that enable us to write practical programs.</p>
 <h2 id="conditional-statements">Conditional Statements</h2>
 <p>A conditional statement (or an if/else statement) allows a program to check a condition and do something different based on the value of that condition.</p>
-<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">absoluteValue</span><span class="err">(x:</span><span class="nc"> Int</span><span class="err">) -&gt; </span><span class="nc">Int</span><span class="err"> {</span>
+<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">absoluteValue</span><span class="err">(x: </span><span class="nc">Int</span><span class="err">) -&gt; </span><span class="nc">Int</span><span class="err"> {</span>
 <span class="err">    </span><span class="k">if</span><span class="err"> (x &lt; 0) {</span>
 <span class="err">        </span><span class="k">return</span><span class="err"> -x</span>
 <span class="err">    } </span><span class="k">else</span><span class="err"> {</span>
@@ -503,8 +503,8 @@
 </code></pre></div>
 <h2 id="loops">Loops</h2>
 <p>Serene has two looping constructs: "for loops" and "while loops".</p>
-<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">findMax</span><span class="err">(u:</span><span class="nc"> Vector</span><span class="err">{Int}) -&gt; </span><span class="nc">Int</span><span class="err"> {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> max = Int.bottom    </span><span class="c1">//lowest possible Int value</span>
+<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">findMax</span><span class="err">(u: </span><span class="nc">Vector</span><span class="err">{</span><span class="nc">Int</span><span class="err">}) -&gt; </span><span class="nc">Int</span><span class="err"> {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> max = </span><span class="nc">Int</span><span class="err">.bottom    </span><span class="c1">//lowest possible Int value</span>
 <span class="err">    </span><span class="k">for</span><span class="err"> (x in u) {</span>
 <span class="err">        </span><span class="k">if</span><span class="err"> (x &gt; max) {</span>
 <span class="err">            </span><span class="k">set</span><span class="err"> max = x</span>
@@ -512,8 +512,8 @@
 <span class="err">    }</span>
 <span class="err">}</span>
 
-<span class="k">function</span><span class="err"> </span><span class="nf">findMax2</span><span class="err">(u:</span><span class="nc"> Vector</span><span class="err">{Int}) -&gt; </span><span class="nc">Int</span><span class="err"> {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> max = Int.bottom</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">findMax2</span><span class="err">(u: </span><span class="nc">Vector</span><span class="err">{</span><span class="nc">Int</span><span class="err">}) -&gt; </span><span class="nc">Int</span><span class="err"> {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> max = </span><span class="nc">Int</span><span class="err">.bottom</span>
 <span class="err">    </span><span class="k">for</span><span class="err"> (i = 0, u.length) { </span><span class="c1">//iterates from 0 up to (but not including) the length of u</span>
 <span class="err">        </span><span class="c1">// Compiler automatically checks that u[i] is not undefined by verifying the loop bounds</span>
 <span class="err">        </span><span class="k">if</span><span class="err"> (u[i] &gt; max) {</span>
@@ -522,9 +522,9 @@
 <span class="err">    }</span>
 <span class="err">}</span>
 
-<span class="k">function</span><span class="err"> </span><span class="nf">findMax3</span><span class="err">(u:</span><span class="nc"> Vector</span><span class="err">{Int}) -&gt; </span><span class="nc">Int</span><span class="err"> {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> max = Int.bottom</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> i:</span><span class="nc"> Int</span><span class="err"> = 0</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">findMax3</span><span class="err">(u: </span><span class="nc">Vector</span><span class="err">{</span><span class="nc">Int</span><span class="err">}) -&gt; </span><span class="nc">Int</span><span class="err"> {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> max = </span><span class="nc">Int</span><span class="err">.bottom</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> i: </span><span class="nc">Int</span><span class="err"> = 0</span>
 <span class="err">    </span><span class="k">while</span><span class="err"> (i &lt; u.length) {</span>
 <span class="err">        </span><span class="k">if</span><span class="err"> (u[i] &gt; max) {   </span>
 <span class="err">            </span><span class="k">set</span><span class="err"> max = u[i]</span>
@@ -535,14 +535,14 @@
 <h2 id="match">Match</h2>
 <p>A Match statement takes a single object as its parameter and it allows you to write multiple paths of execution based on the value of the object.</p>
 <div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">makeChoice</span><span class="err">() -&gt; </span><span class="nc">Bool</span><span class="err"> {</span>
-<span class="err">    </span><span class="k">while</span><span class="err"> (True) {</span>
-<span class="err">        </span><span class="k">var</span><span class="err"> input = ReadLine()</span>
+<span class="err">    </span><span class="k">while</span><span class="err"> (</span><span class="no">True</span><span class="err">) {</span>
+<span class="err">        </span><span class="k">var</span><span class="err"> input = readLine()</span>
 <span class="err">        </span><span class="k">match</span><span class="err"> (input) {</span>
 <span class="err">            &quot;&quot; -&gt; </span><span class="k">continue</span>
-<span class="err">            </span><span class="s">&quot;y&quot;, &quot;Y&quot;</span><span class="err"> -&gt; </span><span class="k">return</span><span class="err"> True</span>
-<span class="err">            </span><span class="s">&quot;n&quot;, &quot;N&quot;</span><span class="err"> -&gt; </span><span class="k">return</span><span class="err"> False</span>
+<span class="err">            </span><span class="s">&quot;y&quot;</span><span class="err">, </span><span class="s">&quot;Y&quot;</span><span class="err"> -&gt; </span><span class="k">return</span><span class="err"> </span><span class="no">True</span>
+<span class="err">            </span><span class="s">&quot;n&quot;</span><span class="err">, </span><span class="s">&quot;N&quot;</span><span class="err"> -&gt; </span><span class="k">return</span><span class="err"> </span><span class="no">False</span>
 <span class="err">            </span><span class="k">else</span><span class="err"> -&gt; {</span>
-<span class="err">                </span><span class="k">run</span><span class="err"> printLine(</span><span class="s">&quot;Input is invalid, try again&quot;</span><span class="err">)</span>
+<span class="err">                </span><span class="k">print</span><span class="err"> </span><span class="s">&quot;Input is invalid, try again&quot;</span>
 <span class="err">                </span><span class="k">continue</span>
 <span class="err">            }</span>
 <span class="err">        }</span>

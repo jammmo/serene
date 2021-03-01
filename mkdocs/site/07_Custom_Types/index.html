@@ -449,90 +449,79 @@
                 
                 <h1 id="7-custom-types">7. Custom Types</h1>
 <p>Types in Serene can be defined using the <code>type</code> keyword, as shown below. Serene supports multiple forms of "compound types", including structs, enums, and tuples.</p>
-<div class="highlight"><pre><span></span><code><span class="k">type</span><span class="err"> Person struct {</span>
-<span class="err">    age:</span><span class="nc"> Int</span><span class="err">,</span>
-<span class="err">    name:</span><span class="nc"> String</span><span class="err">,</span>
-<span class="err">    gender:</span><span class="nc"> enum</span><span class="err"> {</span>
-<span class="err">        Male,</span>
-<span class="err">        Female</span>
-<span class="err">    },</span>
-<span class="err">    nickname:</span><span class="nc"> Cell</span><span class="err">{String}</span>
+<div class="highlight"><pre><span></span><code><span class="k">type</span><span class="err"> </span><span class="nc">Person</span><span class="err"> </span><span class="k">struct</span><span class="err"> {</span>
+<span class="err">    age: </span><span class="nc">Int</span><span class="err">,</span>
+<span class="err">    name: </span><span class="nc">String</span><span class="err">,</span>
+<span class="err">    nickname: </span><span class="nc">Cell</span><span class="err">{</span><span class="nc">String</span><span class="err">}</span>
 <span class="err">}</span>
 
-<span class="k">type</span><span class="err"> Point3D tuple {</span>
-<span class="err">    Int,</span>
-<span class="err">    Int,</span>
-<span class="err">    Int</span>
+<span class="k">type</span><span class="err"> </span><span class="nc">Point3D</span><span class="err"> </span><span class="k">tuple</span><span class="err"> {</span>
+<span class="err">    </span><span class="nc">Int</span><span class="err">,</span>
+<span class="err">    </span><span class="nc">Int</span><span class="err">,</span>
+<span class="err">    </span><span class="nc">Int</span>
 <span class="err">}</span>
 
-<span class="k">type</span><span class="err"> Address tuple {</span>
-<span class="err">    Int,    </span><span class="c1">// House number</span>
-<span class="err">    String, </span><span class="c1">// Street name</span>
+<span class="k">type</span><span class="err"> </span><span class="nc">Address</span><span class="err"> </span><span class="k">tuple</span><span class="err"> {</span>
+<span class="err">    </span><span class="nc">Int</span><span class="err">,    </span><span class="c1">// House number</span>
+<span class="err">    </span><span class="nc">String</span><span class="err">, </span><span class="c1">// Street name</span>
 <span class="err">}</span>
 
-<span class="k">type</span><span class="err"> RainbowColors enum {</span>
-<span class="err">    Red,</span>
-<span class="err">    Orange,</span>
-<span class="err">    Yellow,</span>
-<span class="err">    Green,</span>
-<span class="err">    Blue,</span>
-<span class="err">    Purple</span>
+<span class="k">type</span><span class="err"> </span><span class="nc">RainbowColors</span><span class="err"> </span><span class="k">enum</span><span class="err"> {</span>
+<span class="err">    </span><span class="nc">Red</span><span class="err">,</span>
+<span class="err">    </span><span class="nc">Orange</span><span class="err">,</span>
+<span class="err">    </span><span class="nc">Yellow</span><span class="err">,</span>
+<span class="err">    </span><span class="nc">Green</span><span class="err">,</span>
+<span class="err">    </span><span class="nc">Blue</span><span class="err">,</span>
+<span class="err">    </span><span class="nc">Purple</span>
+<span class="err">}</span>
+
+<span class="k">function</span><span class="err"> </span><span class="nf">main</span><span class="err">() {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> jason = </span><span class="nc">Person</span><span class="err">(41, </span><span class="s">&quot;Jason Segel&quot;</span><span class="err">, </span><span class="nc">Cell</span><span class="err">(</span><span class="s">&quot;Marshall&quot;</span><span class="err">))</span>
+<span class="err">    </span><span class="k">set</span><span class="err"> jason.nickname = </span><span class="nc">None</span>
+
+<span class="err">    </span><span class="k">var</span><span class="err"> color = </span><span class="nc">RainbowColors</span><span class="err">::</span><span class="nc">Red</span>
+<span class="err">    </span><span class="k">set</span><span class="err"> color = </span><span class="nc">RainbowColors</span><span class="err">::</span><span class="nc">Green</span>
 <span class="err">}</span>
 </code></pre></div>
 <h2 id="linked-list-example">Linked List Example</h2>
 <p>Here is an example of a singly linked list implementation in Serene. Notice here that the definition of the <code>LinkedList</code> type has multiple parts to it. Internally, it stores data as a struct, but instead of passing the fields of the struct directly, the user will pass arguments to a <code>constructor</code> function which will create and initialize the struct to actual values. <code>specifics</code> is used to implement methods that can be called on this type. When a type definition has multiple parts like this, each part begins with a tilde (<code>~</code>), and they are meant to look like a bulleted list of details about the type. This format is called a "constructed type".</p>
-<p>One new thing here is <code>private</code> fields, which can't be accessed from outside of the type's definition. However, a type can give special permission for another type to access its private fields by declaring it a <code>friend</code> type, as we will see later.</p>
+<p>Another new thing here is <code>private</code> fields, which can't be accessed from outside of the type's definition. However, a type can give special permission for another type to access its private fields by declaring it a <code>friend</code> type, as we will see later.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Linked list of integers</span>
+<span class="c1">// Possibly some ownership issues here</span>
 
-<span class="k">type</span><span class="err"> Node{MyHandle:</span><span class="nc"> type</span><span class="err">} with</span>
-<span class="err">~ constructor(data:</span><span class="nc"> Int</span><span class="err">, next:</span><span class="nc"> MyHandle</span><span class="err">) {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> self.data:</span><span class="nc"> Int</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> self.next:</span><span class="nc"> MyHandle</span>
+<span class="k">type</span><span class="err"> </span><span class="nc">Node</span><span class="err"> </span><span class="k">struct</span><span class="err"> {</span>
+<span class="err">    data: </span><span class="nc">Int</span><span class="err">,</span>
+<span class="err">    next: </span><span class="nc">Cell</span><span class="err">{</span><span class="nc">Node</span><span class="err">}</span>
 <span class="err">}</span>
 
-<span class="k">type</span><span class="err"> LinkedList with</span>
-<span class="err">~ constructor(first:</span><span class="nc"> Int</span><span class="err">) {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> self.nodes private = Region(Int)</span>
-<span class="err">    </span><span class="k">type</span><span class="err"> self.Handle private = self.nodes.Handle</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> self.head private = self.nodes.add!(Node(first, None))</span>
+<span class="k">type</span><span class="err"> </span><span class="nc">LinkedList</span><span class="err"> </span><span class="k">with</span>
+<span class="err">~ </span><span class="k">constructor</span><span class="err">(first: </span><span class="nc">Int</span><span class="err">) {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> self.head private = </span><span class="nc">Node</span><span class="err">(first, </span><span class="nc">None</span><span class="err">)</span>
 <span class="err">}</span>
 
-<span class="err">~ specifics {</span>
-<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">addFirst</span><span class="err">(a:</span><span class="nc"> Int</span><span class="err">) {</span>
-<span class="err">        </span><span class="k">set</span><span class="err"> self.head = self.nodes.add!(Node(a, self.head))</span>
+<span class="err">~ </span><span class="k">specifics</span><span class="err"> {</span>
+<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">addFirst</span><span class="err">(a: </span><span class="nc">Int</span><span class="err">) {</span>
+<span class="err">        </span><span class="k">set</span><span class="err"> self.head = </span><span class="nc">Node</span><span class="err">(a, </span><span class="no">move</span><span class="err"> self.head)</span>
 <span class="err">    }</span>
 
-<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">addLast</span><span class="err">(a:</span><span class="nc"> Int</span><span class="err">) {</span>
-<span class="err">        </span><span class="k">if</span><span class="err"> (self.head is Empty) {</span>
-<span class="err">            </span><span class="k">set</span><span class="err"> self.head = self.nodes.add!(Node(a, None))</span>
+<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">popFirst</span><span class="err">() -&gt; </span><span class="no">maybe</span><span class="err"> </span><span class="nc">Int</span><span class="err"> {</span>
+<span class="err">        </span><span class="k">if</span><span class="err"> (self.head </span><span class="k">is</span><span class="err"> </span><span class="nc">None</span><span class="err">) </span><span class="k">return</span><span class="err"> </span><span class="no">undefined</span>
+<span class="err">        </span><span class="k">var</span><span class="err"> x = self.head.next</span>
+<span class="err">        </span><span class="k">set</span><span class="err"> self.head = self.head.next</span>
+<span class="err">        </span><span class="k">return</span><span class="err"> x</span>
+<span class="err">    }</span>
+
+<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">append</span><span class="err">(a: </span><span class="nc">Int</span><span class="err">) {</span>
+<span class="err">        </span><span class="k">if</span><span class="err"> (self.head </span><span class="k">is</span><span class="err"> </span><span class="nc">None</span><span class="err">) {</span>
+<span class="err">            </span><span class="k">set</span><span class="err"> self.head = </span><span class="nc">Node</span><span class="err">(a, </span><span class="nc">None</span><span class="err">)</span>
 <span class="err">        }</span>
 <span class="err">        </span><span class="k">else</span><span class="err"> {</span>
-<span class="err">            </span><span class="k">var</span><span class="err"> x = self.nodes[self.head]</span>
-<span class="err">            </span><span class="k">while</span><span class="err"> (self.nodes[x.next] is defined) {</span>
-<span class="err">                </span><span class="k">set</span><span class="err"> x = self.nodes[x.next]</span>
+<span class="err">            </span><span class="k">var</span><span class="err"> x = self.head</span>
+<span class="err">            </span><span class="k">while</span><span class="err"> (x.next </span><span class="k">is</span><span class="err"> </span><span class="k">not</span><span class="err"> </span><span class="nc">None</span><span class="err">) {</span>
+<span class="err">                </span><span class="k">set</span><span class="err"> x = x.next</span>
 <span class="err">            }</span>
-<span class="err">            </span><span class="k">set</span><span class="err"> x.next = self.nodes.add!(Node(a, None))</span>
+<span class="err">            </span><span class="k">set</span><span class="err"> x.next = </span><span class="nc">Node</span><span class="err">(a, </span><span class="nc">None</span><span class="err">)</span>
 <span class="err">        }</span>
-<span class="err">    }</span>
-
-<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">deleteFirst</span><span class="err">() {</span>
-<span class="err">        </span><span class="k">if</span><span class="err"> (self.head is Empty) </span><span class="k">return</span>
-<span class="err">        </span><span class="k">const</span><span class="err"> x = self.head</span>
-<span class="err">        </span><span class="k">set</span><span class="err"> self.head = self.nodes[self.head].next</span>
-<span class="err">        </span><span class="k">run</span><span class="err"> self.nodes.delete!(x)</span>
-<span class="err">    }</span>
-
-<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">deleteLast</span><span class="err">() {</span>
-<span class="err">        </span><span class="k">if</span><span class="err"> (self.head is Empty) </span><span class="k">return</span>
-<span class="err">        </span><span class="k">var</span><span class="err"> x = self.nodes[self.head]</span>
-<span class="err">        </span><span class="k">while</span><span class="err"> (self.nodes[x.next] is defined) {</span>
-<span class="err">            </span><span class="k">set</span><span class="err"> x = self.nodes[x.next]</span>
-<span class="err">        }</span>
-<span class="err">        </span><span class="k">run</span><span class="err"> self.nodes.delete!(x)</span>
-<span class="err">    }</span>
-
-<span class="err">    </span><span class="k">subscript</span><span class="err"> </span><span class="nf">get</span><span class="err">(h:</span><span class="nc"> Handle</span><span class="err">) -&gt; </span><span class="nc">maybe</span><span class="err"> Int {</span>
-<span class="err">        </span><span class="k">return</span><span class="err"> self.nodes[h]</span>
 <span class="err">    }</span>
 <span class="err">}</span>
 </code></pre></div>

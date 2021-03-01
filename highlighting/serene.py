@@ -10,12 +10,12 @@ class SereneLexer(RegexLexer):
 
     tokens = {
         'root': [
-            (r'\b(if|else|elseif|while|for|return|break|either|continue|match)\b', Keyword),
-            (r'\b(let|set|var|const|run|import|or|and)\b', Keyword),
-            (r'\b(function|method|interface|type|subscript)\b', Keyword),
-            (r'\b(mut|mutate|move|copy)\b', Keyword.Type),
-            (r'(?<=:)\s*\w+', Name.Class),
-            (r'(?<=\)\s->\s)\w+', Name.Class),
+            (r'\b(if|else|elseif|while|for|return|break|either|continue|match|is)\b', Keyword),
+            (r'\b(set|var|const|run|import|or|not|and|print|throw)\b', Keyword),
+            (r'\b(function|method|specifics|signatures|constructor|interface|type|subscript|with|implements|struct|enum|tuple)\b', Keyword),
+            (r'\b(mut|mutate|move|copy|maybe|defined|undefined|True|False)\b', Name.Constant),
+            (r'\b(?<!\.)((?!True)(?!False)[A-Z]\w*)\b', Name.Class),
+            (r'(?<=:)\s*type', Name.Class),
             (r'((?<=function\s)|(?<=method\s)|(?<=subscript\s))\w+', Name.Function),
             (r'\".+\"', String),
             (r"'.+'", String),

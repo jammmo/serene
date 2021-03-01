@@ -482,12 +482,12 @@
 <p>You specify what the types of elements are by using generics. We'll explain more about generics later, but for now it suffices to say that you put the type of the elements in curly braces. So <code>Array{Float}</code> would be an array of floating-point numbers.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// returns the index of the leftmost occurence of x, or the next lowest number if x is not found</span>
 <span class="c1">// Array u must be already sorted</span>
-<span class="k">function</span><span class="err"> </span><span class="nf">binarySearch</span><span class="err">(u:</span><span class="nc"> Array</span><span class="err">{Int}, x:</span><span class="nc"> Int</span><span class="err">) -&gt; </span><span class="nc">Int</span><span class="err"> {</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">binarySearch</span><span class="err">(u: </span><span class="nc">Array</span><span class="err">{</span><span class="nc">Int</span><span class="err">}, x: </span><span class="nc">Int</span><span class="err">) -&gt; </span><span class="nc">Int</span><span class="err"> {</span>
 <span class="err">    </span><span class="k">var</span><span class="err"> low = 0</span>
 <span class="err">    </span><span class="k">var</span><span class="err"> high = u.length</span>
 <span class="err">    </span><span class="k">while</span><span class="err"> (low &lt; high) {</span>
 <span class="err">        </span><span class="k">var</span><span class="err"> mid = (low + high) / 2  </span><span class="c1">// integer division</span>
-<span class="err">        </span><span class="k">either</span><span class="err"> (u[mid] is defined) </span><span class="k">or</span><span class="err"> throw IndexError</span>
+<span class="err">        </span><span class="k">either</span><span class="err"> (u[mid] </span><span class="k">is</span><span class="err"> </span><span class="no">defined</span><span class="err">) </span><span class="k">or</span><span class="err"> </span><span class="k">throw</span><span class="err"> </span><span class="nc">IndexError</span>
 <span class="err">        </span><span class="k">if</span><span class="err"> (u[mid] &lt; x) {</span>
 <span class="err">            </span><span class="k">set</span><span class="err"> high = mid</span>
 <span class="err">        } </span><span class="k">else</span><span class="err"> {</span>
@@ -498,21 +498,21 @@
 <span class="err">}</span>
 
 <span class="k">function</span><span class="err"> </span><span class="nf">main</span><span class="err">() {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> u = Array(5, 1, 4, -3, 9, 0)</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> u = </span><span class="nc">Array</span><span class="err">(5, 1, 4, -3, 9, 0)</span>
 <span class="err">    </span><span class="k">run</span><span class="err"> u.sort!()</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(binarySearch(u, 4))</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> binarySearch(u, 4)</span>
 <span class="err">}</span>
 </code></pre></div>
 <h2 id="vectors">Vectors</h2>
 <p>An vector is similar to an array, except its length can be changed after creation. Like an array, if the index is invalid, the indexing operation will return <code>undefined</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// deletes the leftmost occurence of x, or does nothing if x is not found</span>
 <span class="c1">// Vector u must be already sorted</span>
-<span class="k">function</span><span class="err"> </span><span class="nf">binarySearchAndDelete</span><span class="err">(</span><span class="kt">mutate</span><span class="err"> u:</span><span class="nc"> Vector</span><span class="err">{Int}, x:</span><span class="nc"> Int</span><span class="err">) {</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">binarySearchAndDelete</span><span class="err">(</span><span class="no">mutate</span><span class="err"> u: </span><span class="nc">Vector</span><span class="err">{</span><span class="nc">Int</span><span class="err">}, x: </span><span class="nc">Int</span><span class="err">) {</span>
 <span class="err">    </span><span class="k">var</span><span class="err"> low = 0</span>
 <span class="err">    </span><span class="k">var</span><span class="err"> high = u.length</span>
 <span class="err">    </span><span class="k">while</span><span class="err"> (low &lt; high) {</span>
 <span class="err">        </span><span class="k">var</span><span class="err"> mid = (low + high) / 2</span>
-<span class="err">        </span><span class="k">either</span><span class="err"> (u[mid] is defined) </span><span class="k">or</span><span class="err"> throw IndexError</span>
+<span class="err">        </span><span class="k">either</span><span class="err"> (u[mid] </span><span class="k">is</span><span class="err"> </span><span class="no">defined</span><span class="err">) </span><span class="k">or</span><span class="err"> </span><span class="k">throw</span><span class="err"> </span><span class="nc">IndexError</span>
 <span class="err">        </span><span class="k">if</span><span class="err"> (u[mid] &lt; x) {</span>
 <span class="err">            </span><span class="k">set</span><span class="err"> high = mid</span>
 <span class="err">        } </span><span class="k">else</span><span class="err"> {</span>
@@ -525,38 +525,39 @@
 <span class="err">}</span>
 
 <span class="k">function</span><span class="err"> </span><span class="nf">main</span><span class="err">() {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> u = Vector(Int)     </span><span class="c1">// creates an empty vector of integers</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printline(</span><span class="s">&quot;Length of u: %&quot;</span><span class="err">, u.length)   </span><span class="c1">// Length of u: 0</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> u = </span><span class="nc">Vector</span><span class="err">(</span><span class="nc">Int</span><span class="err">)                 </span><span class="c1">// creates an empty vector of integers</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> </span><span class="s">&quot;Length of u: &quot;</span><span class="err">, u.length     </span><span class="c1">// Length of u: 0</span>
 <span class="err">    </span><span class="k">for</span><span class="err">(i = 0, 5) {</span>
 <span class="err">        u.append!(i * 2)</span>
 <span class="err">    }</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printline(</span><span class="s">&quot;Length of u: %&quot;</span><span class="err">, u.length)   </span><span class="c1">// Length of u: 5</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(u)                            </span><span class="c1">// [0, 2, 4, 6, 8]</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(binarySearch(u, 6))           </span><span class="c1">// 3</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> </span><span class="s">&quot;Length of u: &quot;</span><span class="err">, u.length     </span><span class="c1">// Length of u: 5</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> u                             </span><span class="c1">// [0, 2, 4, 6, 8]</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> binarySearch(u, 6)            </span><span class="c1">// 3</span>
 <span class="err">}</span>
 </code></pre></div>
 <h2 id="regions-and-handles">Regions (and Handles)</h2>
 <p>A Region is a dynamically-sized block of memory where objects of the same type can be stored. Those objects are accessed using an index, referred to as a Handle. You can think of a Region as somewhat similar to a hash map, as it is effectively a mapping of keys to values. But unlike a hash map, the keys, called Handles in this case, are a special opaque type and are assigned by the Region when new values are added, rather than being assigned by the programmer. Once again, if the Handle doesn't refer to a valid object, the indexing operation will return <code>undefined</code>.</p>
 <p>Regions and Handles may sound a bit odd right now, but you'll see why they are necessary once you learn how to define your own types. For now, here is a simple demonstration of how they work.</p>
 <div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">makeNames</span><span class="err">() {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> reg = Region{String}</span>
-<span class="err">    </span><span class="k">const</span><span class="err"> firstName = reg.add!(</span><span class="s">&quot;Neil&quot;</span><span class="err">)</span>
-<span class="err">    </span><span class="k">const</span><span class="err"> middleName = reg.add!(</span><span class="s">&quot;Patrick&quot;</span><span class="err">)</span>
-<span class="err">    </span><span class="k">const</span><span class="err"> lastName = reg.add!(</span><span class="s">&quot;Harris&quot;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> reg = </span><span class="nc">Region</span><span class="err">(</span><span class="nc">String</span><span class="err">)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> first_name = reg.add!(</span><span class="s">&quot;Neil&quot;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> middle_name = reg.add!(</span><span class="s">&quot;Patrick&quot;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> last_name = reg.add!(</span><span class="s">&quot;Harris&quot;</span><span class="err">)</span>
 
-<span class="err">    </span><span class="c1">// You can run multiple functions on the same line</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(reg[firstName]), printLine(reg[middleName]), printLine(reg[lastName])</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> reg[first_name]</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> reg[middle_name]</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> reg[last_name]</span>
 <span class="err">}</span>
 
 
 <span class="c1">// This function isn&#39;t useful, as the strings won&#39;t be accessible from the calling scope</span>
 <span class="c1">// but will still occupy memory within the Region. However, it&#39;s not a memory leak, because</span>
 <span class="c1">// reg as a whole is still accessible and can be deallocated later.</span>
-<span class="k">function</span><span class="err"> </span><span class="nf">makeNames2</span><span class="err">() -&gt; </span><span class="nc">Region</span><span class="err">{String} {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> reg = Region{String}</span>
-<span class="err">    </span><span class="k">const</span><span class="err"> firstName = reg.add!(</span><span class="s">&quot;Neil&quot;</span><span class="err">)</span>
-<span class="err">    </span><span class="k">const</span><span class="err"> middleName = reg.add!(</span><span class="s">&quot;Patrick&quot;</span><span class="err">)</span>
-<span class="err">    </span><span class="k">const</span><span class="err"> lastName = reg.add!(</span><span class="s">&quot;Harris&quot;</span><span class="err">)</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">makeNames2</span><span class="err">() -&gt; </span><span class="nc">Region</span><span class="err">{</span><span class="nc">String</span><span class="err">} {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> reg = </span><span class="nc">Region</span><span class="err">(</span><span class="nc">String</span><span class="err">)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> first_name = reg.add!(</span><span class="s">&quot;Neil&quot;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> middle_name = reg.add!(</span><span class="s">&quot;Patrick&quot;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> last_name = reg.add!(</span><span class="s">&quot;Harris&quot;</span><span class="err">)</span>
 
 <span class="err">    </span><span class="k">return</span><span class="err"> reg</span>
 <span class="err">}</span>

@@ -406,19 +406,20 @@
                 <h1 id="1-functions">1. Functions</h1>
 <p>Every program in Serene is required to have a <code>main</code> function. Here is a basic example of a <code>main</code> function that prints "Hello world!" on a new line.</p>
 <div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">main</span><span class="err">() {</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(</span><span class="s">&quot;Hello world!&quot;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> </span><span class="s">&quot;Hello world!&quot;</span>
 <span class="err">}</span>
 </code></pre></div>
-<p>Here, "Hello world!" is being passed as a parameter to the <code>printLine</code> function. In Serene, the body of a function is a sequence of statements, each beginning with a keyword. <code>printLine</code> on its own isn't a statement, but we use the <code>run</code> keyword to execute it. Let's define another function that takes a parameter and also returns a value. Note that the types of both the parameters and return values must be specified.</p>
-<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">invert</span><span class="err">(b:</span><span class="nc"> Bool</span><span class="err">) -&gt; </span><span class="nc">Bool</span><span class="err"> {</span>
-<span class="err">    </span><span class="k">return</span><span class="err"> (not b)</span>
+<p>In Serene, the body of a function is a sequence of statements, each beginning with a keyword.  Let's define another function that takes a parameter and also returns a value. Note that the types of both the parameters and return values must be specified.</p>
+<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">invert</span><span class="err">(b: </span><span class="nc">Bool</span><span class="err">) -&gt; </span><span class="nc">Bool</span><span class="err"> {</span>
+<span class="err">    </span><span class="k">return</span><span class="err"> (</span><span class="k">not</span><span class="err"> b)</span>
 <span class="err">}</span>
 
 <span class="k">function</span><span class="err"> </span><span class="nf">main</span><span class="err">() {</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> invert(True)            </span><span class="c1">//return value is discarded</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(invert(True)) </span><span class="c1">//return value is passed to printLine</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> invert(</span><span class="no">True</span><span class="err">)            </span><span class="c1">//return value is discarded</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> invert(</span><span class="no">True</span><span class="err">)          </span><span class="c1">//return value is printed</span>
 <span class="err">}</span>
 </code></pre></div>
+<p>Remember that the body of a function is a sequence of statements: <code>invert(True)</code> on its own isn't a statement, so we use the <code>run</code> keyword to execute it.</p>
                 
               
               

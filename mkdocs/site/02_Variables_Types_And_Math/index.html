@@ -406,33 +406,33 @@
                 <h1 id="2-variables-types-and-math">2. Variables, Types, and Math</h1>
 <p>You can store a value with either the keyword <code>const</code> (short for "constant") or the keyword <code>var</code> (short for "variable"). The value of a variable can be modified after it is created with the keyword <code>set</code>, but the value of a constant can never change. Note that variables and constants must be defined inside of functions, and they are locally scoped: that is, they are only valid in the scope in which they are declared. When that scope ends, all of its local values will be deleted and the associated memory will be freed.</p>
 <div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">test1</span><span class="err">() {</span>
-<span class="err">    </span><span class="k">const</span><span class="err"> age:</span><span class="nc"> Int</span><span class="err"> = 20</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(age)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> age: </span><span class="nc">Int</span><span class="err"> = 20</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> age</span>
 <span class="err">    </span><span class="c1">//age can&#39;t be changed here!</span>
 <span class="err">}</span>
 
 <span class="k">function</span><span class="err"> </span><span class="nf">test2</span><span class="err">() {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> age:</span><span class="nc"> Int</span><span class="err"> = 20</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(age)</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> age: </span><span class="nc">Int</span><span class="err"> = 20</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> age</span>
 <span class="err">    </span><span class="k">set</span><span class="err"> age = 21</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(age)</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> age</span>
 <span class="err">    </span><span class="k">set</span><span class="err"> age = age + 1</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(age)</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> age</span>
 <span class="err">    </span><span class="k">set</span><span class="err"> age += 1    </span><span class="c1">//same as: set age = age + 1</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(age)</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> age</span>
 <span class="err">}</span>
 
 <span class="k">function</span><span class="err"> </span><span class="nf">test3</span><span class="err">() {</span>
 <span class="err">    </span><span class="k">const</span><span class="err"> base = 5 </span><span class="c1">//the type Int is implied here</span>
 <span class="err">    </span><span class="k">const</span><span class="err"> height = 8</span>
-<span class="err">    </span><span class="k">const</span><span class="err"> area:</span><span class="nc"> Float</span><span class="err"> = (1/2) * base * height</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(area, </span><span class="s">&quot; inches&quot;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> area: </span><span class="nc">Float</span><span class="err"> = (1/2) * base * height</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> area, </span><span class="s">&quot; inches&quot;</span>
 <span class="err">}</span>
 
 <span class="k">function</span><span class="err"> </span><span class="nf">test4</span><span class="err">() {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> name:</span><span class="nc"> String</span><span class="err"> = </span><span class="s">&quot;Rick Astley&quot;</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> name: </span><span class="nc">String</span><span class="err"> = </span><span class="s">&quot;Rick Astley&quot;</span>
 <span class="err">    </span><span class="k">set</span><span class="err"> name = </span><span class="s">&quot;Rickroll&quot;</span><span class="err">   </span><span class="c1">//strings are mutable</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> printLine(name)</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> name</span>
 <span class="err">}</span>
 </code></pre></div>
                 

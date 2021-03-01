@@ -460,14 +460,14 @@
 <p><code>mutate</code>: Mutate effectively "borrows" the value from its original scope, allowing it to be mutated within the function as if it is a local variable. Once the function returns, ownership of the (now modified) value will return to the original scope. <code>mutate</code> is really the only place that aliasing behavior (where mutating one variable also mutates another) exists in Serene. This behavior can be confusing in other languages (which is part of why Serene doesn't have pointers), but Serene makes the behavior explicit to the reader by requiring the keyword <code>mutate</code> both where the function is defined <em>and</em> where it is called. Note that you can't past a constant (<code>const</code>) as a <code>mutate</code> parameter, as once a constant is created, it can never be mutated. Also if function <code>a()</code> takes a value by <code>mutate</code>, function <code>a()</code> still can't pass that value to a function <code>b()</code> that takes it by <code>move</code>, as the value must still exist when the function returns.</p>
 <p><code>move</code>: If you've used Rust or modern C++, you've probably heard of Move semantics. <code>move</code> transfers ownership of an object from one scope to another. If you pass a variable to a function by <code>move</code>, that variable won't exist anymore when the function returns. You can move both variables and constants. If you move a variable into a function, that function will be able to mutate the variable with <code>set</code>, just as if it was declared locally.</p>
 <p><code>copy</code>: Copy does exactly what it sounds like: it copies the original value and passes the copied value to the function. The original value will be unaffected and it will still be owned by the original scope, while the new value will be owned by the new scope. It's worth mentioning at this point that all four of these accessors describe the user-level semantic behavior, but not necessarily the way that the program will execute at the hardware level. The Serene compiler will optimize the program, and part of that process is removing unnecessary copies. So if you pass a large object by copy but then you never mutate it, the compiler will be smart enough to not waste memory by copying the object and to just use a pointer to the original object.</p>
-<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">middleChar</span><span class="err">(s:</span><span class="nc"> String</span><span class="err">, </span><span class="kt">mutate</span><span class="err"> c:</span><span class="nc"> Char</span><span class="err">) {</span>
+<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">middleChar</span><span class="err">(s: </span><span class="nc">String</span><span class="err">, </span><span class="no">mutate</span><span class="err"> c: </span><span class="nc">Char</span><span class="err">) {</span>
 <span class="err">    </span><span class="c1">// Find the character at the middle index of a string</span>
 <span class="err">    </span><span class="k">const</span><span class="err"> length = s.length</span>
-<span class="err">    </span><span class="k">const</span><span class="err"> middle = Int(length / 2)</span>
+<span class="err">    </span><span class="k">const</span><span class="err"> middle = </span><span class="nc">Int</span><span class="err">(length / 2)</span>
 <span class="err">    </span><span class="k">set</span><span class="err"> c = s[middle]</span>
 <span class="err">}</span>
 
-<span class="k">function</span><span class="err"> </span><span class="nf">removeChar</span><span class="err">(</span><span class="kt">mutate</span><span class="err"> s:</span><span class="nc"> String</span><span class="err">, c:</span><span class="nc"> Char</span><span class="err">) {</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">removeChar</span><span class="err">(</span><span class="no">mutate</span><span class="err"> s: </span><span class="nc">String</span><span class="err">, c: </span><span class="nc">Char</span><span class="err">) {</span>
 <span class="err">    </span><span class="c1">// Remove all instances of a character in a string</span>
 <span class="err">    </span><span class="k">var</span><span class="err"> i = 0</span>
 <span class="err">    </span><span class="k">while</span><span class="err"> (i &lt; s.length) {</span>
@@ -483,11 +483,11 @@
 
 <span class="k">function</span><span class="err"> </span><span class="nf">main</span><span class="err">() {</span>
 <span class="err">    </span><span class="k">const</span><span class="err"> name = </span><span class="s">&quot;Matthew&quot;</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> letter = Char(</span><span class="s">&#39; &#39;</span><span class="err">)</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> middleChar(name, </span><span class="kt">mutate</span><span class="err"> letter)</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> letter = </span><span class="nc">Char</span><span class="err">(</span><span class="s">&#39; &#39;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> middleChar(name, </span><span class="no">mutate</span><span class="err"> letter)</span>
 
-<span class="err">    </span><span class="k">var</span><span class="err"> newname = name      </span><span class="c1">// copies name</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> removeChar(</span><span class="kt">mutate</span><span class="err"> newname, c)</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> new_name = name     </span><span class="c1">// copies name</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> removeChar(</span><span class="no">mutate</span><span class="err"> new_name, c)</span>
 <span class="err">}</span>
 </code></pre></div>
                 

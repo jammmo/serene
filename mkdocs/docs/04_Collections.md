@@ -29,7 +29,7 @@ function binarySearch(u: Array{Int}, x: Int) -> Int {
 function main() {
 	var u = Array(5, 1, 4, -3, 9, 0)
 	run u.sort!()
-	run printLine(binarySearch(u, 4))
+	print binarySearch(u, 4)
 }
 ```
 
@@ -58,14 +58,14 @@ function binarySearchAndDelete(mutate u: Vector{Int}, x: Int) {
 }
 
 function main() {
-	var u = Vector(Int)		// creates an empty vector of integers
-	run printline("Length of u: %", u.length)	// Length of u: 0
+	var u = Vector(Int)					// creates an empty vector of integers
+	print "Length of u: ", u.length		// Length of u: 0
 	for(i = 0, 5) {
 		u.append!(i * 2)
 	}
-	run printline("Length of u: %", u.length)	// Length of u: 5
-	run printLine(u)							// [0, 2, 4, 6, 8]
-	run printLine(binarySearch(u, 6))			// 3
+	print "Length of u: ", u.length		// Length of u: 5
+	print u								// [0, 2, 4, 6, 8]
+	print binarySearch(u, 6)			// 3
 }
 ```
 
@@ -77,13 +77,14 @@ Regions and Handles may sound a bit odd right now, but you'll see why they are n
 
 ```serene
 function makeNames() {
-	var reg = Region{String}
-	const firstName = reg.add!("Neil")
-	const middleName = reg.add!("Patrick")
-	const lastName = reg.add!("Harris")
+	var reg = Region(String)
+	const first_name = reg.add!("Neil")
+	const middle_name = reg.add!("Patrick")
+	const last_name = reg.add!("Harris")
 	
-	// You can run multiple functions on the same line
-	run printLine(reg[firstName]), printLine(reg[middleName]), printLine(reg[lastName])
+	print reg[first_name]
+	print reg[middle_name]
+	print reg[last_name]
 }
 
 
@@ -91,10 +92,10 @@ function makeNames() {
 // but will still occupy memory within the Region. However, it's not a memory leak, because
 // reg as a whole is still accessible and can be deallocated later.
 function makeNames2() -> Region{String} {
-	var reg = Region{String}
-	const firstName = reg.add!("Neil")
-	const middleName = reg.add!("Patrick")
-	const lastName = reg.add!("Harris")
+	var reg = Region(String)
+	const first_name = reg.add!("Neil")
+	const middle_name = reg.add!("Patrick")
+	const last_name = reg.add!("Harris")
 	
 	return reg
 }

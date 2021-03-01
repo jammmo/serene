@@ -29,8 +29,8 @@ function elementInArray2{A: type, B type} (move elem: A, arr: B) -> maybe A wher
 
 function main() {
 	var u = Array(1, 3, 5, 7)
-	either (run printLine(elementInArray(5, u)) or run printLine("Could not be found")
-	either (run printLine(elementInArray2(7, u)) or run printLine("Could not be found")
+	either (print elementInArray(5, u)) or print "Could not be found"
+	either (print elementInArray2(7, u)) or print "Could not be found"
 }
 ```
 

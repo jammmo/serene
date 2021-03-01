@@ -26,24 +26,24 @@ The `either` statement is used to handle values that may be undefined. Here is a
 // Assume that the LinkedList struct redirects its subscripting to LinkedList.objects
 
 function findTail(u: LinkedList) -> maybe Handle {
-    either (var currentObject = u[u.head]) or return undefined
+    either (var current_object = u[u.head]) or return undefined
     while (True) {
-        var currentIndex = currentObject.next
-        either (set currentObject = L[currentIndex]) or return currentIndex
+        var current_index = current_object.next
+        either (set current_object = u[current_index]) or return current_index
     }
 }
 
 
 function removeTail(mutate u: LinkedList) {
-    either (var currentObject = u[u.head]) or return	//This copies u[u.head] so it might not be efficient
+    either (var current_object = u[u.head]) or return	//This copies u[u.head] so it might not be efficient
     while (True) {
-        var currentIndex = currentObject.next
-        either (set currentObject = u[currentIndex]) or break
+        var current_index = current_object.next
+        either (set current_object = u[current_index]) or break
     }
-    run u.delete!(currentIndex)
+    run u.delete!(current_index)
 }
 ```
 
 ## Cell
 
-While it isn't present for `maybe` types, the "unwrapping" behavior of something like `Option` in Rust is still useful in certain situations. For that, Serene provides the `Cell` type, which can be unwrapped into either `Some(x)` or `Empty`.
+While it isn't present for `maybe` types, the "unwrapping" behavior of something like `Option` in Rust is still useful in certain situations. For that, Serene provides the Cell type, which can be unwrapped into either `Some(x)` or `None`. Cell can also be used with the `either` construct, just like `maybe`.

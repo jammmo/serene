@@ -480,11 +480,11 @@
 <h2 id="maybe-defined-and-undefined">Maybe (Defined and Undefined)</h2>
 <p>The keywords <code>defined</code> and <code>undefined</code> are used primarily for checking whether an index into some collection (like a vector or a region) is valid. While the language Python, for example, throws an <code>IndexError</code> at runtime when an invalid index is accessed, Serene returns <code>undefined</code>. The compiler requires you to check for these undefined values, which allows common errors to be caught at compile time (using "type refinement") instead of  at runtime. Checking whether a value is defined is often done with <code>either</code> statement, which will be introduced below.</p>
 <p>An important note is that <code>defined</code> and <code>undefined</code> technically aren't values. This makes them different from null pointers in C or <code>Option</code> in Rust. You can have a function return a value that might be undefined by prefixing the return type with <code>maybe</code>, but function parameters cannot be undefined. Also, once you have checked that a value is defined, you can continue to use it like any other value: there is no "unwrapping" necessary. </p>
-<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">getFirst</span><span class="err">(u:</span><span class="nc"> String</span><span class="err">) -&gt; </span><span class="nc">maybe</span><span class="err"> Char {</span>
+<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">getFirst</span><span class="err">(u: </span><span class="nc">String</span><span class="err">) -&gt; </span><span class="no">maybe</span><span class="err"> </span><span class="nc">Char</span><span class="err"> {</span>
 <span class="err">    </span><span class="k">if</span><span class="err"> (u.length &gt; 0) {</span>
 <span class="err">        </span><span class="k">return</span><span class="err"> u[0]</span>
 <span class="err">    } </span><span class="k">else</span><span class="err"> {</span>
-<span class="err">        </span><span class="k">return</span><span class="err"> undefined</span>
+<span class="err">        </span><span class="k">return</span><span class="err"> </span><span class="no">undefined</span>
 <span class="err">    }</span>
 <span class="err">}</span>
 </code></pre></div>
@@ -492,26 +492,26 @@
 <p>The <code>either</code> statement is used to handle values that may be undefined. Here is an example of using the indexing operator with a <code>Handle</code>. <code>either</code> will try to execute the statement in parentheses, and if any part of it returns <code>undefined</code>, then it will stop executing that statement (in this case, it would stop without mutating <code>currentObject</code>) and it would instead execute the second statement, after the keyword <code>or</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Assume that the LinkedList struct redirects its subscripting to LinkedList.objects</span>
 
-<span class="k">function</span><span class="err"> </span><span class="nf">findTail</span><span class="err">(u:</span><span class="nc"> LinkedList</span><span class="err">) -&gt; </span><span class="nc">maybe</span><span class="err"> Handle {</span>
-<span class="err">    </span><span class="k">either</span><span class="err"> (</span><span class="k">var</span><span class="err"> currentObject = u[u.head]) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span><span class="err"> undefined</span>
-<span class="err">    </span><span class="k">while</span><span class="err"> (True) {</span>
-<span class="err">        </span><span class="k">var</span><span class="err"> currentIndex = currentObject.next</span>
-<span class="err">        </span><span class="k">either</span><span class="err"> (</span><span class="k">set</span><span class="err"> currentObject = L[currentIndex]) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span><span class="err"> currentIndex</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">findTail</span><span class="err">(u: </span><span class="nc">LinkedList</span><span class="err">) -&gt; </span><span class="no">maybe</span><span class="err"> </span><span class="nc">Handle</span><span class="err"> {</span>
+<span class="err">    </span><span class="k">either</span><span class="err"> (</span><span class="k">var</span><span class="err"> current_object = u[u.head]) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span><span class="err"> </span><span class="no">undefined</span>
+<span class="err">    </span><span class="k">while</span><span class="err"> (</span><span class="no">True</span><span class="err">) {</span>
+<span class="err">        </span><span class="k">var</span><span class="err"> current_index = current_object.next</span>
+<span class="err">        </span><span class="k">either</span><span class="err"> (</span><span class="k">set</span><span class="err"> current_object = u[current_index]) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span><span class="err"> current_index</span>
 <span class="err">    }</span>
 <span class="err">}</span>
 
 
-<span class="k">function</span><span class="err"> </span><span class="nf">removeTail</span><span class="err">(</span><span class="kt">mutate</span><span class="err"> u:</span><span class="nc"> LinkedList</span><span class="err">) {</span>
-<span class="err">    </span><span class="k">either</span><span class="err"> (</span><span class="k">var</span><span class="err"> currentObject = u[u.head]) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span><span class="err">    </span><span class="c1">//This copies u[u.head] so it might not be efficient</span>
-<span class="err">    </span><span class="k">while</span><span class="err"> (True) {</span>
-<span class="err">        </span><span class="k">var</span><span class="err"> currentIndex = currentObject.next</span>
-<span class="err">        </span><span class="k">either</span><span class="err"> (</span><span class="k">set</span><span class="err"> currentObject = u[currentIndex]) </span><span class="k">or</span><span class="err"> </span><span class="k">break</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">removeTail</span><span class="err">(</span><span class="no">mutate</span><span class="err"> u: </span><span class="nc">LinkedList</span><span class="err">) {</span>
+<span class="err">    </span><span class="k">either</span><span class="err"> (</span><span class="k">var</span><span class="err"> current_object = u[u.head]) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span><span class="err">   </span><span class="c1">//This copies u[u.head] so it might not be efficient</span>
+<span class="err">    </span><span class="k">while</span><span class="err"> (</span><span class="no">True</span><span class="err">) {</span>
+<span class="err">        </span><span class="k">var</span><span class="err"> current_index = current_object.next</span>
+<span class="err">        </span><span class="k">either</span><span class="err"> (</span><span class="k">set</span><span class="err"> current_object = u[current_index]) </span><span class="k">or</span><span class="err"> </span><span class="k">break</span>
 <span class="err">    }</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> u.delete!(currentIndex)</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> u.delete!(current_index)</span>
 <span class="err">}</span>
 </code></pre></div>
 <h2 id="cell">Cell</h2>
-<p>While it isn't present for <code>maybe</code> types, the "unwrapping" behavior of something like <code>Option</code> in Rust is still useful in certain situations. For that, Serene provides the <code>Cell</code> type, which can be unwrapped into either <code>Some(x)</code> or <code>Empty</code>.</p>
+<p>While it isn't present for <code>maybe</code> types, the "unwrapping" behavior of something like <code>Option</code> in Rust is still useful in certain situations. For that, Serene provides the Cell type, which can be unwrapped into either <code>Some(x)</code> or <code>None</code>. Cell can also be used with the <code>either</code> construct, just like <code>maybe</code>.</p>
                 
               
               

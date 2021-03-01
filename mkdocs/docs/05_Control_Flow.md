@@ -58,13 +58,13 @@ A Match statement takes a single object as its parameter and it allows you to wr
 ```serene
 function makeChoice() -> Bool {
 	while (True) {
-        var input = ReadLine()
+        var input = readLine()
         match (input) {
             "" -> continue
             "y", "Y" -> return True
             "n", "N" -> return False
             else -> {
-            	run printLine("Input is invalid, try again")
+            	print "Input is invalid, try again"
             	continue
             }
         }

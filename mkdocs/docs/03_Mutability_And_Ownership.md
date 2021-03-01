@@ -51,8 +51,8 @@ function main() {
     var letter = Char(' ')
     run middleChar(name, mutate letter)
 
-    var newname = name		// copies name
-    run removeChar(mutate newname, c)
+    var new_name = name		// copies name
+    run removeChar(mutate new_name, c)
 }
 ```
 
