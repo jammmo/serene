@@ -404,7 +404,9 @@
                 
                 
                 <h1 id="9-generic-functions">9. Generic Functions</h1>
-<p>Serene supports both generic functions and generic types. A generic parameter is specified using the <code>type</code> keyword, like in the example below.</p>
+<p>Serene supports both generic functions and generic types. What does that mean? Well, let's start with generic functions, which allow you to write a function without knowing the types of its parameters and return values in advance. You can later specify them when the function is called.</p>
+<p>In C++, you might see generics that look something like <code>std::make_unique&lt;Node&gt;(data)</code>, where you pass two sets of parameters: the type information in angle brackets, and the initialization data for the constructor in parenthesis. In Serene, you use curly braces instead of angle brackets for the type parameters in the function definition, but you should never actually see both sets of parameters written together when the function is called, as the type parameters are always either inferred or passed explicitly as regular arguments. As we'll see in the next section, the same is true for generic types: you might want to create an array whose type is <code>Array{Int}</code>, but you would initialize it using its constructor (eg. <code>Array(1, 2, 3)</code>) and the type parameters would be inferred. (<code>Array{Int}(1, 2, 3)</code> is invalid syntax.)</p>
+<p>Generic parameters are types, so they must be start with capital letters like any other type in Serene, and they are specified using the <code>type</code> keyword, like in the example below.</p>
 <div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">elementInArray</span><span class="err">{</span><span class="nc">T</span><span class="err">:</span><span class="nc"> type</span><span class="err">} (</span><span class="no">move</span><span class="err"> elem: </span><span class="nc">T</span><span class="err">, arr: </span><span class="nc">Array</span><span class="err">{</span><span class="nc">T</span><span class="err">}) -&gt; </span><span class="no">maybe</span><span class="err"> </span><span class="nc">T</span><span class="err"> {</span>
 <span class="err">    </span><span class="k">for</span><span class="err"> (i = 0, arr.length) {</span>
 <span class="err">        </span><span class="k">if</span><span class="err"> (arr[i] == elem) {</span>
@@ -429,7 +431,18 @@
 <span class="err">    </span><span class="k">return</span><span class="err"> </span><span class="no">undefined</span>
 <span class="err">}</span>
 
+<span class="k">function</span><span class="err"> </span><span class="nf">makeEmptyCellVector</span><span class="err">{</span><span class="nc">T</span><span class="err">:</span><span class="nc"> type</span><span class="err">} (</span><span class="nc">T</span><span class="err">:</span><span class="nc"> type</span><span class="err">) -&gt; </span><span class="nc">Vector</span><span class="err">{</span><span class="nc">Cell</span><span class="err">{</span><span class="nc">T</span><span class="err">}} {</span>
+<span class="err">    </span><span class="k">return</span><span class="err"> </span><span class="nc">Vector</span><span class="err">(</span><span class="nc">Cell</span><span class="err">{</span><span class="nc">T</span><span class="err">})  </span><span class="c1">// The constructor for vectors allows you to pass a type explicitly</span>
+<span class="err">}</span>
+
 <span class="k">function</span><span class="err"> </span><span class="nf">main</span><span class="err">() {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> a = makeEmptyCellVector(</span><span class="nc">Int</span><span class="err">)</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> a                 </span><span class="c1">// Prints []</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> a.append!(</span><span class="nc">None</span><span class="err">)</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> a                 </span><span class="c1">// Prints [None]</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> a.append!(18)</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> a                 </span><span class="c1">// Prints [None, 18]</span>
+
 <span class="err">    </span><span class="k">var</span><span class="err"> u = </span><span class="nc">Array</span><span class="err">(1, 3, 5, 7)</span>
 <span class="err">    </span><span class="k">either</span><span class="err"> (</span><span class="k">print</span><span class="err"> elementInArray(5, u)) </span><span class="k">or</span><span class="err"> </span><span class="k">print</span><span class="err"> </span><span class="s">&quot;Could not be found&quot;</span>
 <span class="err">    </span><span class="k">either</span><span class="err"> (</span><span class="k">print</span><span class="err"> elementInArray2(7, u)) </span><span class="k">or</span><span class="err"> </span><span class="k">print</span><span class="err"> </span><span class="s">&quot;Could not be found&quot;</span>

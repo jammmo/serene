@@ -374,8 +374,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#regions-and-handles" class="md-nav__link">
-    Regions and Handles
+  <a href="#implementing-regions-and-handles" class="md-nav__link">
+    Implementing Regions and Handles
   </a>
   
 </li>
@@ -435,8 +435,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#regions-and-handles" class="md-nav__link">
-    Regions and Handles
+  <a href="#implementing-regions-and-handles" class="md-nav__link">
+    Implementing Regions and Handles
   </a>
   
 </li>
@@ -462,11 +462,12 @@
                 
                 
                 <h1 id="10-generic-types">10. Generic Types</h1>
-<p>We will introduce generic types through a new implementation of linked lists, followed by an example using Regions and Handles, two commonly used standard library types.</p>
-<h2 id="regions-and-handles">Regions and Handles</h2>
+<p>We've already seen generic types when working with arrays and vectors, but here we'll learn how they work and how to define new ones.</p>
+<p>As we saw with generic functions, the idea behind generics is that you can define a broad template for how something works without specifying exact types, and then you can provide the type information later. We will introduce generic types through two examples using Regions and Handles.</p>
+<h2 id="implementing-regions-and-handles">Implementing Regions and Handles</h2>
 <p>Serene does not have references or pointers. So how does one object refer to another object? The idiom that is most commonly used in Serene is region-based memory management, with the types <code>Region</code> and <code>Handle</code>.</p>
 <p>If you have a bunch of objects of the same type that all refer to each other (say, in a data structure like a linked list), then the typical way to handle it is to store all of the objects inside one <code>Region</code>.  Then an object can access another object by storing its <code>Handle</code> in one of its fields. The other object would be accessed with an indexing operator, like <code>my_region[my_handle]</code>. Note that the indexing operator returns a <code>maybe</code> type here because it is possible that there is no valid object for that handle.</p>
-<p>Below is a reference implementation of the <code>Region</code> and <code>Handle</code> types.</p>
+<p><code>Region</code> and <code>Handle</code> are part of the standard library, but here's a sample of how they could be implemented.</p>
 <div class="highlight"><pre><span></span><code><span class="k">type</span><span class="err"> </span><span class="nc">Handle</span><span class="err">{</span><span class="nc">MyRegion</span><span class="err">:</span><span class="nc"> type</span><span class="err">} </span><span class="k">with</span>
 <span class="err">~ </span><span class="k">constructor</span><span class="err">(</span><span class="nc">MyRegion</span><span class="err">:</span><span class="nc"> type</span><span class="err">, index: </span><span class="nc">Int</span><span class="err">) {</span>
 <span class="err">    </span><span class="k">var</span><span class="err"> self.index private = index</span>
@@ -476,7 +477,7 @@
 
 <span class="k">type</span><span class="err"> </span><span class="nc">Region</span><span class="err">{</span><span class="nc">T</span><span class="err">:</span><span class="nc"> type</span><span class="err">} </span><span class="k">with</span>
 <span class="err">~ </span><span class="k">constructor</span><span class="err">(</span><span class="nc">T</span><span class="err">:</span><span class="nc"> type</span><span class="err">) {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> self.vector private: </span><span class="nc">Vector</span><span class="err">{</span><span class="nc">T</span><span class="err">} = </span><span class="nc">Vector</span><span class="err">()</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> self.vector private = </span><span class="nc">Vector</span><span class="err">(</span><span class="nc">T</span><span class="err">)</span>
 <span class="err">}</span>
 <span class="err">~ </span><span class="k">specifics</span><span class="err"> {</span>
 <span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">add</span><span class="err">(new_value: </span><span class="nc">T</span><span class="err">) -&gt; </span><span class="nc">Handle</span><span class="err">{</span><span class="nc">Region</span><span class="err">{</span><span class="nc">T</span><span class="err">}} {</span>
@@ -496,7 +497,10 @@
 </code></pre></div>
 <h2 id="doubly-linked-lists">Doubly Linked Lists</h2>
 <p>We've seen a singly linked list implementation, but doubly linked lists can be a bit more difficult in a language with single ownership of objects. However, Regions and Handles make this task manageable, as we can store all of the elements in a Region, and we can use Handles as indexes into that Region, so there is no need for pointers or shared mutability. We also use generics to allow you to specify the type of the data.</p>
-<div class="highlight"><pre><span></span><code><span class="k">type</span><span class="err"> </span><span class="nc">Node</span><span class="err">{</span><span class="nc">MyHandle</span><span class="err">:</span><span class="nc"> type</span><span class="err">, </span><span class="nc">Data</span><span class="err">:</span><span class="nc"> type</span><span class="err">} </span><span class="k">with</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// Implementation of a doubly linked list</span>
+<span class="c1">// Some issues with &quot;maybe&quot; vs. Cell should be fixed</span>
+
+<span class="k">type</span><span class="err"> </span><span class="nc">Node</span><span class="err">{</span><span class="nc">MyHandle</span><span class="err">:</span><span class="nc"> type</span><span class="err">, </span><span class="nc">Data</span><span class="err">:</span><span class="nc"> type</span><span class="err">} </span><span class="k">with</span>
 <span class="err">~ </span><span class="k">constructor</span><span class="err">(prev: </span><span class="nc">MyHandle</span><span class="err">, data: </span><span class="nc">Data</span><span class="err">, next: </span><span class="nc">MyHandle</span><span class="err">) {</span>
 <span class="err">    </span><span class="k">var</span><span class="err"> self.prev = prev</span>
 <span class="err">    </span><span class="k">var</span><span class="err"> self.data = data</span>
@@ -507,8 +511,8 @@
 <span class="err">~ </span><span class="k">constructor</span><span class="err">(</span><span class="nc">Data</span><span class="err">:</span><span class="nc"> type</span><span class="err">) {</span>
 <span class="err">    </span><span class="k">var</span><span class="err"> self.nodes private = </span><span class="nc">Region</span><span class="err">(</span><span class="nc">Data</span><span class="err">)</span>
 <span class="err">    </span><span class="k">type</span><span class="err"> self.Handle private = self.nodes.Handle</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> self.head_handle private = self.nodes.add!(</span><span class="nc">Node</span><span class="err">(</span><span class="nc">None</span><span class="err">, </span><span class="nc">None</span><span class="err">, </span><span class="nc">None</span><span class="err">))</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> self.tail_handle private = self.nodes.add!(</span><span class="nc">Node</span><span class="err">(</span><span class="nc">None</span><span class="err">, </span><span class="nc">None</span><span class="err">, </span><span class="nc">None</span><span class="err">))    </span>
+<span class="err">    </span><span class="k">var</span><span class="err"> self.head_handle private: </span><span class="nc">Cell</span><span class="err">{</span><span class="nc">Node</span><span class="err">} = </span><span class="nc">None</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> self.tail_handle private: </span><span class="nc">Cell</span><span class="err">{</span><span class="nc">Node</span><span class="err">} = </span><span class="nc">None</span><span class="err"> </span>
 <span class="err">}</span>
 
 <span class="err">~ </span><span class="k">specifics</span><span class="err"> {</span>

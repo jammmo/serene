@@ -1,6 +1,6 @@
 # 7. Custom Types
 
-Types in Serene can be defined using the `type` keyword, as shown below. Serene supports multiple forms of "compound types", including structs, enums, and tuples.
+Types in Serene can be defined using the `type` keyword, as shown below. You can use this format to define structs, enums, and tuples.
 
 ```serene
 type Person struct {
@@ -57,22 +57,23 @@ type Node struct {
 
 type LinkedList with
 ~ constructor(first: Int) {
-    var self.head private = Node(first, None)
+	// To be able to represent an empty list, the head must be in a Cell
+    var self.head private = Cell(Node(first, None))
 }
 
 ~ specifics {
-    method addFirst(a: Int) {
+    method addFirst!(a: Int) {	// This method mutates the object, so the exclamation point is required
         set self.head = Node(a, move self.head)
     }
 
-    method popFirst() -> maybe Int {
+    method popFirst!() -> maybe Int {
         if (self.head is None) return undefined
-        var x = self.head.next
+        var x = self.head.data	// note that this copies self.head.data
         set self.head = self.head.next
         return x
     }
     
-    method append(a: Int) {
+    method append!(a: Int) {
         if (self.head is None) {
             set self.head = Node(a, None)
         }
@@ -83,6 +84,10 @@ type LinkedList with
             }
             set x.next = Node(a, None)
         }
+    }
+    
+    method empty() -> Bool {
+    	return (self.head is None)
     }
 }
 ```

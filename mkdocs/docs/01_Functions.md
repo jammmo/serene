@@ -8,7 +8,7 @@ function main() {
 }
 ```
 
-In Serene, the body of a function is a sequence of statements, each beginning with a keyword.  Let's define another function that takes a parameter and also returns a value. Note that the types of both the parameters and return values must be specified.
+In Serene, the body of a function is a sequence of statements, each beginning with a keyword.  Let's define another function that takes a parameter and also returns a value. The `invert` function is pretty trivial, but it shows what a typical function signature looks like. Note that the types of both the parameters and return values must be specified.
 
 ```serene
 function invert(b: Bool) -> Bool {

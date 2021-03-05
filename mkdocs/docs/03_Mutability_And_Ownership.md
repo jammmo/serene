@@ -46,13 +46,35 @@ function removeChar(mutate s: String, c: Char) {
     }
 }
 
+function sortedCopy(copy s: String) -> String {
+	run s.sort!()	// s is a copy of the original input, so the original input is not modified
+	return s
+}
+
+// consumes a character array and returns it as a string
+function charArrayToString(move u: Array{Char}) -> String {
+	var s = ""
+	for (x in u) {
+		s.append!(x)
+	}
+	return s
+}
+
 function main() {
     const name = "Matthew"
-    var letter = Char(' ')
+    var letter = ' '
     run middleChar(name, mutate letter)
 
     var new_name = name		// copies name
     run removeChar(mutate new_name, c)
+    
+	const mixed_up = "edcabfg"
+	print sortedCopy(copy mixed_up)		// mixed_up is not modified
+	
+	var u_array = Array('h', 'e', 'l', 'l', 'o')
+	var u_string = charArrayToString(move u_array)
+	print typeof(u_string)	// prints String
+	// u_array no longer exists here
 }
 ```
 

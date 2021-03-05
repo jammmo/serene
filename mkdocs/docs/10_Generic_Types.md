@@ -1,13 +1,15 @@
 # 10. Generic Types
-We will introduce generic types through a new implementation of linked lists, followed by an example using Regions and Handles, two commonly used standard library types.
+We've already seen generic types when working with arrays and vectors, but here we'll learn how they work and how to define new ones.
 
-## Regions and Handles
+As we saw with generic functions, the idea behind generics is that you can define a broad template for how something works without specifying exact types, and then you can provide the type information later. We will introduce generic types through two examples using Regions and Handles.
+
+## Implementing Regions and Handles
 
 Serene does not have references or pointers. So how does one object refer to another object? The idiom that is most commonly used in Serene is region-based memory management, with the types `Region` and `Handle`.
 
 If you have a bunch of objects of the same type that all refer to each other (say, in a data structure like a linked list), then the typical way to handle it is to store all of the objects inside one `Region`.  Then an object can access another object by storing its `Handle` in one of its fields. The other object would be accessed with an indexing operator, like `my_region[my_handle]`. Note that the indexing operator returns a `maybe` type here because it is possible that there is no valid object for that handle.
 
-Below is a reference implementation of the `Region` and `Handle` types.
+`Region` and `Handle` are part of the standard library, but here's a sample of how they could be implemented.
 
 ```serene
 type Handle{MyRegion: type} with
@@ -19,7 +21,7 @@ type Handle{MyRegion: type} with
 
 type Region{T: type} with
 ~ constructor(T: type) {
-    var self.vector private: Vector{T} = Vector()
+    var self.vector private = Vector(T)
 }
 ~ specifics {
     method add(new_value: T) -> Handle{Region{T}} {
@@ -43,6 +45,9 @@ type Region{T: type} with
 We've seen a singly linked list implementation, but doubly linked lists can be a bit more difficult in a language with single ownership of objects. However, Regions and Handles make this task manageable, as we can store all of the elements in a Region, and we can use Handles as indexes into that Region, so there is no need for pointers or shared mutability. We also use generics to allow you to specify the type of the data.
 
 ```serene
+// Implementation of a doubly linked list
+// Some issues with "maybe" vs. Cell should be fixed
+
 type Node{MyHandle: type, Data: type} with
 ~ constructor(prev: MyHandle, data: Data, next: MyHandle) {
     var self.prev = prev
@@ -54,8 +59,8 @@ type DoublyLinkedList{Data: type} with
 ~ constructor(Data: type) {
 	var self.nodes private = Region(Data)
     type self.Handle private = self.nodes.Handle
-    var self.head_handle private = self.nodes.add!(Node(None, None, None))
-    var self.tail_handle private = self.nodes.add!(Node(None, None, None))    
+    var self.head_handle private: Cell{Node} = None
+    var self.tail_handle private: Cell{Node} = None 
 }
 
 ~ specifics {

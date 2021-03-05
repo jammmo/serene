@@ -321,15 +321,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#either" class="md-nav__link">
-    Either
+  <a href="#cell" class="md-nav__link">
+    Cell
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#cell" class="md-nav__link">
-    Cell
+  <a href="#either" class="md-nav__link">
+    Either
   </a>
   
 </li>
@@ -449,15 +449,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#either" class="md-nav__link">
-    Either
+  <a href="#cell" class="md-nav__link">
+    Cell
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#cell" class="md-nav__link">
-    Cell
+  <a href="#either" class="md-nav__link">
+    Either
   </a>
   
 </li>
@@ -476,10 +476,10 @@
                 
                 
                 <h1 id="6-expressing-nothing">6. Expressing Nothing</h1>
-<p>There are a couple ways of expressing that something does not exist in Serene. </p>
+<p>In Serene, there are a couple ways of expressing that something does not exist. </p>
 <h2 id="maybe-defined-and-undefined">Maybe (Defined and Undefined)</h2>
-<p>The keywords <code>defined</code> and <code>undefined</code> are used primarily for checking whether an index into some collection (like a vector or a region) is valid. While the language Python, for example, throws an <code>IndexError</code> at runtime when an invalid index is accessed, Serene returns <code>undefined</code>. The compiler requires you to check for these undefined values, which allows common errors to be caught at compile time (using "type refinement") instead of  at runtime. Checking whether a value is defined is often done with <code>either</code> statement, which will be introduced below.</p>
-<p>An important note is that <code>defined</code> and <code>undefined</code> technically aren't values. This makes them different from null pointers in C or <code>Option</code> in Rust. You can have a function return a value that might be undefined by prefixing the return type with <code>maybe</code>, but function parameters cannot be undefined. Also, once you have checked that a value is defined, you can continue to use it like any other value: there is no "unwrapping" necessary. </p>
+<p>The keywords <code>defined</code> and <code>undefined</code> are used primarily for checking whether an index into some collection (like a vector or a region) is valid. While the language Python, for example, throws an <code>IndexError</code> at runtime when an invalid index is accessed, Serene returns <code>undefined</code>. The compiler requires you to check for these undefined values, which allows common errors to be caught at compile time (using "type refinement") instead of at runtime. Checking whether a value is defined is often done with <code>either</code> statement, which will be introduced below.</p>
+<p>An important note is that <code>defined</code> and <code>undefined</code> technically aren't values (instead, one might describe them as "states" of a value). This makes them different from null pointers in C or <code>Option</code> in Rust. You can have a function return a value that might be undefined by prefixing the return type with <code>maybe</code>, but variables and function parameters cannot be undefined. So once you return a <code>maybe</code>, you are required to check whether it's defined before doing anything useful with it, but once you have checked it, you can continue to use it like any other value: there is no "unwrapping" necessary.</p>
 <div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">getFirst</span><span class="err">(u: </span><span class="nc">String</span><span class="err">) -&gt; </span><span class="no">maybe</span><span class="err"> </span><span class="nc">Char</span><span class="err"> {</span>
 <span class="err">    </span><span class="k">if</span><span class="err"> (u.length &gt; 0) {</span>
 <span class="err">        </span><span class="k">return</span><span class="err"> u[0]</span>
@@ -487,31 +487,30 @@
 <span class="err">        </span><span class="k">return</span><span class="err"> </span><span class="no">undefined</span>
 <span class="err">    }</span>
 <span class="err">}</span>
-</code></pre></div>
-<h2 id="either">Either</h2>
-<p>The <code>either</code> statement is used to handle values that may be undefined. Here is an example of using the indexing operator with a <code>Handle</code>. <code>either</code> will try to execute the statement in parentheses, and if any part of it returns <code>undefined</code>, then it will stop executing that statement (in this case, it would stop without mutating <code>currentObject</code>) and it would instead execute the second statement, after the keyword <code>or</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="c1">// Assume that the LinkedList struct redirects its subscripting to LinkedList.objects</span>
 
-<span class="k">function</span><span class="err"> </span><span class="nf">findTail</span><span class="err">(u: </span><span class="nc">LinkedList</span><span class="err">) -&gt; </span><span class="no">maybe</span><span class="err"> </span><span class="nc">Handle</span><span class="err"> {</span>
-<span class="err">    </span><span class="k">either</span><span class="err"> (</span><span class="k">var</span><span class="err"> current_object = u[u.head]) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span><span class="err"> </span><span class="no">undefined</span>
-<span class="err">    </span><span class="k">while</span><span class="err"> (</span><span class="no">True</span><span class="err">) {</span>
-<span class="err">        </span><span class="k">var</span><span class="err"> current_index = current_object.next</span>
-<span class="err">        </span><span class="k">either</span><span class="err"> (</span><span class="k">set</span><span class="err"> current_object = u[current_index]) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span><span class="err"> current_index</span>
-<span class="err">    }</span>
-<span class="err">}</span>
-
-
-<span class="k">function</span><span class="err"> </span><span class="nf">removeTail</span><span class="err">(</span><span class="no">mutate</span><span class="err"> u: </span><span class="nc">LinkedList</span><span class="err">) {</span>
-<span class="err">    </span><span class="k">either</span><span class="err"> (</span><span class="k">var</span><span class="err"> current_object = u[u.head]) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span><span class="err">   </span><span class="c1">//This copies u[u.head] so it might not be efficient</span>
-<span class="err">    </span><span class="k">while</span><span class="err"> (</span><span class="no">True</span><span class="err">) {</span>
-<span class="err">        </span><span class="k">var</span><span class="err"> current_index = current_object.next</span>
-<span class="err">        </span><span class="k">either</span><span class="err"> (</span><span class="k">set</span><span class="err"> current_object = u[current_index]) </span><span class="k">or</span><span class="err"> </span><span class="k">break</span>
-<span class="err">    }</span>
-<span class="err">    </span><span class="k">run</span><span class="err"> u.delete!(current_index)</span>
+<span class="c1">// This is equivalent to the first definition, as indexing a String (and most other collections)</span>
+<span class="c1">// returns a &quot;maybe&quot; type. Note that leaving out &quot;maybe&quot; would cause a compile-time error</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">getFirst2</span><span class="err">(u: </span><span class="nc">String</span><span class="err">) -&gt; </span><span class="no">maybe</span><span class="err"> </span><span class="nc">Char</span><span class="err"> {</span>
+<span class="err">    </span><span class="k">return</span><span class="err"> u[0]</span>
 <span class="err">}</span>
 </code></pre></div>
 <h2 id="cell">Cell</h2>
-<p>While it isn't present for <code>maybe</code> types, the "unwrapping" behavior of something like <code>Option</code> in Rust is still useful in certain situations. For that, Serene provides the Cell type, which can be unwrapped into either <code>Some(x)</code> or <code>None</code>. Cell can also be used with the <code>either</code> construct, just like <code>maybe</code>.</p>
+<p>While it isn't present for <code>maybe</code> types, the "unwrapping" behavior of an object that may or may not exist is still useful in certain situations, like when defining a recursive type such as the Node type we will see in the next section. Serene provides the Cell type, which can be unwrapped into either <code>Some(x)</code> or <code>None</code>. All the usual ownership rules still apply to Cells: a Cell owns whatever value it holds, so you can't have two Cells holding the same value.</p>
+<p>The main difference between a Cell and a <code>maybe</code> is that a Cell is an actual value, so it can be stored in a variable or passed to a function. <code>maybe</code> is mainly used by standard library types as a safety mechanism to detect indexing errors at compile time instead of runtime. But Cells can be used anywhere as an object that can hold (or not hold) another object.</p>
+<div class="highlight"><pre><span></span><code><span class="k">function</span><span class="err"> </span><span class="nf">printNickname</span><span class="err">(p: </span><span class="nc">Person</span><span class="err">) {</span>
+<span class="err">    </span><span class="k">match</span><span class="err"> (p.nickname) {</span>
+<span class="err">        </span><span class="nc">Some</span><span class="err">(name) -&gt; </span><span class="k">print</span><span class="err"> </span><span class="s">&quot;Your nickname is &quot;</span><span class="err">, name, </span><span class="s">&quot;.&quot;</span>
+<span class="err">        </span><span class="nc">None</span><span class="err"> -&gt; </span><span class="k">print</span><span class="err"> </span><span class="s">&quot;No nickname is set.&quot;</span>
+<span class="err">    }</span>
+<span class="err">}</span>
+</code></pre></div>
+<h2 id="either">Either</h2>
+<p>The <code>either</code> statement is a control flow construct that is used in conjunction with <code>maybe</code> types. It allows you to execute a statement conditionally based on whether the values needed are defined. Here is an example of using the indexing operator with a <code>HashMap</code>. <code>either</code> will try to execute the statement in parentheses, and if any part of it returns <code>undefined</code>, then it will stop executing that statement (in this case, it would stop without mutating <code>map</code>) and it would instead execute the second statement, after the keyword <code>or</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Update the value for a key in a HashMap, only if the key is present</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">updateValueAtKey</span><span class="err">(value: </span><span class="nc">Float</span><span class="err">, key: </span><span class="nc">String</span><span class="err">, </span><span class="no">mutate</span><span class="err"> map: </span><span class="nc">HashMap</span><span class="err">{</span><span class="nc">String</span><span class="err">, </span><span class="nc">Float</span><span class="err">}) {</span>
+<span class="err">    </span><span class="k">either</span><span class="err"> (</span><span class="k">set</span><span class="err"> map[key] = value) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span>
+<span class="err">}</span>
+</code></pre></div>
                 
               
               

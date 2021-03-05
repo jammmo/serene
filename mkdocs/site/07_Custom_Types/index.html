@@ -448,7 +448,7 @@
                 
                 
                 <h1 id="7-custom-types">7. Custom Types</h1>
-<p>Types in Serene can be defined using the <code>type</code> keyword, as shown below. Serene supports multiple forms of "compound types", including structs, enums, and tuples.</p>
+<p>Types in Serene can be defined using the <code>type</code> keyword, as shown below. You can use this format to define structs, enums, and tuples.</p>
 <div class="highlight"><pre><span></span><code><span class="k">type</span><span class="err"> </span><span class="nc">Person</span><span class="err"> </span><span class="k">struct</span><span class="err"> {</span>
 <span class="err">    age: </span><span class="nc">Int</span><span class="err">,</span>
 <span class="err">    name: </span><span class="nc">String</span><span class="err">,</span>
@@ -496,22 +496,23 @@
 
 <span class="k">type</span><span class="err"> </span><span class="nc">LinkedList</span><span class="err"> </span><span class="k">with</span>
 <span class="err">~ </span><span class="k">constructor</span><span class="err">(first: </span><span class="nc">Int</span><span class="err">) {</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> self.head private = </span><span class="nc">Node</span><span class="err">(first, </span><span class="nc">None</span><span class="err">)</span>
+<span class="err">    </span><span class="c1">// To be able to represent an empty list, the head must be in a Cell</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> self.head private = </span><span class="nc">Cell</span><span class="err">(</span><span class="nc">Node</span><span class="err">(first, </span><span class="nc">None</span><span class="err">))</span>
 <span class="err">}</span>
 
 <span class="err">~ </span><span class="k">specifics</span><span class="err"> {</span>
-<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">addFirst</span><span class="err">(a: </span><span class="nc">Int</span><span class="err">) {</span>
+<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">addFirst</span><span class="err">!(a: </span><span class="nc">Int</span><span class="err">) {  </span><span class="c1">// This method mutates the object, so the exclamation point is required</span>
 <span class="err">        </span><span class="k">set</span><span class="err"> self.head = </span><span class="nc">Node</span><span class="err">(a, </span><span class="no">move</span><span class="err"> self.head)</span>
 <span class="err">    }</span>
 
-<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">popFirst</span><span class="err">() -&gt; </span><span class="no">maybe</span><span class="err"> </span><span class="nc">Int</span><span class="err"> {</span>
+<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">popFirst</span><span class="err">!() -&gt; </span><span class="no">maybe</span><span class="err"> </span><span class="nc">Int</span><span class="err"> {</span>
 <span class="err">        </span><span class="k">if</span><span class="err"> (self.head </span><span class="k">is</span><span class="err"> </span><span class="nc">None</span><span class="err">) </span><span class="k">return</span><span class="err"> </span><span class="no">undefined</span>
-<span class="err">        </span><span class="k">var</span><span class="err"> x = self.head.next</span>
+<span class="err">        </span><span class="k">var</span><span class="err"> x = self.head.data  </span><span class="c1">// note that this copies self.head.data</span>
 <span class="err">        </span><span class="k">set</span><span class="err"> self.head = self.head.next</span>
 <span class="err">        </span><span class="k">return</span><span class="err"> x</span>
 <span class="err">    }</span>
 
-<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">append</span><span class="err">(a: </span><span class="nc">Int</span><span class="err">) {</span>
+<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">append</span><span class="err">!(a: </span><span class="nc">Int</span><span class="err">) {</span>
 <span class="err">        </span><span class="k">if</span><span class="err"> (self.head </span><span class="k">is</span><span class="err"> </span><span class="nc">None</span><span class="err">) {</span>
 <span class="err">            </span><span class="k">set</span><span class="err"> self.head = </span><span class="nc">Node</span><span class="err">(a, </span><span class="nc">None</span><span class="err">)</span>
 <span class="err">        }</span>
@@ -522,6 +523,10 @@
 <span class="err">            }</span>
 <span class="err">            </span><span class="k">set</span><span class="err"> x.next = </span><span class="nc">Node</span><span class="err">(a, </span><span class="nc">None</span><span class="err">)</span>
 <span class="err">        }</span>
+<span class="err">    }</span>
+
+<span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">empty</span><span class="err">() -&gt; </span><span class="nc">Bool</span><span class="err"> {</span>
+<span class="err">        </span><span class="k">return</span><span class="err"> (self.head </span><span class="k">is</span><span class="err"> </span><span class="nc">None</span><span class="err">)</span>
 <span class="err">    }</span>
 <span class="err">}</span>
 </code></pre></div>

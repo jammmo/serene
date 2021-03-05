@@ -481,13 +481,35 @@
 <span class="err">    }</span>
 <span class="err">}</span>
 
+<span class="k">function</span><span class="err"> </span><span class="nf">sortedCopy</span><span class="err">(</span><span class="no">copy</span><span class="err"> s: </span><span class="nc">String</span><span class="err">) -&gt; </span><span class="nc">String</span><span class="err"> {</span>
+<span class="err">    </span><span class="k">run</span><span class="err"> s.sort!()   </span><span class="c1">// s is a copy of the original input, so the original input is not modified</span>
+<span class="err">    </span><span class="k">return</span><span class="err"> s</span>
+<span class="err">}</span>
+
+<span class="c1">// consumes a character array and returns it as a string</span>
+<span class="k">function</span><span class="err"> </span><span class="nf">charArrayToString</span><span class="err">(</span><span class="no">move</span><span class="err"> u: </span><span class="nc">Array</span><span class="err">{</span><span class="nc">Char</span><span class="err">}) -&gt; </span><span class="nc">String</span><span class="err"> {</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> s = &quot;&quot;</span>
+<span class="err">    </span><span class="k">for</span><span class="err"> (x in u) {</span>
+<span class="err">        s.append!(x)</span>
+<span class="err">    }</span>
+<span class="err">    </span><span class="k">return</span><span class="err"> s</span>
+<span class="err">}</span>
+
 <span class="k">function</span><span class="err"> </span><span class="nf">main</span><span class="err">() {</span>
 <span class="err">    </span><span class="k">const</span><span class="err"> name = </span><span class="s">&quot;Matthew&quot;</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> letter = </span><span class="nc">Char</span><span class="err">(</span><span class="s">&#39; &#39;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> letter = </span><span class="s">&#39; &#39;</span>
 <span class="err">    </span><span class="k">run</span><span class="err"> middleChar(name, </span><span class="no">mutate</span><span class="err"> letter)</span>
 
 <span class="err">    </span><span class="k">var</span><span class="err"> new_name = name     </span><span class="c1">// copies name</span>
 <span class="err">    </span><span class="k">run</span><span class="err"> removeChar(</span><span class="no">mutate</span><span class="err"> new_name, c)</span>
+
+<span class="err">    </span><span class="k">const</span><span class="err"> mixed_up = </span><span class="s">&quot;edcabfg&quot;</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> sortedCopy(</span><span class="no">copy</span><span class="err"> mixed_up)     </span><span class="c1">// mixed_up is not modified</span>
+
+<span class="err">    </span><span class="k">var</span><span class="err"> u_array = </span><span class="nc">Array</span><span class="err">(</span><span class="s">&#39;h&#39;</span><span class="err">, </span><span class="s">&#39;e&#39;</span><span class="err">, </span><span class="s">&#39;l&#39;</span><span class="err">, </span><span class="s">&#39;l&#39;</span><span class="err">, </span><span class="s">&#39;o&#39;</span><span class="err">)</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> u_string = charArrayToString(</span><span class="no">move</span><span class="err"> u_array)</span>
+<span class="err">    </span><span class="k">print</span><span class="err"> typeof(u_string)  </span><span class="c1">// prints String</span>
+<span class="err">    </span><span class="c1">// u_array no longer exists here</span>
 <span class="err">}</span>
 </code></pre></div>
                 

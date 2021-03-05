@@ -6,7 +6,7 @@ In this section, we will learn about several more complex types that are built i
 
 An array is a fixed-length sequence elements, where all of the elements are the same type. If the index is invalid, the indexing operation will return `undefined`, which is a special value (actually, it's not a value) that will be introduced later, in the Expressing Nothing section.
 
-You specify what the types of elements are by using generics. We'll explain more about generics later, but for now it suffices to say that you put the type of the elements in curly braces. So `Array{Float}` would be an array of floating-point numbers.
+You specify what the types of elements are by using generics. We'll explain more about generics later, but for now it suffices to say that when describing a generic type like an array, you put the type of its elements in curly braces. So `Array{Float}` would be an array of floating-point numbers. However, generic types are still constructed like other objects, using the type's name followed by parameters in parenthesis (eg. `Array(0.1, 0.2, 0.3)`).
 
 ```serene
 // returns the index of the leftmost occurence of x, or the next lowest number if x is not found

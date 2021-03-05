@@ -23,7 +23,7 @@ Serene has two looping constructs: "for loops" and "while loops".
 ```serene
 function findMax(u: Vector{Int}) -> Int {
 	var max = Int.bottom	//lowest possible Int value
-	for (x in u) {
+	for (x in u) {	//iterates through the elements of u
 		if (x > max) {
 			set max = x
 		}
