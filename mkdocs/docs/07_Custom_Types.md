@@ -48,7 +48,6 @@ Another new thing here is `private` fields, which can't be accessed from outside
 
 ```serene
 // Linked list of integers
-// Possibly some ownership issues here
 
 type Node struct {
     data: Int,
@@ -78,9 +77,9 @@ type LinkedList with
             set self.head = Node(a, None)
         }
         else {
-            var x = self.head
+            bind x = self.head
             while (x.next is not None) {
-                set x = x.next
+                bind x = x.next
             }
             set x.next = Node(a, None)
         }

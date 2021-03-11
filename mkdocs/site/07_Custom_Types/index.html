@@ -487,7 +487,6 @@
 <p>Here is an example of a singly linked list implementation in Serene. Notice here that the definition of the <code>LinkedList</code> type has multiple parts to it. Internally, it stores data as a struct, but instead of passing the fields of the struct directly, the user will pass arguments to a <code>constructor</code> function which will create and initialize the struct to actual values. <code>specifics</code> is used to implement methods that can be called on this type. When a type definition has multiple parts like this, each part begins with a tilde (<code>~</code>), and they are meant to look like a bulleted list of details about the type. This format is called a "constructed type".</p>
 <p>Another new thing here is <code>private</code> fields, which can't be accessed from outside of the type's definition. However, a type can give special permission for another type to access its private fields by declaring it a <code>friend</code> type, as we will see later.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Linked list of integers</span>
-<span class="c1">// Possibly some ownership issues here</span>
 
 <span class="k">type</span><span class="err"> </span><span class="nc">Node</span><span class="err"> </span><span class="k">struct</span><span class="err"> {</span>
 <span class="err">    data: </span><span class="nc">Int</span><span class="err">,</span>
@@ -517,9 +516,9 @@
 <span class="err">            </span><span class="k">set</span><span class="err"> self.head = </span><span class="nc">Node</span><span class="err">(a, </span><span class="nc">None</span><span class="err">)</span>
 <span class="err">        }</span>
 <span class="err">        </span><span class="k">else</span><span class="err"> {</span>
-<span class="err">            </span><span class="k">var</span><span class="err"> x = self.head</span>
+<span class="err">            bind x = self.head</span>
 <span class="err">            </span><span class="k">while</span><span class="err"> (x.next </span><span class="k">is</span><span class="err"> </span><span class="k">not</span><span class="err"> </span><span class="nc">None</span><span class="err">) {</span>
-<span class="err">                </span><span class="k">set</span><span class="err"> x = x.next</span>
+<span class="err">                bind x = x.next</span>
 <span class="err">            }</span>
 <span class="err">            </span><span class="k">set</span><span class="err"> x.next = </span><span class="nc">Node</span><span class="err">(a, </span><span class="nc">None</span><span class="err">)</span>
 <span class="err">        }</span>

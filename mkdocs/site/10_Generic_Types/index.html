@@ -472,7 +472,9 @@
 <span class="err">~ </span><span class="k">constructor</span><span class="err">(</span><span class="nc">MyRegion</span><span class="err">:</span><span class="nc"> type</span><span class="err">, index: </span><span class="nc">Int</span><span class="err">) {</span>
 <span class="err">    </span><span class="k">var</span><span class="err"> self.index private = index</span>
 <span class="err">}</span>
-<span class="err">~ friend </span><span class="nc">Region</span>
+<span class="err">~ </span><span class="k">friend</span><span class="err"> </span><span class="nc">Region</span>
+
+<span class="c1">// Issue: should Handles be nullable?</span>
 
 
 <span class="k">type</span><span class="err"> </span><span class="nc">Region</span><span class="err">{</span><span class="nc">T</span><span class="err">:</span><span class="nc"> type</span><span class="err">} </span><span class="k">with</span>
@@ -490,6 +492,7 @@
 <span class="err">        </span><span class="k">run</span><span class="err"> self.vector.pop!(index_to_delete)</span>
 <span class="err">    }</span>
 
+<span class="err">    </span><span class="c1">// Implements the indexing operator on this type</span>
 <span class="err">    </span><span class="k">subscript</span><span class="err"> </span><span class="nf">get</span><span class="err">(my_handle: </span><span class="nc">Handle</span><span class="err">{</span><span class="nc">Region</span><span class="err">{</span><span class="nc">T</span><span class="err">}}) -&gt; </span><span class="no">maybe</span><span class="err"> </span><span class="nc">T</span><span class="err"> {</span>
 <span class="err">        </span><span class="k">return</span><span class="err"> self.vector[my_handle.index]</span>
 <span class="err">    }</span>
@@ -497,8 +500,7 @@
 </code></pre></div>
 <h2 id="doubly-linked-lists">Doubly Linked Lists</h2>
 <p>We've seen a singly linked list implementation, but doubly linked lists can be a bit more difficult in a language with single ownership of objects. However, Regions and Handles make this task manageable, as we can store all of the elements in a Region, and we can use Handles as indexes into that Region, so there is no need for pointers or shared mutability. We also use generics to allow you to specify the type of the data.</p>
-<div class="highlight"><pre><span></span><code><span class="c1">// Implementation of a doubly linked list</span>
-<span class="c1">// Some issues with &quot;maybe&quot; vs. Cell should be fixed</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// Some issues here, Handle::Null is inconsistent with previous example</span>
 
 <span class="k">type</span><span class="err"> </span><span class="nc">Node</span><span class="err">{</span><span class="nc">MyHandle</span><span class="err">:</span><span class="nc"> type</span><span class="err">, </span><span class="nc">Data</span><span class="err">:</span><span class="nc"> type</span><span class="err">} </span><span class="k">with</span>
 <span class="err">~ </span><span class="k">constructor</span><span class="err">(prev: </span><span class="nc">MyHandle</span><span class="err">, data: </span><span class="nc">Data</span><span class="err">, next: </span><span class="nc">MyHandle</span><span class="err">) {</span>
@@ -511,30 +513,30 @@
 <span class="err">~ </span><span class="k">constructor</span><span class="err">(</span><span class="nc">Data</span><span class="err">:</span><span class="nc"> type</span><span class="err">) {</span>
 <span class="err">    </span><span class="k">var</span><span class="err"> self.nodes private = </span><span class="nc">Region</span><span class="err">(</span><span class="nc">Data</span><span class="err">)</span>
 <span class="err">    </span><span class="k">type</span><span class="err"> self.Handle private = self.nodes.Handle</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> self.head_handle private: </span><span class="nc">Cell</span><span class="err">{</span><span class="nc">Node</span><span class="err">} = </span><span class="nc">None</span>
-<span class="err">    </span><span class="k">var</span><span class="err"> self.tail_handle private: </span><span class="nc">Cell</span><span class="err">{</span><span class="nc">Node</span><span class="err">} = </span><span class="nc">None</span><span class="err"> </span>
+<span class="err">    </span><span class="k">var</span><span class="err"> self.head_handle private = </span><span class="nc">Handle</span><span class="err">::</span><span class="nc">Null</span>
+<span class="err">    </span><span class="k">var</span><span class="err"> self.tail_handle private = </span><span class="nc">Handle</span><span class="err">::</span><span class="nc">Null</span><span class="err"> </span>
 <span class="err">}</span>
 
 <span class="err">~ </span><span class="k">specifics</span><span class="err"> {</span>
 <span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">addFirst</span><span class="err">(a: </span><span class="nc">Data</span><span class="err">) {</span>
-<span class="err">        </span><span class="k">set</span><span class="err"> self.head_handle = self.nodes.add!(</span><span class="nc">Node</span><span class="err">(</span><span class="nc">None</span><span class="err">, a, self.head_handle))</span>
+<span class="err">        </span><span class="k">set</span><span class="err"> self.head_handle = self.nodes.add!(</span><span class="nc">Node</span><span class="err">(</span><span class="nc">Handle</span><span class="err">::</span><span class="nc">Null</span><span class="err">, a, self.head_handle))</span>
 <span class="err">    }</span>
 
 <span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">addLast</span><span class="err">(a: </span><span class="nc">Data</span><span class="err">) {</span>
-<span class="err">        </span><span class="k">set</span><span class="err"> self.tail_handle = self.nodes.add!(</span><span class="nc">Node</span><span class="err">(self.tail_handle, a, </span><span class="nc">None</span><span class="err">))</span>
+<span class="err">        </span><span class="k">set</span><span class="err"> self.tail_handle = self.nodes.add!(</span><span class="nc">Node</span><span class="err">(self.tail_handle, a, </span><span class="nc">Handle</span><span class="err">::</span><span class="nc">Null</span><span class="err">))</span>
 <span class="err">    }</span>
 
 <span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">deleteFirst</span><span class="err">() {</span>
-<span class="err">        </span><span class="k">if</span><span class="err"> (self.head_handle </span><span class="k">is</span><span class="err"> </span><span class="nc">None</span><span class="err">) </span><span class="k">return</span>
+<span class="err">        </span><span class="k">if</span><span class="err"> (self.head_handle </span><span class="k">is</span><span class="err"> </span><span class="nc">Handle</span><span class="err">::</span><span class="nc">Null</span><span class="err">) </span><span class="k">return</span>
 <span class="err">        </span><span class="k">const</span><span class="err"> x = self.head_handle</span>
-<span class="err">        </span><span class="k">set</span><span class="err"> self.head_handle = self.nodes[self.head_handle].next</span>
+<span class="err">        </span><span class="k">either</span><span class="err"> (</span><span class="k">set</span><span class="err"> self.head_handle = self.nodes[self.head_handle].next) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span>
 <span class="err">        </span><span class="k">run</span><span class="err"> self.nodes.delete!(x)</span>
 <span class="err">    }</span>
 
 <span class="err">    </span><span class="k">method</span><span class="err"> </span><span class="nf">deleteLast</span><span class="err">() {</span>
-<span class="err">        </span><span class="k">if</span><span class="err"> (self.head_handle </span><span class="k">is</span><span class="err"> </span><span class="nc">None</span><span class="err">) </span><span class="k">return</span>
+<span class="err">        </span><span class="k">if</span><span class="err"> (self.head_handle </span><span class="k">is</span><span class="err"> </span><span class="nc">Handle</span><span class="err">::</span><span class="nc">Null</span><span class="err">) </span><span class="k">return</span>
 <span class="err">        </span><span class="k">const</span><span class="err"> x = self.last_handle</span>
-<span class="err">        </span><span class="k">set</span><span class="err"> self.last_handle = self.nodes[self.last_handle].prev</span>
+<span class="err">        </span><span class="k">either</span><span class="err"> (</span><span class="k">set</span><span class="err"> self.last_handle = self.nodes[self.last_handle].prev) </span><span class="k">or</span><span class="err"> </span><span class="k">return</span>
 <span class="err">        </span><span class="k">run</span><span class="err"> self.nodes.delete!(x)</span>
 <span class="err">    }</span>
 

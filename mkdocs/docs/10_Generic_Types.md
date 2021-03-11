@@ -18,6 +18,8 @@ type Handle{MyRegion: type} with
 }
 ~ friend Region
 
+// Issue: should Handles be nullable?
+
 
 type Region{T: type} with
 ~ constructor(T: type) {
@@ -34,6 +36,7 @@ type Region{T: type} with
         run self.vector.pop!(index_to_delete)
     }
     
+    // Implements the indexing operator on this type
     subscript get(my_handle: Handle{Region{T}}) -> maybe T {
         return self.vector[my_handle.index]
     }
@@ -45,8 +48,7 @@ type Region{T: type} with
 We've seen a singly linked list implementation, but doubly linked lists can be a bit more difficult in a language with single ownership of objects. However, Regions and Handles make this task manageable, as we can store all of the elements in a Region, and we can use Handles as indexes into that Region, so there is no need for pointers or shared mutability. We also use generics to allow you to specify the type of the data.
 
 ```serene
-// Implementation of a doubly linked list
-// Some issues with "maybe" vs. Cell should be fixed
+// Some issues here, Handle::Null is inconsistent with previous example
 
 type Node{MyHandle: type, Data: type} with
 ~ constructor(prev: MyHandle, data: Data, next: MyHandle) {
@@ -59,30 +61,30 @@ type DoublyLinkedList{Data: type} with
 ~ constructor(Data: type) {
 	var self.nodes private = Region(Data)
     type self.Handle private = self.nodes.Handle
-    var self.head_handle private: Cell{Node} = None
-    var self.tail_handle private: Cell{Node} = None 
+    var self.head_handle private = Handle::Null
+    var self.tail_handle private = Handle::Null 
 }
 
 ~ specifics {
     method addFirst(a: Data) {
-        set self.head_handle = self.nodes.add!(Node(None, a, self.head_handle))
+        set self.head_handle = self.nodes.add!(Node(Handle::Null, a, self.head_handle))
     }
 
     method addLast(a: Data) {
-        set self.tail_handle = self.nodes.add!(Node(self.tail_handle, a, None))
+        set self.tail_handle = self.nodes.add!(Node(self.tail_handle, a, Handle::Null))
     }
 
     method deleteFirst() {
-        if (self.head_handle is None) return
+        if (self.head_handle is Handle::Null) return
         const x = self.head_handle
-        set self.head_handle = self.nodes[self.head_handle].next
+        either (set self.head_handle = self.nodes[self.head_handle].next) or return
         run self.nodes.delete!(x)
     }
 
     method deleteLast() {
-        if (self.head_handle is None) return
+        if (self.head_handle is Handle::Null) return
         const x = self.last_handle
-        set self.last_handle = self.nodes[self.last_handle].prev
+        either (set self.last_handle = self.nodes[self.last_handle].prev) or return
         run self.nodes.delete!(x)
     }
     
