@@ -77,10 +77,12 @@ type LinkedList with
             set self.head = Node(a, None)
         }
         else {
-            bind x = self.head
+            bind x = self.head // the head node is still owned by self.head, not x
             while (x.next is not None) {
+            	// this re-binds x but it doesn't mutate anything
                 bind x = x.next
             }
+            // you can "set" a member of a binding (but not the binding itself)
             set x.next = Node(a, None)
         }
     }

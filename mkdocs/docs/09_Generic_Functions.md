@@ -18,7 +18,7 @@ function elementInArray{T: type} (move elem: T, arr: Array{T}) -> maybe T {
 }
 
 // Where statement
-function elementInArray2{A: type, B type} (move elem: A, arr: B) -> maybe A where
+function elementInArray2{A: type, B: type} (move elem: A, arr: B) -> maybe A where
     A: Simple,
     B: Array{A} {
 
