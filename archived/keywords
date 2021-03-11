@@ -1,5 +1,6 @@
 if
 else
+elseif
 while
 for
 break
@@ -10,9 +11,9 @@ and
 or
 not
 
-new
+var
 const
-alias
+bind
 
 run
 set
@@ -20,6 +21,7 @@ set
 function
 struct
 enum
+tuple
 
 type
 interface
@@ -37,7 +39,7 @@ in
 
 import
 
-mut
+mutate
 move
 copy
 
