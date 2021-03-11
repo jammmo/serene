@@ -476,7 +476,7 @@
                 
                 
                 <h1 id="4-collections">4. Collections</h1>
-<p>In this section, we will learn about several more complex types that are built into Serene.</p>
+<p>In this section, we will learn about several of the more complex types that are built into Serene. Collections hold a group of objects (typically of the same type), and you can access the elements of the collection using square brackets. Here, we'll learn about Array, Vectors, and Regions.</p>
 <h2 id="arrays">Arrays</h2>
 <p>An array is a fixed-length sequence elements, where all of the elements are the same type. If the index is invalid, the indexing operation will return <code>undefined</code>, which is a special value (actually, it's not a value) that will be introduced later, in the Expressing Nothing section.</p>
 <p>You specify what the types of elements are by using generics. We'll explain more about generics later, but for now it suffices to say that when describing a generic type like an array, you put the type of its elements in curly braces. So <code>Array{Float}</code> would be an array of floating-point numbers. However, generic types are still constructed like other objects, using the type's name followed by parameters in parenthesis (eg. <code>Array(0.1, 0.2, 0.3)</code>).</p>

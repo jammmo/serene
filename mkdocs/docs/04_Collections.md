@@ -1,6 +1,6 @@
 # 4. Collections
 
-In this section, we will learn about several more complex types that are built into Serene.
+In this section, we will learn about several of the more complex types that are built into Serene. Collections hold a group of objects (typically of the same type), and you can access the elements of the collection using square brackets. Here, we'll learn about Array, Vectors, and Regions.
 
 ## Arrays
 
