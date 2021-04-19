@@ -23,17 +23,17 @@ type Handle{MyRegion: type} with
 
 type Region{T: type} with
 ~ constructor(T: type) {
-    var self.vector private = Vector(T)
+    var self.vector private = Vector(maybe T)
 }
 ~ specifics {
     method add(new_value: T) -> Handle{Region{T}} {
         run self.vector.append(NewValue)
-        const handle = Handle(Region{T}, vector.length)
+        const handle = Handle(Region{T}, vector.length - 1)
         return handle
     }
 
     method delete(index_to_delete: Handle{Region{T}}) {
-        run self.vector.pop!(index_to_delete)
+        set self.vector[index_to_delete] = None
     }
     
     // Implements the indexing operator on this type
