@@ -33,7 +33,6 @@ function findMax(u: Vector{Int}) -> Int {
 function findMax2(u: Vector{Int}) -> Int {
 	var max = Int.bottom
 	for (i = 0, u.length) {	//iterates from 0 up to (but not including) the length of u
-		// Compiler automatically checks that u[i] is not undefined by verifying the loop bounds
 		if (u[i] > max) {
 			set max = u[i]
 		}
@@ -71,7 +70,3 @@ function makeChoice() -> Bool {
 	}
 }
 ```
-
-## More Control Flow
-
-There is one more control flow construct in Serene, named `either`. But there's a bit of background explanation as to why `either` is necessary, so you can explore that in the next section.

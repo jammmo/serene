@@ -1,4 +1,4 @@
-# 8. Interfaces
+# 7. Interfaces
 
 When writing a function, sometimes you only care about what methods the function arguments support, and not how they're implemented. You may want to write the function in a flexible way so that they can accept any type that implements the correct methods. That can be done with Interfaces. Here is an example of how you can define an Interface.
 
