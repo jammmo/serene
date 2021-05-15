@@ -1,4 +1,4 @@
-# 9. Generic Functions
+# 8. Generic Functions
 
 Serene supports both generic functions and generic types. What does that mean? Well, let's start with generic functions, which allow you to write a function without knowing the types of its parameters and return values in advance. You can later specify them when the function is called.
 
@@ -7,36 +7,36 @@ In C++, you might see generics that look something like `std::make_unique<Node>(
 Generic parameters are types, so they must be start with capital letters like any other type in Serene, and they are specified using the `type` keyword, like in the example below.
 
 ```serene
-function elementInArray{T: type} (move elem: T, arr: Array{T}) -> maybe T {
+function elementInArray{T: type} (move elem: T, arr: Array{T}) -> Some{T} {
     for (i = 0, arr.length) {
         if (arr[i] == elem) {
-            return elem
+            return Some(elem)
         }
     }
 
-    return undefined
+    return None
 }
 
 // Where statement
-function elementInArray2{A: type, B: type} (move elem: A, arr: B) -> maybe A where
+function elementInArray2{A: type, B: type} (move elem: A, arr: B) -> Option{A} where
     A: Simple,
     B: Array{A} {
 
     for (i = 0, arr.length) {
         if (arr[i] == elem) {
-            return elem
+            return Some(elem)
         }
     }
 
-    return undefined
+    return None
 }
 
-function makeEmptyCellVector{T: type} (T: type) -> Vector{Cell{T}} {
-	return Vector(Cell{T})	// The constructor for vectors allows you to pass a type explicitly
+function makeEmptyOptionVector{T: type} (T: type) -> Vector{Option{T}} {
+	return Vector(Option{T})	// The constructor for vectors allows you to pass a type explicitly
 }
 
 function main() {
-	var a = makeEmptyCellVector(Int)
+	var a = makeEmptyOptionVector(Int)
 	print a					// Prints []
 	run a.append!(None)
 	print a					// Prints [None]
@@ -44,8 +44,14 @@ function main() {
 	print a					// Prints [None, 18]
 	
 	var u = Array(1, 3, 5, 7)
-	either (print elementInArray(5, u)) or print "Could not be found"
-	either (print elementInArray2(7, u)) or print "Could not be found"
+	match (elementInArray(5, u)) {
+		Some(x) -> print x
+		None -> print "Could not be found"
+	}
+	match (elementInArray2(7, u)) {
+		Some(x) -> print x
+		None -> print "Could not be found"
+	}
 }
 ```
 

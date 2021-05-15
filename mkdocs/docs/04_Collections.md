@@ -4,9 +4,7 @@ In this section, we will learn about several of the more complex types that are 
 
 ## Arrays
 
-An array is a fixed-length sequence elements, where all of the elements are the same type. If the index is invalid, the indexing operation will return `undefined`, which is a special value (actually, it's not a value) that will be introduced later, in the Expressing Nothing section.
-
-You specify what the types of elements are by using generics. We'll explain more about generics later, but for now it suffices to say that when describing a generic type like an array, you put the type of its elements in curly braces. So `Array{Float}` would be an array of floating-point numbers. However, generic types are still constructed like other objects, using the type's name followed by parameters in parenthesis (eg. `Array(0.1, 0.2, 0.3)`).
+An array is a fixed-length sequence elements, where all of the elements are the same type. You specify what the types of elements are by using generics. We'll explain more about generics later, but for now it suffices to say that when describing a generic type like an array, you put the type of its elements in curly braces. So `Array{Float}` would be an array of floating-point numbers. However, generic types are still constructed like other objects, using the type's name followed by parameters in parenthesis (eg. `Array(0.1, 0.2, 0.3)`).
 
 ```serene
 // returns the index of the leftmost occurence of x, or the next lowest number if x is not found
@@ -16,7 +14,6 @@ function binarySearch(u: Array{Int}, x: Int) -> Int {
     var high = u.length
 	while (low < high) {
 		var mid = (low + high) / 2	// integer division
-		either (u[mid] is defined) or throw IndexError
 		if (u[mid] < x) {
 			set high = mid
 		} else {
@@ -35,7 +32,7 @@ function main() {
 
 ## Vectors
 
-An vector is similar to an array, except its length can be changed after creation. Like an array, if the index is invalid, the indexing operation will return `undefined`.
+An vector is similar to an array, except its length can be changed after creation.
 
 ```serene
 // deletes the leftmost occurence of x, or does nothing if x is not found
@@ -45,7 +42,6 @@ function binarySearchAndDelete(mutate u: Vector{Int}, x: Int) {
     var high = u.length
 	while (low < high) {
 		var mid = (low + high) / 2
-		either (u[mid] is defined) or throw IndexError
 		if (u[mid] < x) {
 			set high = mid
 		} else {
@@ -71,7 +67,7 @@ function main() {
 
 ## Regions (and Handles)
 
-A Region is a dynamically-sized block of memory where objects of the same type can be stored. Those objects are accessed using an index, referred to as a Handle. You can think of a Region as somewhat similar to a hash map, as it is effectively a mapping of keys to values. But unlike a hash map, the keys, called Handles in this case, are a special opaque type and are assigned by the Region when new values are added, rather than being assigned by the programmer. Once again, if the Handle doesn't refer to a valid object, the indexing operation will return `undefined`.
+A Region is a dynamically-sized block of memory where objects of the same type can be stored. Those objects are accessed using an index, referred to as a Handle. You can think of a Region as somewhat similar to a hash map, as it is effectively a mapping of keys to values. But unlike a hash map, the keys, called Handles in this case, are a special opaque type and are assigned by the Region when new values are added, rather than being assigned by the programmer.
 
 Regions and Handles may sound a bit odd right now, but you'll see why they are necessary once you learn how to define your own types. For now, here is a simple demonstration of how they work.
 

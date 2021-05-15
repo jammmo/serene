@@ -1,12 +1,29 @@
-# 7. Custom Types
+# 6. More Types
+In this section, we will learn about a built-in type called Option, and we will also see how to define our own types.
 
+
+## Option
+
+The Option type is a way of "wrapping" an object that may or may not exist. This is useful in certain situations, like when defining a recursive type such as the Node type we will see in the next section. The Option type can be unwrapped into either `Some(x)` or `None`, where x is an assignment to a variable. All the usual ownership rules still apply to Options: a Option owns whatever value it holds, so you can't have two Options holding the same value.
+
+```serene
+function printNickname(p: Person) {
+    match (p.nickname) {
+        Some(name) -> print "Your nickname is ", name, "."
+        None -> print "No nickname is set."
+    }
+}
+```
+
+
+## Defining Types
 Types in Serene can be defined using the `type` keyword, as shown below. You can use this format to define structs, enums, and tuples.
 
 ```serene
 type Person struct {
     age: Int,
     name: String,
-    nickname: Cell{String}
+    nickname: Option{String}
 }
 
 type Point3D tuple {
@@ -30,14 +47,13 @@ type RainbowColors enum {
 }
 
 function main() {
-	var jason = Person(41, "Jason Segel", Cell("Marshall"))
+	var jason = Person(41, "Jason Segel", Option("Marshall"))
 	set jason.nickname = None
 	
 	var color = RainbowColors::Red
 	set color = RainbowColors::Green
 }
 ```
-
 
 
 ## Linked List Example
@@ -51,13 +67,13 @@ Another new thing here is `private` fields, which can't be accessed from outside
 
 type Node struct {
     data: Int,
-    next: Cell{Node}
+    next: Option{Node}
 }
 
 type LinkedList with
 ~ constructor(first: Int) {
-	// To be able to represent an empty list, the head must be in a Cell
-    var self.head private = Cell(Node(first, None))
+	// To be able to represent an empty list, the head must be in an Option
+    var self.head private = Option(Node(first, None))
 }
 
 ~ specifics {
@@ -65,11 +81,11 @@ type LinkedList with
         set self.head = Node(a, move self.head)
     }
 
-    method popFirst!() -> maybe Int {
-        if (self.head is None) return undefined
+    method popFirst!() -> Option{Int} {
+        if (self.head is None) return None
         var x = self.head.data	// note that this copies self.head.data
         set self.head = self.head.next
-        return x
+        return Some(x)
     }
     
     method append!(a: Int) {
