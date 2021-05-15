@@ -23,7 +23,7 @@ Types in Serene can be defined using the `type` keyword, as shown below. You can
 type Person struct {
     age: Int,
     name: String,
-    nickname: Cell{String}
+    nickname: Option{String}
 }
 
 type Point3D tuple {
@@ -47,7 +47,7 @@ type RainbowColors enum {
 }
 
 function main() {
-	var jason = Person(41, "Jason Segel", Cell("Marshall"))
+	var jason = Person(41, "Jason Segel", Option("Marshall"))
 	set jason.nickname = None
 	
 	var color = RainbowColors::Red
