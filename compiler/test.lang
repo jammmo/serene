@@ -1,0 +1,13 @@
+function main(test: MyTest, maaan: Maahsd) {
+    // This is a comment !@#$%^&*()
+    print a // This is another comment !@#$%^&*() YAAAAA
+    print d
+    print c
+    set a *= 1
+    var a = 123
+    var a: Xanthum = b
+    const a = b
+    const a: Xanthum = b
+    run hello()
+    return a
+}

@@ -1,0 +1,8 @@
+// consumes a character array and returns it as a string
+function charArrayToString(move u: Array{Char}) -> String {
+    var s = ""
+    for (x in u) {
+        run s.append!(x)
+    }
+    return s
+}

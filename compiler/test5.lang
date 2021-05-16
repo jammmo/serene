@@ -1,0 +1,14 @@
+function makeChoice() -> Bool {
+    while (True) {
+        var input = readLine()
+        match (input) {
+            "" -> continue
+            "y", "Y" -> return True
+            "n", "N" -> return False
+            else -> {
+                print "Input is invalid, try again"
+                continue
+            }
+        }
+    }
+}
