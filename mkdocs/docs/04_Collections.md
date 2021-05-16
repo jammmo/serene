@@ -56,8 +56,8 @@ function binarySearchAndDelete(mutate u: Vector{Int}, x: Int) {
 function main() {
 	var u = Vector(Int)					// creates an empty vector of integers
 	print "Length of u: ", u.length		// Length of u: 0
-	for(i = 0, 5) {
-		u.append!(i * 2)
+	for (i = 0, 5) {
+		run u.append!(i * 2)
 	}
 	print "Length of u: ", u.length		// Length of u: 5
 	print u								// [0, 2, 4, 6, 8]
