@@ -14,10 +14,10 @@ grammar Serene {
 
     # Main language grammar
     token functions {
-        [<function> | <comment>]+ %% <.separator>
+        [<function> | <.comment>]+ %% <.separator>
     }
     token statements {
-        [<statement> <comment> | <statement> | <comment>]+ %% <.separator>
+        [<statement> <.comment> | <statement> | <.comment>]+ %% <.separator>
     }
     token statement {
         | <print_statement>
@@ -249,4 +249,17 @@ grammar Serene {
 }
 
 my $parsed = Serene.parsefile("test5.lang");
-say $parsed;
+
+sub print_parsed ($match, $n_indent) {
+    my $r = '';
+    for $match.caps {
+        $r ~= "\n" ~ ( '  ' x $n_indent ) ~ "- " ~ $_.key ~ ": " ~ print_parsed($_.value, $n_indent + 1);
+    }
+    if $match.caps[0].^name eq 'Nil' {
+        $r ~= "'" ~ qq[$match] ~ "'";
+    }
+    return $r;
+}
+
+my $output = print_parsed($parsed, 0);
+spurt 'parsed.yaml', $output;
