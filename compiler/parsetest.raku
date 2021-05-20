@@ -248,7 +248,7 @@ grammar Serene {
     }
 }
 
-my $parsed = Serene.parsefile("test5.lang");
+my $parsed = Serene.parsefile("test4.lang");
 
 sub print_parsed ($match, $n_indent) {
     my $r = '';
@@ -262,4 +262,4 @@ sub print_parsed ($match, $n_indent) {
 }
 
 my $output = print_parsed($parsed, 0);
-spurt 'parsed.yaml', $output;
+spurt 'test4_parsed.yaml', $output;

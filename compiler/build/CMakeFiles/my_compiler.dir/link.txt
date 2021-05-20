@@ -1,0 +1,1 @@
+/usr/bin/c++.exe -Wl,--enable-auto-import CMakeFiles/my_compiler.dir/compile_serene.cc.o -o my_compiler.exe -Wl,--out-implib,libmy_compiler.dll.a -Wl,--major-image-version,0,--minor-image-version,0  include/yaml-cpp-master/libyaml-cpp.a 

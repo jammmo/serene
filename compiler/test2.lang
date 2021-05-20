@@ -22,7 +22,7 @@ function test3() {
     const base = 5 //the type Int is implied here
     const height = 8
     const area: Float = (1/2) * cylinder.dimensions.base * cylinder.dimensions.height
-    run animals.aardvark!(mutate array1, move array2, copy array3, array4)
+    run animals.aardvark!(mutate array1, move array2, copy array3, array4)  // syntax test for mutating method calls
 }
 
 function test4() {

@@ -15,9 +15,9 @@ function binarySearch(u: Array{Int}, x: Int) -> Int {
 	while (low < high) {
 		var mid = (low + high) / 2	// integer division
 		if (u[mid] < x) {
-			set high = mid
-		} else {
 			set low = mid + 1
+		} else {
+			set high = mid
 		}
 	}
 	return low
@@ -43,9 +43,9 @@ function binarySearchAndDelete(mutate u: Vector{Int}, x: Int) {
 	while (low < high) {
 		var mid = (low + high) / 2
 		if (u[mid] < x) {
-			set high = mid
-		} else {
 			set low = mid + 1
+		} else {
+			set high = mid
 		}
 	}
 	if (u[low] == x) {
@@ -61,7 +61,9 @@ function main() {
 	}
 	print "Length of u: ", u.length		// Length of u: 5
 	print u								// [0, 2, 4, 6, 8]
-	print binarySearch(u, 6)			// 3
+	run binarySearchAndDelete(u, 6)
+	print "Length of u: ", u.length		// Length of u: 4
+	print u								// [0, 2, 4, 8]
 }
 ```
 
