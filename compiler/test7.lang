@@ -1,0 +1,5 @@
+function main() {
+    if (not ((a and b) or c)) {
+        print d
+    }
+}

@@ -49,12 +49,10 @@ grammar Serene {
         'True' | 'False'
     }
 
-    token base_identifier {
+    token identifier {
         <.alpha> <.alnum>*
     }
-    token identifier {
-        <base_identifier> ['.' <base_identifier>]*
-    }
+
     token base_type {
         <.upper> <.alpha>*
     }
@@ -81,6 +79,8 @@ grammar Serene {
         | '*'
         | '/'
         | '%'
+        | 'and'
+        | 'or'
     }
 
     token comparison_op {
@@ -93,7 +93,8 @@ grammar Serene {
     }
 
     token unary_op {
-        '-'
+        | '-'
+        | 'not'
     }
 
     token accessor {
@@ -121,7 +122,7 @@ grammar Serene {
     }
 
     token function_call {
-        <identifier> '!'? '(' <function_call_parameters> ')'
+        <identifier> '(' <function_call_parameters> ')'
     }
 
     rule function_call_parameters {
@@ -132,27 +133,42 @@ grammar Serene {
         <accessor>? <expression>
     }
 
+    token mutate_method_symbol {
+        '!'
+    }
+
     token constructor_call {
         <base_type> '(' <function_call_parameters> ')'
     }
 
+    token method_call {
+        '.' <identifier> <mutate_method_symbol>? '(' <function_call_parameters> ')'
+    }
+
+    token field_access {
+        '.' <identifier>
+    }
+
     # Indexing with square brackets
-    rule index_call {
-        <identifier> '[' <expression> ']'
+    token index_call {
+        '[' <expression> ']'
     }
 
     # Expressions
     rule expression {
-        | <unary_op>? <base_expression> [<infix_op> <unary_op>? <base_expression>]*
+        <unary_op>? <term> [ <infix_op> <unary_op>? <term> ]*
     }
 
     rule base_expression {
         | <function_call>
         | <constructor_call>
-        | <index_call>
         | <identifier>
         | <literal>
         | '(' <expression> ')'
+    }
+
+    token term {
+        <base_expression> [ <method_call> | <field_access> | <index_call> ]*
     }
 
     # Types of statements
@@ -175,8 +191,9 @@ grammar Serene {
     }
 
     rule run_statement {
-        'run' <function_call> 
-    }
+        | 'run' <function_call> 
+        | 'run' <identifier> <method_call> 
+    } #should term also be allowed? 'run a.b()' is fine, but what about 'run a.b().c' or 'run a.b()[5]'?
 
     rule return_statement {
         'return' <expression>
@@ -198,18 +215,18 @@ grammar Serene {
     }
 
     rule for_loop {
-        | [ 'for' '(' <base_identifier> 'in' <expression> ')' '{' <.separator>
+        | [ 'for' '(' <identifier> 'in' <expression> ')' '{' <.separator>
             <statements>
             '}' ]
-        | [ 'for' '(' <base_identifier> '=' <expression> ',' <expression> ')' '{' <.separator>
+        | [ 'for' '(' <identifier> '=' <expression> ',' <expression> ')' '{' <.separator>
             <statements>
             '}' ] 
     }
 
     rule if_block {
         <if_branch> <.separator>?
-        [<elseif_branch> <.separator>?]?
-        [<else_branch> <.separator>?]?
+        [ <elseif_branch> <.separator>? ]?
+        [ <else_branch> <.separator>? ]?
     }
 
     rule if_branch {
@@ -232,7 +249,7 @@ grammar Serene {
 
     rule match_block {
         'match' '(' <expression> ')' '{' <.separator>
-        [<match_branch> <.separator>]+
+        [ <match_branch> <.separator> ]+
         '}'    
     }
 
@@ -262,4 +279,5 @@ sub print_parsed ($match, $n_indent) {
 }
 
 my $output = print_parsed($parsed, 0);
-spurt 'test4_parsed.yaml', $output;
+say $output;
+#spurt 'parsed.yaml', $output;
