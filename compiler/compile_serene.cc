@@ -9,18 +9,64 @@ using std::string;
 
 enum Accessor {LOOK, MUTATE, MOVE, COPY};
 
-class ExpressionNode {
-private:
+class LiteralNode {
 public:
     YAML::Node yaml;
 
     string to_output_code() {
+        return yaml.begin()->second.as<string>();
+    }
+};
+
+class BaseExpressionNode {
+public:
+    YAML::Node yaml;
+
+    string to_output_code() {
+        if (yaml.size() == 1) {
+            if (yaml[0].begin()->first.as<string>() == "literal") {
+                auto a = LiteralNode();
+                a.yaml = yaml[0].begin()->second;
+                return a.to_output_code();
+            }
+        }
+        return "";
+    } 
+};
+
+class TermNode {
+public:
+    YAML::Node yaml;
+
+    string to_output_code() {
+        if (yaml.size() == 1) {
+            if (yaml[0].begin()->first.as<string>() == "base_expression") {
+                auto a = BaseExpressionNode();
+                a.yaml = yaml[0].begin()->second;
+                return a.to_output_code();
+            }
+        }
+        return "";
+    }
+};
+
+class ExpressionNode {
+public:
+    YAML::Node yaml;
+
+    string to_output_code() {
+        if (yaml.size() == 1) {
+            if (yaml[0].begin()->first.as<string>() == "term") {
+                auto a = TermNode();
+                a.yaml = yaml[0].begin()->second;
+                return a.to_output_code();
+            }
+        }
         return "";
     }
 };
 
 class ParameterNode {
-private:
 public:
     string name;
     YAML::Node type;
@@ -28,7 +74,6 @@ public:
 };
 
 class StatementNode {
-private:
 public:
     enum Type {Print,
                Var,
@@ -64,11 +109,11 @@ public:
 };
 
 class FunctionNode {
-private:
 public:
     string name;
     std::vector<ParameterNode> parameters;
     std::vector<StatementNode> statements;
+    string output_code;
 };
 
 auto create_map(YAML::Node node) {
@@ -88,7 +133,7 @@ auto create_map(YAML::Node node) {
 }
 
 int main() {
-    YAML::Node parsed = YAML::LoadFile("../test4_parsed.yaml");
+    YAML::Node parsed = YAML::LoadFile("../parsed.yaml");
 
     auto myfunctions = parsed[0]["functions"];   // Sequence of all functions
 
@@ -98,7 +143,7 @@ int main() {
 
         auto F = FunctionNode();
         if (func_map.count("identifier")) {
-            F.name = func_map.at("identifier")[0]["base_identifier"].as<string>();
+            F.name = func_map.at("identifier").as<string>();
         }
 
         if (func_map.count("function_parameters")) {
@@ -126,7 +171,7 @@ int main() {
                 }
 
                 if (param_map.count("identifier")) {
-                    P.name = param_map.at("identifier")[0]["base_identifier"].as<string>();
+                    P.name = param_map.at("identifier").as<string>();
                 }
 
                 if (param_map.count("type")) {
@@ -158,7 +203,7 @@ int main() {
                             output_code.append("<< ");
                             output_code.append(E.to_output_code());
                         }
-                        output_code.append(" ;");
+                        output_code.append(" ;\n");
                         break;
                     }
                     case StatementNode::Var: {
@@ -197,7 +242,9 @@ int main() {
                 }
 
                 S.output_code = output_code;
+                F.output_code.append(output_code);
             }
         }
+        cout << F.output_code << endl;
     }
 }

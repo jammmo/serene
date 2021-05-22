@@ -235,8 +235,11 @@ CMakeFiles/my_compiler.dir/compile_serene.cc.o: ../compile_serene.cc \
   /usr/lib/gcc/x86_64-pc-cygwin/10/include/c++/bits/stl_heap.h \
   /usr/lib/gcc/x86_64-pc-cygwin/10/include/c++/bits/uniform_int_dist.h \
   ../include/yaml-cpp-master/include/yaml-cpp/node/parse.h \
-  ../include/yaml-cpp-master/include/yaml-cpp/node/emit.h
+  ../include/yaml-cpp-master/include/yaml-cpp/node/emit.h \
+  ../myclasses.hh
 
+
+../myclasses.hh:
 
 ../include/yaml-cpp-master/include/yaml-cpp/node/parse.h:
 
