@@ -1,1 +1,0 @@
-/usr/bin/c++.exe -Wl,--enable-auto-import CMakeFiles/yaml-cpp-parse.dir/parse.cpp.o -o parse.exe -Wl,--out-implib,libparse.dll.a -Wl,--major-image-version,0,--minor-image-version,0  ../libyaml-cpp.a 

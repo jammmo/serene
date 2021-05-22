@@ -1,0 +1,85 @@
+
+- functions: 
+  - function: 
+    - identifier: 'main'
+    - function_parameters: 
+      - function_parameter: 
+        - identifier: 'test'
+        - type: 
+          - base_type: 'MyTest'
+      - function_parameter: 
+        - identifier: 'man'
+        - type: 
+          - base_type: 'Man'
+    - statements: 
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'a'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'd'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'c'
+      - statement: 
+        - set_statement: 
+          - identifier: 'a'
+          - assignment_op: '*='
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '1'
+      - statement: 
+        - var_statement: 
+          - identifier: 'a'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '123'
+      - statement: 
+        - var_statement: 
+          - identifier: 'a'
+          - type: 
+            - base_type: 'Xanthan'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'b'
+      - statement: 
+        - const_statement: 
+          - identifier: 'a'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'b'
+      - statement: 
+        - const_statement: 
+          - identifier: 'a'
+          - type: 
+            - base_type: 'Xanthan'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'b'
+      - statement: 
+        - run_statement: 
+          - function_call: 
+            - identifier: 'hello'
+            - function_call_parameters: ''
+      - statement: 
+        - return_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'a'

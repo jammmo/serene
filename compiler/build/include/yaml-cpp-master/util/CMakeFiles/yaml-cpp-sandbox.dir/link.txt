@@ -1,1 +1,0 @@
-/usr/bin/c++.exe -Wl,--enable-auto-import CMakeFiles/yaml-cpp-sandbox.dir/sandbox.cpp.o -o sandbox.exe -Wl,--out-implib,libsandbox.dll.a -Wl,--major-image-version,0,--minor-image-version,0  ../libyaml-cpp.a 
