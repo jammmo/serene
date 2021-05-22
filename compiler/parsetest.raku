@@ -265,8 +265,6 @@ grammar Serene {
     }
 }
 
-my $parsed = Serene.parsefile("test4.lang");
-
 sub print_parsed ($match, $n_indent) {
     my $r = '';
     for $match.caps {
@@ -278,6 +276,17 @@ sub print_parsed ($match, $n_indent) {
     return $r;
 }
 
-my $output = print_parsed($parsed, 0);
-say $output;
-#spurt 'parsed.yaml', $output;
+sub MAIN($file) {
+    say 'Compiling ', $file, ' now...';
+    my $parsed = Serene.parsefile($file);
+    my $output = print_parsed($parsed, 0);
+    #say $output;
+    #spurt 'parsed.yaml', $output;
+
+    my $py = $*PROGRAM.dirname.IO.add('compile.py').absolute;
+    say 'Running ', $py, "\n";
+
+    my $py_process = run 'python', $py, :in;
+    $py_process.in.say: $output;
+    $py_process.in.close;
+}
