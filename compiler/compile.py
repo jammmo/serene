@@ -1,6 +1,8 @@
 import yaml
 import sys
 
+indent_level = 0
+
 # Should be constructed with 'create', not regular constructor
 class Node:
     def create(D):
@@ -35,6 +37,12 @@ class Node:
                 return MethodCallNode(D)
             elif (nodetype == 'function_call_parameter'):
                 return FunctionCallParameterNode(D)
+            elif (nodetype == 'for_loop'):
+                return ForLoopNode(D)
+            elif (nodetype == 'while_loop'):
+                return WhileLoopNode(D)
+            elif (nodetype == 'if_block'):
+                return IfBlock(D)
             else:
                 return Node(D)
         else:
@@ -97,13 +105,19 @@ class Node:
 
 class FunctionNode(Node):
     def to_code(self):
+        global indent_level
+        oldindent = ('    '*indent_level)
+        indent_level += 1
+        newindent = ('    '*indent_level)
         if 'type' not in self:
             func_type = 'void'
         else:
             func_type = self['type']
         func_name = 'sn_' + self['identifier'].data
-        statements = '    '.join([x.to_code() for x in self['statements']])
-        return f'{func_type} {func_name}() {{\n    {statements}}}'
+        statements = newindent.join([x.to_code() for x in self['statements']])
+        code = f'{func_type} {func_name}() {{\n{newindent}{statements}{oldindent}}}'
+        indent_level -= 1
+        return code
 
 class StatementNode(Node):
     def to_code(self):
@@ -153,7 +167,10 @@ class ExpressionNode(Node):
         for i in range(len(self.data)):
             cur = self[i]
             if (cur.nodetype == 'unary_op') or (cur.nodetype == 'infix_op'):
-                code += ' ' + cur.data + ' '
+                if type(cur.data) != str:
+                    code += ' ' + cur[0].data + ' '
+                else:
+                    code += ' ' + cur.data + ' '
             elif cur.nodetype == 'term':
                 code += cur.to_code()
             else:
@@ -169,9 +186,9 @@ class TermNode(Node):
             elif x.nodetype == 'field_access':
                 code += '.sn_' + x['identifier'].data
             elif x.nodetype == 'method_call':
-                raise NotImplementedError
+                code += x.to_code()
             elif x.nodetype == 'index_call':
-                raise NotImplementedError
+                code += '[' + x['expression'].to_code() + ']'
         return code
 
 class BaseExpressionNode(Node):
@@ -208,6 +225,64 @@ class MethodCallNode(Node):
 class FunctionCallParameterNode(Node):
     def to_code(self):
         return self['expression'].to_code()
+
+class ForLoopNode(Node):
+    def to_code(self):
+        global indent_level
+        oldindent = ('    '*indent_level)
+        indent_level += 1
+        newindent = ('    '*indent_level)
+        loopvar = self['identifier']
+        statements = newindent.join([x.to_code() for x in self['statements']])
+        if self.count('expression') == 2:   # start and endpoint
+            startval = self[1].to_code()
+            endval = self[2].to_code()
+            code = f'for (int sn_{loopvar} = {startval}; sn_{loopvar} < {endval}; sn_{loopvar}++) {{\n{newindent}{statements}{oldindent}}}\n'
+        else:
+            myrange = self['expression'].to_code()
+            code = f'for (const auto& sn_{loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
+        indent_level -= 1
+        return code
+
+class WhileLoopNode(Node):
+    def to_code(self):
+        global indent_level
+        oldindent = ('    '*indent_level)
+        indent_level += 1
+        newindent = ('    '*indent_level)
+        statements = newindent.join([x.to_code() for x in self['statements']])
+        condition = self['expression'].to_code()
+        code = f'while ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
+        indent_level -= 1
+        return code
+
+class IfBlock(Node):
+    def to_code(self):
+        global indent_level
+        oldindent = ('    '*indent_level)
+        indent_level += 1
+        newindent = ('    '*indent_level)
+
+        code = ''
+
+        cur = self['if_branch']
+        statements = newindent.join([x.to_code() for x in cur['statements']])
+        condition = cur['expression'].to_code()
+        code += f'if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
+
+        if 'elseif_branch' in self:
+            cur = self['elseif_branch']
+            statements = newindent.join([x.to_code() for x in cur['statements']])
+            condition = cur['expression'].to_code()
+            code += f'{oldindent}else if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
+        
+        if 'else_branch' in self:
+            cur = self['else_branch']
+            statements = newindent.join([x.to_code() for x in cur['statements']])
+            code += f'{oldindent}else {{\n{newindent}{statements}{oldindent}}}\n'
+        
+        indent_level -= 1
+        return code
 
 
 def main():
