@@ -1,2 +1,3 @@
 archived/node_modules/
 compiler/outputs/*.yaml
+compiler/__pycache__/
