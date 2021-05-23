@@ -1,6 +1,6 @@
 //This is mostly gibberish, it's just to check syntax (and not semantics)
 
-function main(test: MyTest, man: Man) {
+function main(test: Float, man: Int) {
     // This is a comment !@#$%^&*()
     print a // This is another comment !@#$%^&*() YAAAAA
     print d

@@ -11,6 +11,10 @@ class Node:
             nodetype = list(D.keys())[0]
             if (nodetype == 'function'):
                 return FunctionNode(D)
+            elif (nodetype == 'function_parameter'):
+                return FunctionParameterNode(D)
+            elif (nodetype == 'type'):
+                return TypeNode(D)
             elif (nodetype == 'statement'):
                 return StatementNode(D)
             elif (nodetype == 'var_statement'):
@@ -25,6 +29,10 @@ class Node:
                 return RunStatement(D)
             elif (nodetype == 'return_statement'):
                 return ReturnStatement(D)
+            elif (nodetype == 'break_statement'):
+                return BreakStatement(D)
+            elif (nodetype == 'continue_statement'):
+                return ContinueStatement(D)
             elif (nodetype == 'expression'):
                 return ExpressionNode(D)
             elif (nodetype == 'term'):
@@ -43,6 +51,8 @@ class Node:
                 return WhileLoopNode(D)
             elif (nodetype == 'if_block'):
                 return IfBlock(D)
+            elif (nodetype == 'match_block'):
+                return MatchBlock(D)
             else:
                 return Node(D)
         else:
@@ -109,15 +119,49 @@ class FunctionNode(Node):
         oldindent = ('    '*indent_level)
         indent_level += 1
         newindent = ('    '*indent_level)
-        if 'type' not in self:
-            func_type = 'void'
+        if 'type' in self:
+            func_type = self['type'].to_code()
         else:
-            func_type = self['type']
+            func_type = 'void'
         func_name = 'sn_' + self['identifier'].data
+        func_parameters = ', '.join([x.to_code() for x in self['function_parameters']])
         statements = newindent.join([x.to_code() for x in self['statements']])
-        code = f'{func_type} {func_name}() {{\n{newindent}{statements}{oldindent}}}'
+        code = f'{func_type} {func_name}({func_parameters}) {{\n{newindent}{statements}{oldindent}}}'
         indent_level -= 1
         return code
+
+class FunctionParameterNode(Node):
+    def to_code(self):
+        code = self['type'].to_code()
+        if 'accessor' in self:
+            if self['accessor'].data == 'mutate':
+                code += '&'
+        code += ' sn_' + self['identifier'].data
+        return code
+
+class TypeNode(Node):
+    def to_code(self):
+        base = self['base_type'].data
+        if base == 'Int':
+            code = 'int64_t'
+        elif base == 'Bool':
+            code = 'bool'
+        elif base == 'String':
+            code = 'std::string'
+        elif base == 'Float':
+            code = 'double'
+        elif base == 'Char':
+            code = 'char'
+        elif base == 'Vector':
+            code = 'SN_Vector'
+        elif base == 'Array':
+            code = 'SN_Array'
+        else:
+            raise NotImplementedError
+        if 'type' in self:  # Generic type
+            return code + '<' + self['type'].to_code() + '>'
+        else:
+            return code
 
 class StatementNode(Node):
     def to_code(self):
@@ -159,7 +203,15 @@ class RunStatement(Node):
 class ReturnStatement(Node):
     def to_code(self):
         expr_code = self['expression'].to_code()
-        return f'return {expr_code}\n'
+        return f'return {expr_code};\n'
+
+class BreakStatement(Node):
+    def to_code(self):
+        return 'break;\n'
+
+class ContinueStatement(Node):
+    def to_code(self):
+        return 'continue;\n'
 
 class ExpressionNode(Node):
     def to_code(self):
@@ -200,7 +252,10 @@ class BaseExpressionNode(Node):
         elif 'identifier' in self:
             return 'sn_' + self['identifier'].data
         elif 'literal' in self:
-            return self['literal'][0].data
+            if 'bool_literal' in self['literal']:
+                return self['literal'][0].data.lower()
+            else:
+                return self['literal'][0].data
         elif 'expression' in self:
             return '(' + self['expression'].to_code() + ')'
 
@@ -284,6 +339,38 @@ class IfBlock(Node):
         indent_level -= 1
         return code
 
+class MatchBlock(Node):
+    def to_code(self):
+        global indent_level
+        oldindent = ('    '*indent_level)
+        indent_level += 1
+        newindent = ('    '*indent_level)
+
+        subject = self['expression'].to_code()
+        branches = []
+        for x in self:
+            if x.nodetype == 'match_branch':
+                if 'expression' in x:
+                    conditions = []
+                    for i in range(len(x.data) - 1):    # skip last element, which is 'statements'; all others are expressions
+                        conditions.append('(' + x[i].to_code() + ' == ' + subject + ')')
+                    conditions = ' or '.join(conditions)
+                    if 'statements' in x:
+                        statements = newindent.join([y.to_code() for y in x['statements']])
+                    else:
+                        statements = x['statement'].to_code()
+                    branchcode = f'if ({conditions}) {{\n{newindent}{statements}{oldindent}}}\n'
+                    branches.append(branchcode)
+                else:   # 'else' branch in 'match' block
+                    if 'statements' in x:
+                        statements = newindent.join([y.to_code() for y in x['statements']])
+                    else:
+                        statements = x['statement'].to_code()
+                    branchcode = f'{{\n{newindent}{statements}{oldindent}}}\n'
+                    branches.append(branchcode)
+        indent_level -= 1
+        return (f'{oldindent}else ').join(branches)
+
 
 def main():
     lines = []
@@ -301,8 +388,9 @@ def main():
     function_code = []
     for x in functions:
         function_code.append(x.to_code())
-    code = '#include <iostream>\n\n'
+    code = '#include <iostream>\n#include <cstdint>\n#include <string>\n\n'
     code += '\n\n'.join(function_code)
+    code += '\n\nint main() {\n    sn_main();\n    return 0;\n}\n'
     print(code)
 
 
