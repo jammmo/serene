@@ -1,3 +1,5 @@
+import scope
+
 indent_level = 0
 
 # Should be constructed with 'create', not regular constructor
@@ -116,6 +118,9 @@ class FunctionNode(Node):
         oldindent = ('    '*indent_level)
         indent_level += 1
         newindent = ('    '*indent_level)
+
+        scope.currentscope = scope.ScopeObject(scope.currentscope)
+
         if 'type' in self:
             func_type = self['type'].to_code()
         else:
@@ -123,17 +128,31 @@ class FunctionNode(Node):
         func_name = 'sn_' + self['identifier'].data
         func_parameters = ', '.join([x.to_code() for x in self['function_parameters']])
         statements = newindent.join([x.to_code() for x in self['statements']])
-        code = f'{func_type} {func_name}({func_parameters}) {{\n{newindent}{statements}{oldindent}}}'
+        if (statements != ''):
+            code = f'{func_type} {func_name}({func_parameters}) {{\n{newindent}{statements}{oldindent}}}'
+        else:
+            code = f'{func_type} {func_name}({func_parameters}) {{\n\n{oldindent}}}'
+
         indent_level -= 1
+        scope.currentscope = scope.currentscope.parent
+
         return code
 
 class FunctionParameterNode(Node):
     def to_code(self):
         code = self['type'].to_code()
         if 'accessor' in self:
-            if self['accessor'].data == 'mutate':
+            accessor = self['accessor'].data
+            if accessor == 'mutate':
                 code += '&'
-        code += ' sn_' + self['identifier'].data
+        else:
+            accessor = 'look'
+        var_name = 'sn_' + self['identifier'].data
+        code += ' ' + var_name
+
+        # Adds to the scope INSIDE the function, not the scope where the function is defined
+        scope.currentscope.add_binding(scope.ParameterObject(var_name, accessor))
+
         return code
 
 class TypeNode(Node):
@@ -167,21 +186,31 @@ class StatementNode(Node):
 class VarStatement(Node):
     def to_code(self):
         var_name = 'sn_' + self['identifier'].data
+
+        scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=True))
+
         expr_code = self['expression'].to_code()
         return f'auto {var_name} = {expr_code};\n'
 
 class ConstStatement(Node):
     def to_code(self):
         var_name = 'sn_' + self['identifier'].data
+
+        scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=False))
+
         expr_code = self['expression'].to_code()
         return f'const auto {var_name} = {expr_code};\n'
 
 class SetStatement(Node):
     def to_code(self):
         var_name = 'sn_' + self['identifier'].data
-        assign_op = self['assignment_op']
-        expr_code = self['expression'].to_code()
-        return f'{var_name} {assign_op} {expr_code};\n'
+
+        if scope.currentscope.check_set(var_name):
+            assign_op = self['assignment_op']
+            expr_code = self['expression'].to_code()
+            return f'{var_name} {assign_op} {expr_code};\n'
+        else:
+            raise NameError('var_name')
 
 class PrintStatement(Node):
     def to_code(self):
@@ -243,11 +272,15 @@ class TermNode(Node):
 class BaseExpressionNode(Node):
     def to_code(self):
         if 'function_call' in self:
-            return 'sn_function()'
+            return self['function_call'].to_code()
         elif 'constructor_call' in self:
             raise NotImplementedError
         elif 'identifier' in self:
-            return 'sn_' + self['identifier'].data
+            var_name = 'sn_' + self['identifier'].data
+            if scope.currentscope.check_read(var_name):     # Issue: var_name is not necessarily read-only, since the expression might be passed to a function
+                return var_name
+            else:
+                raise NameError(var_name)
         elif 'literal' in self:
             if 'bool_literal' in self['literal']:
                 return self['literal'][0].data.lower()
@@ -276,6 +309,13 @@ class MethodCallNode(Node):
 
 class FunctionCallParameterNode(Node):
     def to_code(self):
+        if 'accessor' in self:
+            accessor = self['accessor']
+        else:
+            accessor = 'look'
+        
+        #scope.currentscope.check_pass(var_name, accessor) # Where to get variable name? There could be multiple in a single expression
+
         return self['expression'].to_code()
 
 class ForLoopNode(Node):
@@ -284,16 +324,24 @@ class ForLoopNode(Node):
         oldindent = ('    '*indent_level)
         indent_level += 1
         newindent = ('    '*indent_level)
-        loopvar = self['identifier']
+
+        scope.currentscope = scope.ScopeObject(scope.currentscope)
+
+        loopvar = 'sn_' + self['identifier'].data
+        scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False))
+
         statements = newindent.join([x.to_code() for x in self['statements']])
         if self.count('expression') == 2:   # start and endpoint
             startval = self[1].to_code()
             endval = self[2].to_code()
-            code = f'for (int sn_{loopvar} = {startval}; sn_{loopvar} < {endval}; sn_{loopvar}++) {{\n{newindent}{statements}{oldindent}}}\n'
+            code = f'for (int {loopvar} = {startval}; {loopvar} < {endval}; {loopvar}++) {{\n{newindent}{statements}{oldindent}}}\n'
         else:
             myrange = self['expression'].to_code()
-            code = f'for (const auto& sn_{loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
+            code = f'for (const auto& {loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
+        
         indent_level -= 1
+        scope.currentscope = scope.currentscope.parent
+
         return code
 
 class WhileLoopNode(Node):
@@ -302,10 +350,16 @@ class WhileLoopNode(Node):
         oldindent = ('    '*indent_level)
         indent_level += 1
         newindent = ('    '*indent_level)
+
+        scope.currentscope = scope.ScopeObject(scope.currentscope)
+
         statements = newindent.join([x.to_code() for x in self['statements']])
         condition = self['expression'].to_code()
         code = f'while ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
+
         indent_level -= 1
+        scope.currentscope = scope.currentscope.parent
+
         return code
 
 class IfBlock(Node):
@@ -315,23 +369,34 @@ class IfBlock(Node):
         indent_level += 1
         newindent = ('    '*indent_level)
 
-        code = ''
+        scope.currentscope = scope.ScopeObject(scope.currentscope)
 
+        code = ''
         cur = self['if_branch']
         statements = newindent.join([x.to_code() for x in cur['statements']])
         condition = cur['expression'].to_code()
         code += f'if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
+        scope.currentscope = scope.currentscope.parent
+
         if 'elseif_branch' in self:
+            scope.currentscope = scope.ScopeObject(scope.currentscope)
+
             cur = self['elseif_branch']
             statements = newindent.join([x.to_code() for x in cur['statements']])
             condition = cur['expression'].to_code()
             code += f'{oldindent}else if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
+
+            scope.currentscope = scope.currentscope.parent
         
         if 'else_branch' in self:
+            scope.currentscope = scope.ScopeObject(scope.currentscope)
+
             cur = self['else_branch']
             statements = newindent.join([x.to_code() for x in cur['statements']])
             code += f'{oldindent}else {{\n{newindent}{statements}{oldindent}}}\n'
+
+            scope.currentscope = scope.currentscope.parent
         
         indent_level -= 1
         return code
@@ -347,6 +412,8 @@ class MatchBlock(Node):
         branches = []
         for x in self:
             if x.nodetype == 'match_branch':
+                scope.currentscope = scope.ScopeObject(scope.currentscope)
+                
                 if 'expression' in x:
                     conditions = []
                     for i in range(len(x.data) - 1):    # skip last element, which is 'statements'; all others are expressions
@@ -365,5 +432,7 @@ class MatchBlock(Node):
                         statements = x['statement'].to_code()
                     branchcode = f'{{\n{newindent}{statements}{oldindent}}}\n'
                     branches.append(branchcode)
+                
+                scope.currentscope = scope.currentscope.parent
         indent_level -= 1
         return (f'{oldindent}else ').join(branches)

@@ -14,6 +14,8 @@ class ScopeObject:
         self.victim_bindings = dict()   # Bindings that have been moved/deleted and no longer exist
         self.subscopes = []
         self.parent = parent
+        if self.parent is not None:
+            self.parent.subscopes.append(self)
 
     def __contains__(self, key):
         return (key in self.bindings)
@@ -26,10 +28,10 @@ class ScopeObject:
             raise ValueError
         self.bindings[binding_object.name] = binding_object
     
-    def kill_binding(self, binding_object):
-        if binding_object.name in self:
-            self.victim_bindings[binding_object.name] = binding_object
-            del self.bindings[binding_object.name]
+    def kill_binding(self, name):
+        if name in self:
+            self.victim_bindings[name] = self.bindings[name]
+            del self.bindings[name]
     
     def check_read(self, name):
         if (name in self):
@@ -102,3 +104,6 @@ class ScopeObject:
             return self.parent.check_pass(name, param_accessor)
         else:
             return False
+
+top_scope = ScopeObject(None)
+currentscope = top_scope

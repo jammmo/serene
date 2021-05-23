@@ -26,5 +26,5 @@ function test3() {
 }
 
 function test4() {
-    print name
+    print 8
 }

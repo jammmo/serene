@@ -17,7 +17,7 @@ grammar Serene {
         [<function> | <.comment>]+ %% <.separator>
     }
     token statements {
-        [<statement> <.comment> | <statement> | <.comment>]+ %% <.separator>
+        [<statement> <.comment> | <statement> | <.comment>]* %% <.separator>
     }
     token statement {
         | <print_statement>
@@ -50,11 +50,11 @@ grammar Serene {
     }
 
     token identifier {
-        <.alpha> <.alnum>*
+        <.lower> <.alnum>*
     }
 
     token base_type {
-        <.upper> <.alpha>*
+        <.upper> <.alnum>*
     }
     token type {
         | <base_type> '{' <type> '}'
@@ -133,12 +133,21 @@ grammar Serene {
         <accessor>? <expression>
     }
 
-    token mutate_method_symbol {
-        '!'
+    token constructor_call {
+        <base_type> '(' <constructor_call_parameters> ')'
     }
 
-    token constructor_call {
-        <base_type> '(' <function_call_parameters> ')'
+    rule constructor_call_parameters {
+        <constructor_call_parameter>* %% ','
+    }
+
+    rule constructor_call_parameter {
+        | [<accessor>? <expression>]
+        | <type>
+    }
+
+    token mutate_method_symbol {
+        '!'
     }
 
     token method_call {
@@ -271,7 +280,11 @@ sub print_parsed ($match, $n_indent) {
         $r ~= "\n" ~ ( '  ' x $n_indent ) ~ "- " ~ $_.key ~ ": " ~ print_parsed($_.value, $n_indent + 1);
     }
     if $match.caps[0].^name eq 'Nil' {
-        $r ~= "'" ~ qq[$match] ~ "'";
+        if $match.starts-with("//") {   # Resolves issue with comments
+            $r ~= "''";
+        } else {
+            $r ~= "'" ~ qq[$match] ~ "'";
+        }
     }
     return $r;
 }
