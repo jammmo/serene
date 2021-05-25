@@ -2,6 +2,7 @@ import yaml
 import sys
 
 from node import Node
+import scope
 
 def main():
     lines = []
@@ -17,8 +18,13 @@ def main():
 
     functions = Node.create(tree)
     function_code = []
-    for x in functions:
-        function_code.append(x.to_code())
+    try:
+        for x in functions:
+            function_code.append(x.to_code())
+    except scope.SereneScopeError as exc:
+        print("COMPILE ERROR:", exc.message, sep="\n")
+        exit(126)
+
     code = '#include <iostream>\n#include <cstdint>\n#include <string>\n\n'
     code += '\n\n'.join(function_code)
     code += '\n\nint main() {\n    sn_main();\n    return 0;\n}\n'

@@ -181,7 +181,8 @@ class TypeNode(Node):
 
 class StatementNode(Node):
     def to_code(self):
-        return self[0].to_code()
+        scope.line_number = self[0].data
+        return self[1].to_code()
 
 class VarStatement(Node):
     def to_code(self):
@@ -210,7 +211,7 @@ class SetStatement(Node):
             expr_code = self['expression'].to_code()
             return f'{var_name} {assign_op} {expr_code};\n'
         else:
-            raise NameError('var_name')
+            raise scope.SereneScopeError(scope.line_number, self['identifier'].data)
 
 class PrintStatement(Node):
     def to_code(self):
@@ -280,7 +281,7 @@ class BaseExpressionNode(Node):
             if scope.currentscope.check_read(var_name):     # Issue: var_name is not necessarily read-only, since the expression might be passed to a function
                 return var_name
             else:
-                raise NameError(var_name)
+                raise scope.SereneScopeError(scope.line_number, self['identifier'].data)
         elif 'literal' in self:
             if 'bool_literal' in self['literal']:
                 return self['literal'][0].data.lower()

@@ -274,10 +274,31 @@ grammar Serene {
     }
 }
 
+
+my $original;
+
+sub line_num ($pos) {
+    my @a = $original.indices("\n");
+    my $num = 1;
+    for @a {
+        if $pos > $_ {
+            $num += 1;
+        } else {
+            last;
+        }
+    }
+    return $num;
+}
+
 sub print_parsed ($match, $n_indent) {
     my $r = '';
     for $match.caps {
-        $r ~= "\n" ~ ( '  ' x $n_indent ) ~ "- " ~ $_.key ~ ": " ~ print_parsed($_.value, $n_indent + 1);
+        if $_.key eq 'statement' {
+            $r ~= "\n" ~ ( '  ' x $n_indent ) ~ "- " ~ $_.key ~ ": ";
+            $r ~= "\n" ~ ( '  ' x ($n_indent + 1)) ~ "- line_number: " ~ line_num($_.value.from()) ~ print_parsed($_.value, $n_indent + 1)
+        } else {
+            $r ~= "\n" ~ ( '  ' x $n_indent ) ~ "- " ~ $_.key ~ ": " ~ print_parsed($_.value, $n_indent + 1);
+        }
     }
     if $match.caps[0].^name eq 'Nil' {
         if $match.starts-with("//") {   # Resolves issue with comments
@@ -292,6 +313,7 @@ sub print_parsed ($match, $n_indent) {
 sub MAIN($file) {
     say 'Compiling ', $file, ' now...';
     my $parsed = Serene.parsefile($file);
+    $original = $parsed.target;
     my $output = print_parsed($parsed, 0);
     #say $output;
     #spurt 'parsed.yaml', $output;
@@ -299,7 +321,19 @@ sub MAIN($file) {
     my $py = $*PROGRAM.dirname.IO.add('compile.py').absolute;
     say 'Running ', $py, "\n";
 
-    my $py_process = run 'python', $py, :in;
-    $py_process.in.say: $output;
-    $py_process.in.close;
+    try {
+        my $py_process = run 'python', $py, :in;
+        $py_process.in.say: $output;
+        $py_process.in.close;
+
+        CATCH {
+            when X::Proc::Unsuccessful {
+                if $py_process.exitcode == 126 {
+                    say "Did not compile."
+                } else {
+                    $*ERR.say: .message;
+                }
+            }
+        }
+    }
 }

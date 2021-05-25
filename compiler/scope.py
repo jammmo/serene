@@ -1,3 +1,12 @@
+line_number = 1
+
+class SereneScopeError(Exception):
+    def __init__(self, location, identifier):
+        self.line_number = location
+        self.identifier = identifier
+        self.message = f"Improper access of variable '{self.identifier}' at line number {self.line_number}."
+        super().__init__(self.message)
+
 class VariableObject:
     def __init__(self, name, mutable):
         self.name = name
@@ -25,7 +34,7 @@ class ScopeObject:
 
     def add_binding(self, binding_object):
         if binding_object.name in self:
-            raise ValueError
+            raise SereneScopeError(line_number, binding_object.name)
         self.bindings[binding_object.name] = binding_object
     
     def kill_binding(self, name):
