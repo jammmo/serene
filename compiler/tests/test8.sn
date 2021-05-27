@@ -11,3 +11,4 @@ function removeChar(mutate s: String, c: Char) {
         }
     }
 }
+huy

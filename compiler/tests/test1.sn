@@ -1,15 +1,32 @@
-//This is mostly gibberish, it's just to check syntax (and not semantics)
+//This is mostly gibberish, it's just to check syntax parsing
 
-function main(test: Float, man: Int) {
+//This function is blank
+function hello1() {
+}
+
+function hello2() {
+    // This function is blank except for this comment
+}
+
+// New Comment
+
+function main(x: Float, y: Int) {
     // This is a comment !@#$%^&*()
-    print a // This is another comment !@#$%^&*() YAAAAA
-    print d
+    var a = 123 // This is another comment)*&(&"")''
+    set a *= 2
+
+    
+    var b: Int = a
+    const c = b
+    const d: Float = x
+    const e: Int = y
+
     print c
-    set a *= 1
-    var a = 123
-    var a: Xanthan = b
-    const a = b
-    const a: Xanthan = b
-    run hello()
+    print d
+
+
+    run hello1()
+    run hello2()
     return a
+    // Independent comment!
 }

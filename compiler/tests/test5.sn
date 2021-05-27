@@ -12,3 +12,7 @@ function makeChoice() -> Bool {
         }
     }
 }
+
+function main() {
+    print "Result is ", makeChoice()
+}

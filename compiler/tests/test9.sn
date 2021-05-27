@@ -1,0 +1,13 @@
+function absoluteValue(x: Int) -> Int {
+    if (x < 0) {
+        return -x
+    } else {
+        return x
+    }
+}
+
+function main() {
+    print absoluteValue(50)
+    print absoluteValue(-4)
+    print absoluteValue(0)
+}

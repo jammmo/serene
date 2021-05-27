@@ -269,8 +269,8 @@ class TermNode(Node):
 
         if inner_expr.nodetype == 'identifier':
             self.is_temporary = False
-            self.var_to_access = 'sn_' + self[0][0].data
-            code = self.var_to_access
+            code = base_expr.to_code()      # This is a bit redundant, but it's done to check read access on the identifier
+            self.var_to_access = code
         elif (inner_expr.nodetype == 'expression'):
             code = '(' + inner_expr.to_code() + ')'
             self.is_temporary = inner_expr.is_temporary

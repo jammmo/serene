@@ -312,6 +312,14 @@ sub print_parsed ($match, $n_indent) {
 sub MAIN($file) {
     say 'Compiling ', $file, ' now...';
     my $parsed = Serene.parsefile($file);
+
+    if not $parsed {
+        say "COMPILE ERROR:";
+        say "Invalid syntax.";
+        say "Did not compile.";
+        exit();
+    }
+
     $original = $parsed.target;
     my $output = print_parsed($parsed, 0);
     #say $output;
