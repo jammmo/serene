@@ -309,8 +309,18 @@ sub print_parsed ($match, $n_indent) {
     return $r;
 }
 
-sub MAIN($file) {
-    say 'Compiling ', $file, ' now...';
+sub MAIN($output_type, $file, $output_file) {
+    if not $file.IO.e {
+        say 'File "', $file, '" does not exist.';
+        exit();
+    }
+
+    if $output_type eq 'p' {
+        say 'Parsing ', $file, ' now...';
+    } else {
+        say 'Compiling ', $file, ' now...';        
+    }
+
     my $parsed = Serene.parsefile($file);
 
     if not $parsed {
@@ -322,23 +332,52 @@ sub MAIN($file) {
 
     $original = $parsed.target;
     my $output = print_parsed($parsed, 0);
-    #say $output;
-    #spurt 'parsed.yaml', $output;
 
-    my $py = $*PROGRAM.dirname.IO.add('compile.py').absolute;
-    say 'Running ', $py, "\n";
+    if $output_type eq 'p' {
+        say $output;
+        #spurt 'parsed.yaml', $output;
+    } elsif $output_type eq 'c' {
+        my $py = $*PROGRAM.dirname.IO.add('compile.py').absolute;
+        say 'Running ', $py, "\n";
 
-    try {
-        my $py_process = run 'python', $py, :in;
-        $py_process.in.say: $output;
-        $py_process.in.close;
+        try {
+            my $py_process = run 'python', $py, :in;
+            $py_process.in.say: $output;
+            $py_process.in.close;
 
-        CATCH {
-            when X::Proc::Unsuccessful {
-                if $py_process.exitcode == 126 {
-                    say "Did not compile."
-                } else {
-                    $*ERR.say: .message;
+            CATCH {
+                when X::Proc::Unsuccessful {
+                    if $py_process.exitcode == 126 {
+                        say "Did not compile."
+                    } else {
+                        $*ERR.say: .message;
+                    }
+                }
+            }
+        }
+    } elsif $output_type eq 'o' {
+        my $py = $*PROGRAM.dirname.IO.add('compile.py').absolute;
+        say 'Running ', $py;
+
+        my $output_path = $*PROGRAM.dirname.IO.add($output_file).absolute;
+        if not (($output_path.IO.extension eq 'cpp') or ($output_path.IO.extension eq 'cc')) {
+            say 'Invalid output file name.';
+            exit();
+        }
+
+        try {
+            my $py_process = run 'python', $py, "-o", $output_path, :in;
+            $py_process.in.say: $output;
+            $py_process.in.close;
+            say 'Saved output to file ', $output_path;
+
+            CATCH {
+                when X::Proc::Unsuccessful {
+                    if $py_process.exitcode == 126 {
+                        say "Did not compile."
+                    } else {
+                        $*ERR.say: .message;
+                    }
                 }
             }
         }
