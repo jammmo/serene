@@ -200,9 +200,8 @@ grammar Serene {
     }
 
     rule run_statement {
-        | 'run' <function_call> 
-        | 'run' <identifier> <method_call> 
-    } #should term also be allowed? 'run a.b()' is fine, but what about 'run a.b().c' or 'run a.b()[5]'?
+        | 'run' <term>
+    } #should all terms be allowed? 'run a.b()' is fine, but what about 'run a.b().c' or 'run a.b()[5]'?
 
     rule return_statement {
         'return' <expression>

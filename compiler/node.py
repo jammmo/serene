@@ -221,11 +221,7 @@ class PrintStatement(Node):
 
 class RunStatement(Node):
     def to_code(self):
-        if 'function_call' in self:
-            return self['function_call'].to_code() + ';\n'
-        elif 'method_call' in self:
-            obj = 'sn_' + self['identifier'].data
-            return obj + self['method_call'].to_code() + ';\n'
+        return self['term'].to_code() + ';\n'
 
 class ReturnStatement(Node):
     def to_code(self):
@@ -258,13 +254,34 @@ class ExpressionNode(Node):
 
 class TermNode(Node):
     def to_code(self):
-        code = ''
-        for x in self:
-            if x.nodetype == 'base_expression':
-                code = x.to_code()
-            elif x.nodetype == 'field_access':
+        # Get first identifier in term, which may be mutated. Ex: m from m.sort!() or ((m)).sort!()
+        # Issue: Does not yet account for things like (((m[5]))).sort!()
+        x = self
+        while True:
+            x = x[0][0]
+            if x.nodetype == 'identifier':
+                temp = False
+                var_name = 'sn_' + self[0][0].data
+                break
+            elif (x.nodetype == 'expression') and len(x.data) == 1:
+                continue
+            else:
+                temp = True
+                break                
+        
+        code = self[0].to_code()
+
+        for i in range(1, len(self.data)):
+            x = self[i]
+            if x.nodetype == 'field_access':
                 code += '.sn_' + x['identifier'].data
             elif x.nodetype == 'method_call':
+                if not temp:
+                    if 'mutate_method_symbol' in x:
+                        if not scope.currentscope.check_pass(var_name, 'mutate'):
+                            raise scope.SereneScopeError(scope.line_number, var_name[3:])
+                    # Method calls return temporary values, so only the first method call in a term needs to be scope-checked
+                    temp = True
                 code += x.to_code()
             elif x.nodetype == 'index_call':
                 code += '[' + x['expression'].to_code() + ']'
@@ -278,7 +295,7 @@ class BaseExpressionNode(Node):
             raise NotImplementedError
         elif 'identifier' in self:
             var_name = 'sn_' + self['identifier'].data
-            if scope.currentscope.check_read(var_name):     # Issue: var_name is not necessarily read-only, since the expression might be passed to a function
+            if scope.currentscope.check_read(var_name):     # If the variable also needs to be mutated/moved, that will already be checked within TermNode or FunctionCallParameterNode
                 return var_name
             else:
                 raise scope.SereneScopeError(scope.line_number, self['identifier'].data)
@@ -315,9 +332,14 @@ class FunctionCallParameterNode(Node):
         else:
             accessor = 'look'
         
-        #scope.currentscope.check_pass(var_name, accessor) # Where to get variable name? There could be multiple in a single expression
+        # It doesn't matter what accessor you use for a temporary value, and all infix expressions (eg. x+1) return temporary values.
+        # So we only need to check single-term expressions for mutate/move access.
+        if (self['expression'].count('term') == 1) and (self['expression']['term']['base_expression'][0].nodetype == 'identifier'):
+            var_name = 'sn_' + self['expression']['term']['base_expression'][0].data     # Not entirely correct; Needs to handle method calls and field accesses
+            if not scope.currentscope.check_pass(var_name, accessor):
+                raise scope.SereneScopeError(scope.line_number, var_name[3:])
 
-        return self['expression'].to_code()
+        return self['expression'].to_code() # This will check read access for all identifiers.
 
 class ForLoopNode(Node):
     def to_code(self):
