@@ -6,3 +6,52 @@ function charArrayToString(move u: Array{Char}) -> String {
     }
     return s
 }
+
+
+// These should not compile (for scoping/mutability reasons, though there may also be other reasons)
+// function charArrayToString(move u: Array{Char}) -> String {
+//     const s = ""
+//     for (x in u) {
+//         run s.append!(x)
+//     }
+//     return s
+// }
+
+// function charArrayToString(move u: Array{Char}) -> String {
+//     var s = ""
+//     for (x in u) {
+//         run s.append!(mutate x)
+//     }
+//     return s
+// }
+
+// function charArrayToString(move u: Array{Char}) -> String {
+//     var s = ""
+//     for (x in u) {
+//         run s.append!(mutate x[0].hello.world)
+//     }
+//     return s
+// }
+
+// function charArrayToString(move u: Array{Char}) -> String {
+//     const s = ""
+//     for (x in u) {
+//         run ((((s[0]).a[2])))[1].append!(x)
+//     }
+//     return s
+// }
+
+
+
+// This still compiles, but it shouldn't. Scoping rules will need to take loops and other control flow into account
+
+// function charArrayToString(move u: Array{Char}) -> String {
+//     var s = ""
+//     for (x in u) {
+//         run s.append!(move u)
+//     }
+//     return s
+// }
+
+// Also, something like 'run s.append!(mutate s)' should never compile.
+// Variables should only be able to pass themselves as 'look' or 'copy' to non-mutating methods, and only as 'copy' to mutating methods.
