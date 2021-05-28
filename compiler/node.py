@@ -211,7 +211,10 @@ class SetStatement(Node):
             expr_code = self['expression'].to_code()
             return f'{var_name} {assign_op} {expr_code};\n'
         else:
-            raise scope.SereneScopeError(scope.line_number, self['identifier'].data)
+            if scope.currentscope.check_read(var_name):
+                raise scope.SereneScopeError(f"Variable '{self['identifier'].data}' cannot be mutated at line number {scope.line_number}.")
+            else:
+                raise scope.SereneScopeError(f"Variable '{self['identifier'].data}' is not defined at line number {scope.line_number}.")
 
 class PrintStatement(Node):
     def to_code(self):
@@ -258,7 +261,8 @@ class ExpressionNode(Node):
             self.var_to_access = last_term.var_to_access
             if enclosing_accessor is not None:
                 if not scope.currentscope.check_pass(self.var_to_access, enclosing_accessor):
-                    raise scope.SereneScopeError(scope.line_number, self.var_to_access[3:])
+                    var_name = self.var_to_access[3:]
+                    raise scope.SereneScopeError(f"Variable '{var_name}' cannot be passed with accessor '{enclosing_accessor}' at line number {scope.line_number}.")
 
         return code
 
@@ -288,7 +292,8 @@ class TermNode(Node):
                 if not self.is_temporary:
                     if 'mutate_method_symbol' in x:
                         if not scope.currentscope.check_pass(self.var_to_access, 'mutate'):
-                            raise scope.SereneScopeError(scope.line_number, self.var_to_access[3:])
+                            var_name = self.var_to_access[3:]
+                            raise scope.SereneScopeError(f"Mutating methods cannot be called on variable '{var_name}' at line number {scope.line_number}.")
                     # Method calls return temporary values, so only the first method call in a term needs to be scope-checked
                     self.is_temporary = True
                 code += x.to_code()
@@ -307,7 +312,7 @@ class BaseExpressionNode(Node):
             if scope.currentscope.check_read(var_name):     # If the variable also needs to be mutated/moved, that will already be checked within TermNode or ExpressionNode
                 return var_name
             else:
-                raise scope.SereneScopeError(scope.line_number, self['identifier'].data)
+                raise scope.SereneScopeError(f"Variable '{self['identifier'].data}' is not defined at line number {scope.line_number}.")
         elif 'literal' in self:
             if 'bool_literal' in self['literal']:
                 return self['literal'][0].data.lower()
@@ -318,6 +323,8 @@ class BaseExpressionNode(Node):
 
 class FunctionCallNode(Node):
     def to_code(self):
+        if self['identifier'].data not in scope.function_names:
+            raise scope.SereneScopeError(f"Function '{self['identifier'].data}' is not defined at line number {scope.line_number}.")
         code = 'sn_' + self['identifier'].data + '('
         params = []
         for x in self['function_call_parameters']:
@@ -356,13 +363,14 @@ class ForLoopNode(Node):
         loopvar = 'sn_' + self['identifier'].data
         scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False))
 
-        statements = newindent.join([x.to_code() for x in self['statements']])
         if self.count('expression') == 2:   # start and endpoint
             startval = self[1].to_code()
             endval = self[2].to_code()
+            statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous two lines due to the side effects
             code = f'for (int {loopvar} = {startval}; {loopvar} < {endval}; {loopvar}++) {{\n{newindent}{statements}{oldindent}}}\n'
         else:
             myrange = self['expression'].to_code()
+            statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous line due to the side effects
             code = f'for (const auto& {loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
         
         indent_level -= 1

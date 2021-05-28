@@ -1,10 +1,8 @@
 line_number = 1
 
 class SereneScopeError(Exception):
-    def __init__(self, location, identifier):
-        self.line_number = location
-        self.identifier = identifier
-        self.message = f"Improper access of variable '{self.identifier}' at line number {self.line_number}."
+    def __init__(self, message):
+        self.message = message
         super().__init__(self.message)
 
 class VariableObject:
@@ -116,3 +114,4 @@ class ScopeObject:
 
 top_scope = ScopeObject(None)
 currentscope = top_scope
+function_names = []

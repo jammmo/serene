@@ -22,6 +22,13 @@ def main():
         exit()
 
     functions = Node.create(tree)
+    for x in functions:
+        scope.function_names.append(x['identifier'].data)
+
+    if 'main' not in scope.function_names:
+        print("COMPILE ERROR:", "No 'main()' function is defined.", sep="\n")
+        exit(126)
+
     function_code = []
     try:
         for x in functions:
