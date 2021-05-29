@@ -2,7 +2,50 @@ import scope
 
 indent_level = 0
 
-# Should be constructed with 'create', not regular constructor
+# Base Classes ________________________________________________________________
+
+class NodeMap:
+    def __init__(self, L):  # L is a list of Node objects
+        if type(L) != list:
+            raise TypeError
+        self.data = [Node.create(x) for x in L]
+    
+    def __getitem__(self, x):
+        if type(x) == int:
+            return self.data[x]
+        if type(x) == str:
+            for y in self.data:
+                if y.nodetype == x:
+                    return y
+        raise TypeError
+    
+    def __contains__(self, x):
+        if type(x) == int:
+            return x in self.data[x]
+        if type(x) == str:
+            for y in self.data:
+                if y.nodetype == x:
+                    return True
+            return False
+        raise TypeError
+    
+    def count(self, x):
+        c = 0
+        for y in self.data:
+            if y.nodetype == x:
+                c += 1
+        return c
+    
+    def __len__(self):
+        return len(self.data)
+
+    def __str__(self):
+        raise TypeError
+    
+    def __repr__(self):
+        return '\n'.join(repr(x) for x in self.data)
+
+# Node should be constructed with 'create', not regular constructor
 class Node:
     def create(D):
         if type(D) == dict:
@@ -59,39 +102,28 @@ class Node:
 
     def __init__(self, D):
         self.nodetype = list(D.keys())[0]
-        self.data = D[self.nodetype]
-    
+        inside = D[self.nodetype]
+        if type(inside) == list:
+            self.data = NodeMap(inside)
+        else:
+            self.data = inside
+        
     def __getitem__(self, x):
-        if type(self.data) == str:
+        if type(self.data) == NodeMap:
+            return self.data[x]
+        else:
             raise TypeError
-        if type(x) == int:
-            return Node.create(self.data[x])
-        if type(x) == str:
-            for y in self.data:
-                if x in y:
-                    return Node.create(y)
-        raise TypeError
     
     def __contains__(self, x):
-        if type(self.data) == str:
+        if type(self.data) == NodeMap:
+            return x in self.data
+        else:
             raise TypeError
-        if type(x) == int:
-            return x in self.data[x]
-        if type(x) == str:
-            for y in self.data:
-                if x in y:
-                    return True
-            return False
-        raise TypeError
     
     def count(self, x):
-        if (type(x) != str) or (type(self.data) == str):
+        if (type(x) != str) or (type(self.data) != NodeMap):
             raise TypeError
-        c = 0
-        for y in self.data:
-            if x in y:
-                c += 1
-        return c
+        return self.data.count(x)
     
     def __iter__(self):
         self._i = 0
@@ -105,12 +137,17 @@ class Node:
         self._i += 1
         return n
     
-    def __repr__(self):
-        if type(self.data) == str:
-            return self.data
-        else:
-            return self.nodetype
+    def __str__(self):
+        raise TypeError
 
+    def __repr__(self):
+        if type(self.data) == NodeMap:
+            return '<' + self.nodetype + '>\n  ' + '\n  '.join(repr(self.data).split('\n')) + '\n</' + self.nodetype + '>'
+        else:
+            return '<' + self.nodetype + ': ' + repr(self.data if self.data != '' else None) + '>'
+
+
+# Subclasses __________________________________________________________________
 
 class FunctionNode(Node):
     def to_code(self):
@@ -207,7 +244,7 @@ class SetStatement(Node):
         var_name = 'sn_' + self['identifier'].data
 
         if scope.currentscope.check_set(var_name):
-            assign_op = self['assignment_op']
+            assign_op = self['assignment_op'].data
             expr_code = self['expression'].to_code()
             return f'{var_name} {assign_op} {expr_code};\n'
         else:
