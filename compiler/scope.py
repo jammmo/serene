@@ -16,11 +16,12 @@ class ParameterObject:
         self.accessor = accessor
 
 class ScopeObject:
-    def __init__(self, parent):
+    def __init__(self, parent, loop = False):
         self.bindings = dict()
         self.victim_bindings = dict()   # Bindings that have been moved/deleted and no longer exist
         self.subscopes = []
         self.parent = parent
+        self.loop = loop or (self.parent.loop if self.parent is not None else False)
         if self.parent is not None:
             self.parent.subscopes.append(self)
 
@@ -32,11 +33,13 @@ class ScopeObject:
 
     def add_binding(self, binding_object):
         if binding_object.name in self:
-            raise SereneScopeError(line_number, binding_object.name)
+            raise SereneScopeError(f"Variable '{binding_object.name[3:]}' defined at line {line_number} already exists in this scope.")
         self.bindings[binding_object.name] = binding_object
     
     def kill_binding(self, name):
         if name in self:
+            if currentscope.loop:
+                raise SereneScopeError(f"Variable '{name[3:]}' is moved or destroyed at line {line_number} in a loop where it may be accessed again.")
             self.victim_bindings[name] = self.bindings[name]
             del self.bindings[name]
     

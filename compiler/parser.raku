@@ -43,7 +43,7 @@ grammar Serene {
         \d+
     }
     token string_literal {
-        '"' <-[ " ]>* '"'
+        '"' [ '\\"' | '\\\\' | <-[ " \\ ]> ]* '"'
     }
     token bool_literal {
         'True' | 'False'
@@ -217,46 +217,46 @@ grammar Serene {
 
     # Blocks
     rule while_loop {
-        'while' '(' <expression> ')' '{' <.separator>
+        'while' '(' <expression> ')' <.separator>? '{' <.separator>
         <statements>
         '}'
     }
 
     rule for_loop {
-        | [ 'for' '(' <identifier> 'in' <expression> ')' '{' <.separator>
+        | [ 'for' '(' <identifier> 'in' <expression> ')' <.separator>? '{' <.separator>
             <statements>
             '}' ]
-        | [ 'for' '(' <identifier> '=' <expression> ',' <expression> ')' '{' <.separator>
+        | [ 'for' '(' <identifier> '=' <expression> ',' <expression> ')' <.separator>? '{' <.separator>
             <statements>
             '}' ] 
     }
 
     rule if_block {
-        <if_branch> <.separator>?
-        [ <elseif_branch> <.separator>? ]?
-        [ <else_branch> <.separator>? ]?
+        <if_branch>
+        [ <.separator>? <elseif_branch> ]?
+        [ <.separator>? <else_branch> ]?
     }
 
     rule if_branch {
-        'if' '(' <expression> ')' '{' <.separator>
+        'if' '(' <expression> ')' <.separator>? '{' <.separator>
         <statements>
         '}'        
     }
 
     rule elseif_branch {
-        'elseif' '(' <expression> ')' '{' <.separator>
+        'elseif' '(' <expression> ')' <.separator>? '{' <.separator>
         <statements>
         '}'
     }
 
     rule else_branch {
-        'else' '{' <.separator>
+        'else' <.separator>? '{' <.separator>
         <statements>
         '}'
     }
 
     rule match_block {
-        'match' '(' <expression> ')' '{' <.separator>
+        'match' '(' <expression> ')' <.separator>? '{' <.separator>
         [ <match_branch> <.separator> ]+
         '}'    
     }

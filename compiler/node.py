@@ -395,7 +395,7 @@ class ForLoopNode(Node):
         indent_level += 1
         newindent = ('    '*indent_level)
 
-        scope.currentscope = scope.ScopeObject(scope.currentscope)
+        scope.currentscope = scope.ScopeObject(scope.currentscope, loop=True)
 
         loopvar = 'sn_' + self['identifier'].data
         scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False))
@@ -422,7 +422,7 @@ class WhileLoopNode(Node):
         indent_level += 1
         newindent = ('    '*indent_level)
 
-        scope.currentscope = scope.ScopeObject(scope.currentscope)
+        scope.currentscope = scope.ScopeObject(scope.currentscope, loop=True)
 
         statements = newindent.join([x.to_code() for x in self['statements']])
         condition = self['expression'].to_code()
