@@ -126,16 +126,10 @@ class Node:
         return self.data.count(x)
     
     def __iter__(self):
-        self._i = 0
-        return self
-    
-    def __next__(self):
-        if self._i == len(self.data):
-            raise StopIteration
-        
-        n = self[self._i]
-        self._i += 1
-        return n
+        if type(self.data) == NodeMap:
+            return iter(self.data.data)
+        else:
+            return iter([])
     
     def __str__(self):
         raise TypeError
@@ -157,6 +151,7 @@ class FunctionNode(Node):
         newindent = ('    '*indent_level)
 
         scope.currentscope = scope.ScopeObject(scope.currentscope)
+        self.my_scope = scope.currentscope
 
         if 'type' in self:
             func_type = self['type'].to_code()
@@ -187,8 +182,13 @@ class FunctionParameterNode(Node):
         var_name = 'sn_' + self['identifier'].data
         code += ' ' + var_name
 
+        if len(self['type'].data) == 1 and self['type']['base_type'].data in ('String', 'Int', 'Bool'):
+            my_type =  self['type']['base_type'].data
+        else:
+            raise NotImplementedError(self['type']['base_type'].data)
+
         # Adds to the scope INSIDE the function, not the scope where the function is defined
-        scope.currentscope.add_binding(scope.ParameterObject(var_name, accessor))
+        scope.currentscope.add_binding(scope.ParameterObject(var_name, accessor, my_type))
 
         return code
 
@@ -225,18 +225,24 @@ class VarStatement(Node):
     def to_code(self):
         var_name = 'sn_' + self['identifier'].data
 
-        scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=True))
-
         expr_code = self['expression'].to_code()
+        expr_type = self['expression'].get_type()
+        if expr_type == 'Number':
+            expr_type = 'Int'
+
+        scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=True, var_type=expr_type))
         return f'auto {var_name} = {expr_code};\n'
 
 class ConstStatement(Node):
     def to_code(self):
         var_name = 'sn_' + self['identifier'].data
 
-        scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=False))
-
         expr_code = self['expression'].to_code()
+        expr_type = self['expression'].get_type()
+        if expr_type == 'Number':
+            expr_type = 'Int'
+
+        scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=False, var_type=expr_type))
         return f'const auto {var_name} = {expr_code};\n'
 
 class SetStatement(Node):
@@ -246,6 +252,12 @@ class SetStatement(Node):
         if scope.currentscope.check_set(var_name):
             assign_op = self['assignment_op'].data
             expr_code = self['expression'].to_code()
+            expr_type = self['expression'].get_type()
+
+            correct_type = scope.currentscope.get_type_of(var_name)
+            if expr_type != correct_type:
+                raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{self['identifier'].data}' at {scope.line_number}. Correct type is '{correct_type}'.")
+
             return f'{var_name} {assign_op} {expr_code};\n'
         else:
             if scope.currentscope.check_read(var_name):
@@ -277,6 +289,11 @@ class ContinueStatement(Node):
         return 'continue;\n'
 
 class ExpressionNode(Node):
+    def get_type(self):
+        if (self.count("term") > 1) or 'unary_op' in self:
+            raise NotImplementedError("get_type() for ExpressionNode with infix or unary operators")
+        return self['term'].get_type()
+    
     def to_code(self, enclosing_accessor=None):     # enclosing_accessor should only be passed to top-level expression with an applied accessor
         code = ''
         last_term = None
@@ -304,6 +321,11 @@ class ExpressionNode(Node):
         return code
 
 class TermNode(Node):
+    def get_type(self):
+        if len(self.data) > 1:
+            raise NotImplementedError
+        return self['base_expression'].get_type()
+    
     def to_code(self):
         base_expr = self[0]
         inner_expr = base_expr[0]
@@ -339,6 +361,22 @@ class TermNode(Node):
         return code
 
 class BaseExpressionNode(Node):
+    def get_type(self):
+        if 'literal' in self:
+            if 'int_literal' in self['literal']:
+                return 'Int'
+            elif 'bool_literal' in self['literal']:
+                return 'Bool'
+            elif 'string_literal' in self['literal']:
+                return 'String'
+            else:
+                raise NotImplementedError
+        elif 'identifier' in self:
+            var_name = 'sn_' + self['identifier'].data
+            return scope.currentscope.get_type_of(var_name)
+        else:
+            raise NotImplementedError
+        
     def to_code(self):
         if 'function_call' in self:
             return self['function_call'].to_code()
@@ -363,9 +401,40 @@ class FunctionCallNode(Node):
         if self['identifier'].data not in scope.function_names:
             raise scope.SereneScopeError(f"Function '{self['identifier'].data}' is not defined at line number {scope.line_number}.")
         code = 'sn_' + self['identifier'].data + '('
+
+        num_called_params = len(self['function_call_parameters'].data) if type(self['function_call_parameters'].data) == NodeMap else 0
+        for y in scope.functions:
+            if self['identifier'].data == y['identifier'].data:
+                break
+        original_function = y
+
+        if type(original_function['function_parameters'].data) != NodeMap:
+            num_original_params = 0
+        else:
+            num_original_params = len(original_function['function_parameters'].data)
+        if num_called_params > num_original_params:
+            raise scope.SereneScopeError(f"Function '{self['identifier'].data}' is given too many parameters when called at line number {scope.line_number}.")
+        if num_called_params < num_original_params:
+            raise scope.SereneScopeError(f"Function '{self['identifier'].data}' is given too few parameters when called at line number {scope.line_number}.")
+
         params = []
-        for x in self['function_call_parameters']:
-            params.append(x.to_code())
+        for i in range(num_called_params):
+            o_param = original_function['function_parameters'][i]
+            if 'accessor' in o_param:
+                o_accessor = o_param['accessor'].data
+            else:
+                o_accessor = 'look'
+            
+            o_type = original_function.my_scope.get_type_of('sn_' + o_param['identifier'].data)
+            
+            c_param = self['function_call_parameters'][i]
+            if 'accessor' in c_param:
+                c_accessor = c_param['accessor'].data
+            else:
+                c_accessor = 'look'
+            
+            params.append(c_param.to_code(original_accessor = o_accessor, original_type = o_type, function_name = self['identifier'].data, param_name = o_param['identifier'].data))
+
         code += ', '.join(params) + ')'
         return code
 
@@ -379,13 +448,20 @@ class MethodCallNode(Node):
         return code
 
 class FunctionCallParameterNode(Node):
-    def to_code(self):
+    def to_code(self, original_accessor, original_type, function_name, param_name):
         if 'accessor' in self:
-            accessor = self['accessor'].data
+            my_accessor = self['accessor'].data
         else:
-            accessor = 'look'
+            my_accessor = 'look'
         
-        code = self['expression'].to_code(enclosing_accessor=accessor) # This will raise exceptions for incorrect accesses
+        code = self['expression'].to_code(enclosing_accessor=my_accessor) # This will raise exceptions for incorrect accesses
+
+        if (not self['expression'].is_temporary) and (my_accessor != original_accessor) and (my_accessor != 'copy'):
+            raise scope.SereneScopeError(f"Function '{function_name}' is called with incorrect accessor for parameter '{param_name}' at line number {scope.line_number}.")
+
+        if original_type != self['expression'].get_type():
+            raise scope.SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to function '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
+
         return code
 
 class ForLoopNode(Node):

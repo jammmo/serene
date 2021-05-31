@@ -5,15 +5,22 @@ class SereneScopeError(Exception):
         self.message = message
         super().__init__(self.message)
 
+class SereneTypeError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
 class VariableObject:
-    def __init__(self, name, mutable):
+    def __init__(self, name, mutable, var_type):
         self.name = name
         self.mutable = mutable
+        self.var_type = var_type
 
 class ParameterObject:
-    def __init__(self, name, accessor):
+    def __init__(self, name, accessor, var_type):
         self.name = name
         self.accessor = accessor
+        self.var_type = var_type
 
 class ScopeObject:
     def __init__(self, parent, loop = False):
@@ -43,6 +50,14 @@ class ScopeObject:
             self.victim_bindings[name] = self.bindings[name]
             del self.bindings[name]
     
+    def get_type_of(self, name):
+        if (name in self):
+            return self[name].var_type
+        elif self.parent is not None:
+            return self.parent.get_type_of(name)
+        else:
+            raise ValueError
+
     def check_read(self, name):
         if (name in self):
             return True
@@ -118,3 +133,4 @@ class ScopeObject:
 top_scope = ScopeObject(None)
 currentscope = top_scope
 function_names = []
+functions = None

@@ -21,8 +21,8 @@ def main():
         print(e)
         exit()
 
-    functions = Node.create(tree)
-    for x in functions:
+    scope.functions = Node.create(tree)
+    for x in scope.functions:
         scope.function_names.append(x['identifier'].data)
 
     if 'main' not in scope.function_names:
@@ -31,9 +31,9 @@ def main():
 
     function_code = []
     try:
-        for x in functions:
+        for x in scope.functions:
             function_code.append(x.to_code())
-    except scope.SereneScopeError as exc:
+    except (scope.SereneScopeError, scope.SereneTypeError) as exc:
         print("COMPILE ERROR:", exc.message, sep="\n")
         exit(126)
 
