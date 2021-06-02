@@ -27,3 +27,13 @@ function test4() {
     set name = "Rickroll"   //strings are mutable
     print name
 }
+
+function main() {
+    run test1()
+    print ""
+    run test2()
+    print ""
+    run test3()
+    print ""
+    run test4()
+}

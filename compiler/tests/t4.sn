@@ -1,3 +1,7 @@
+function readLine() -> String {
+    // Assume this is implemented elsewhere
+}
+
 function makeChoice() -> Bool {
     while (True) {
         var input = readLine()

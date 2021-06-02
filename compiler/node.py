@@ -144,14 +144,17 @@ class Node:
 # Subclasses __________________________________________________________________
 
 class FunctionNode(Node):
+    def __init__(self, D):
+        super().__init__(D)
+        self.my_scope = scope.ScopeObject(scope.top_scope)
+    
     def to_code(self):
         global indent_level
         oldindent = ('    '*indent_level)
         indent_level += 1
         newindent = ('    '*indent_level)
 
-        scope.currentscope = scope.ScopeObject(scope.currentscope)
-        self.my_scope = scope.currentscope
+        scope.currentscope = self.my_scope
 
         if 'type' in self:
             func_type = self['type'].to_code()
@@ -171,7 +174,10 @@ class FunctionNode(Node):
         return code
 
 class FunctionParameterNode(Node):
-    def to_code(self):
+    # Function parameters need to be processed before other code so that function calls can be verified regardless of the order that functions are defined
+    def __init__(self, D):
+        super().__init__(D)
+        
         code = self['type'].to_code()
         if 'accessor' in self:
             accessor = self['accessor'].data
@@ -183,14 +189,17 @@ class FunctionParameterNode(Node):
         code += ' ' + var_name
 
         if len(self['type'].data) == 1 and self['type']['base_type'].data in ('String', 'Int', 'Bool'):
-            my_type =  self['type']['base_type'].data
+            my_type = self['type']['base_type'].data
         else:
             raise NotImplementedError(self['type']['base_type'].data)
 
         # Adds to the scope INSIDE the function, not the scope where the function is defined
         scope.currentscope.add_binding(scope.ParameterObject(var_name, accessor, my_type))
 
-        return code
+        self.code = code
+    
+    def to_code(self):
+        return self.code
 
 class TypeNode(Node):
     def to_code(self):
@@ -290,8 +299,8 @@ class ContinueStatement(Node):
 
 class ExpressionNode(Node):
     def get_type(self):
-        if (self.count("term") > 1) or 'unary_op' in self:
-            raise NotImplementedError("get_type() for ExpressionNode with infix or unary operators")
+        if (self.count("term") > 1):
+            raise NotImplementedError("get_type() for ExpressionNode with infix operators")
         return self['term'].get_type()
     
     def to_code(self, enclosing_accessor=None):     # enclosing_accessor should only be passed to top-level expression with an applied accessor
@@ -374,6 +383,15 @@ class BaseExpressionNode(Node):
         elif 'identifier' in self:
             var_name = 'sn_' + self['identifier'].data
             return scope.currentscope.get_type_of(var_name)
+        elif 'function_call' in self:
+            for y in scope.functions:
+                if self['function_call']['identifier'].data == y['identifier'].data:
+                    break
+            original_function = y
+            if 'type' not in original_function['type']:
+                return original_function['type']['base_type'].data
+            else:
+                raise NotImplementedError
         else:
             raise NotImplementedError
         

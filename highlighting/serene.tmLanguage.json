@@ -25,11 +25,11 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.serene",
-				"match": "\\b(if|else|while|for|return|break|either)\\b"
+				"match": "\\b(if|else|while|for|match|return|break|continue|either)\\b"
 			},
 			{
 				"name": "keyword.other.serene",
-				"match": "\\b(let|set|var|const|run|import|or|and)\\b"
+				"match": "\\b(let|set|var|const|run|print|import|or|and|not)\\b"
 			},
 			{
 				"name": "storage.type.serene",

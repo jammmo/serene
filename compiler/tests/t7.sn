@@ -7,6 +7,9 @@ function charArrayToString(move u: Array{Char}) -> String {
     return s
 }
 
+function main() {
+    // Char is not implemented yet, so charArrayToString() can't be tested here
+}
 
 // These should not compile (for scoping/mutability reasons, though there may also be other reasons)
 // function charArrayToString(move u: Array{Char}) -> String {

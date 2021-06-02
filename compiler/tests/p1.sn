@@ -1,4 +1,5 @@
 //This is mostly gibberish, it's just to check syntax parsing and scoping/ownership rules
+//Test this with -p option to only parse and not compile
 
 function main() {
     var b = something()
