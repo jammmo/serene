@@ -265,7 +265,7 @@ class SetStatement(Node):
 
             correct_type = scope.currentscope.get_type_of(var_name)
             if expr_type != correct_type:
-                raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{self['identifier'].data}' at {scope.line_number}. Correct type is '{correct_type}'.")
+                raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{self['identifier'].data}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
 
             return f'{var_name} {assign_op} {expr_code};\n'
         else:
@@ -388,6 +388,8 @@ class BaseExpressionNode(Node):
                 if self['function_call']['identifier'].data == y['identifier'].data:
                     break
             original_function = y
+            if 'type' not in original_function:
+                raise scope.SereneTypeError(f"Function '{self['function_call']['identifier'].data}' with no return value cannot be used as an expression at line number {scope.line_number}.")
             if 'type' not in original_function['type']:
                 return original_function['type']['base_type'].data
             else:
@@ -574,6 +576,7 @@ class MatchBlock(Node):
         newindent = ('    '*indent_level)
 
         subject = self['expression'].to_code()
+        subject_type = self['expression'].get_type()
         branches = []
         for x in self:
             if x.nodetype == 'match_branch':
@@ -583,6 +586,10 @@ class MatchBlock(Node):
                     conditions = []
                     for i in range(len(x.data) - 1):    # skip last element, which is 'statements'; all others are expressions
                         conditions.append('(' + x[i].to_code() + ' == ' + subject + ')')
+                        expr_type = x[i].get_type()
+                        if expr_type != subject_type:
+                            raise scope.SereneTypeError(f"Incorrect type in match statement at line number {scope.line_number}. Type must match subject of type '{subject_type}'.")
+                    
                     conditions = ' or '.join(conditions)
                     if 'statements' in x:
                         statements = newindent.join([y.to_code() for y in x['statements']])
