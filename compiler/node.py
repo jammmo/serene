@@ -188,7 +188,7 @@ class FunctionParameterNode(Node):
         var_name = 'sn_' + self['identifier'].data
         code += ' ' + var_name
 
-        if len(self['type'].data) == 1 and self['type']['base_type'].data in ('String', 'Int', 'Bool'):
+        if len(self['type'].data) == 1 and self['type']['base_type'].data in ('String', 'Char', 'Int', 'Float', 'Bool'):
             my_type = self['type']['base_type'].data
         else:
             raise NotImplementedError(self['type']['base_type'].data)
@@ -210,6 +210,8 @@ class TypeNode(Node):
             code = 'bool'
         elif base == 'String':
             code = 'std::string'
+        elif base == 'String':
+            code = 'char'
         elif base == 'Float':
             code = 'double'
         elif base == 'Char':
@@ -374,10 +376,14 @@ class BaseExpressionNode(Node):
         if 'literal' in self:
             if 'int_literal' in self['literal']:
                 return 'Int'
+            elif 'float_literal' in self['literal']:
+                return 'Float'
             elif 'bool_literal' in self['literal']:
                 return 'Bool'
             elif 'string_literal' in self['literal']:
                 return 'String'
+            elif 'char_literal' in self['literal']:
+                return 'Char'
             else:
                 raise NotImplementedError
         elif 'identifier' in self:
@@ -463,7 +469,8 @@ class MethodCallNode(Node):
         code = '.sn_' + self['identifier'].data + '('
         params = []
         for x in self['function_call_parameters']:
-            params.append(x.to_code())
+            raise NotImplementedError
+            # params.append(x.to_code())  # This doesn't work anymore
         code += ', '.join(params) + ')'
         return code
 

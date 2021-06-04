@@ -36,6 +36,9 @@ def main():
     except (scope.SereneScopeError, scope.SereneTypeError) as exc:
         print("COMPILE ERROR:", exc.message, sep="\n")
         exit(126)
+    except Exception as exc:
+        print(f"At source line number {scope.line_number}:")
+        raise exc
 
     code = '#include <iostream>\n#include <cstdint>\n#include <string>\n\n'
     code += '\n\n'.join(function_code)

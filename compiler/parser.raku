@@ -36,14 +36,22 @@ grammar Serene {
 
     token literal {
         | <int_literal>
+        | <float_literal>
         | <string_literal>
+        | <char_literal>
         | <bool_literal>
     }
     token int_literal {
         \d+
     }
+    token float_literal {
+        \d+ "." \d*
+    }
     token string_literal {
         '"' [ '\\"' | '\\\\' | <-[ " \\ ]> ]* '"'
+    }
+    token char_literal {
+        "'" [ "\\'" | "\\\\" | <-[ \' \\ ]> ]* "'"
     }
     token bool_literal {
         'True' | 'False'
@@ -303,7 +311,7 @@ sub print_parsed ($match, $n_indent) {
         if $match.starts-with("//") {   # Resolves issue with comments
             $r ~= "''";
         } else {
-            $r ~= "'" ~ qq[$match] ~ "'";
+            $r ~= "'" ~ $match.subst(/"'"/, "''", :g) ~ "'";
         }
     }
     return $r;

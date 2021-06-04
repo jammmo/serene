@@ -27,6 +27,8 @@ function main(x: Float, y: Int) {
 
     run hello1()
     run hello2()
-    return a
+
+    print "Hello"   // Prints like: Hello
+    print "'Hello'" // Prints like: 'Hello'
     // Independent comment!
 }
