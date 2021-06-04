@@ -80,7 +80,7 @@ class ScopeObject:
         else:
             return False
     
-    def check_return(self, name):
+    def check_return(self, name):   # Not currently used?
         if (name in self):
             binding_object = self[name]
             if type(binding_object) == VariableObject:
@@ -132,5 +132,7 @@ class ScopeObject:
 
 top_scope = ScopeObject(None)
 currentscope = top_scope
+current_func_name = None
+current_func_type = None
 function_names = []
 functions = None

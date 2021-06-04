@@ -155,14 +155,27 @@ class FunctionNode(Node):
         newindent = ('    '*indent_level)
 
         scope.currentscope = self.my_scope
+        scope.current_func_name =  self['identifier'].data
 
         if 'type' in self:
+            if ('type' not in self['type']):
+                scope.current_func_type = self['type']['base_type'].data
+            else:
+                raise NotImplementedError("Function with generic return type")
+            
+            return_is_statisfied = False
             func_type = self['type'].to_code()
         else:
+            return_is_statisfied = True     # No need to return a value anywhere
             func_type = 'void'
         func_name = 'sn_' + self['identifier'].data
         func_parameters = ', '.join([x.to_code() for x in self['function_parameters']])
-        statements = newindent.join([x.to_code() for x in self['statements']])
+
+        statements, return_is_statisfied = StatementNode.process_statements(node=self['statements'], indent=newindent, satisfied=return_is_statisfied)
+        
+        if not return_is_statisfied:
+            raise scope.SereneTypeError(f"Function '{self['identifier'].data}' is missing a return value in at least one execution path.")
+
         if (statements != ''):
             code = f'{func_type} {func_name}({func_parameters}) {{\n{newindent}{statements}{oldindent}}}'
         else:
@@ -170,6 +183,9 @@ class FunctionNode(Node):
 
         indent_level -= 1
         scope.currentscope = scope.currentscope.parent
+
+        scope.current_func_name = None  # For now, function definitions cannot be nested
+        scope.current_func_type = None
 
         return code
 
@@ -228,9 +244,21 @@ class TypeNode(Node):
             return code
 
 class StatementNode(Node):
+    def process_statements(node, indent, satisfied):
+        statement_list = []
+        return_is_statisfied = satisfied
+        for x in node:
+            statement_list.append(x.to_code())
+            if (not return_is_statisfied) and (x.satisfies_return):
+                return_is_statisfied = True
+
+        return indent.join(statement_list), return_is_statisfied
+
     def to_code(self):
         scope.line_number = self[0].data
-        return self[1].to_code()
+        code = self[1].to_code()
+        self.satisfies_return = self[1].satisfies_return if hasattr(self[1], 'satisfies_return') else False
+        return code
 
 class VarStatement(Node):
     def to_code(self):
@@ -287,6 +315,10 @@ class RunStatement(Node):
         return self['term'].to_code() + ';\n'
 
 class ReturnStatement(Node):
+    def __init__(self, D):
+        super().__init__(D)
+        self.satisfies_return = True
+    
     def to_code(self):
         expr_code = self['expression'].to_code()
         return f'return {expr_code};\n'
@@ -454,10 +486,6 @@ class FunctionCallNode(Node):
             o_type = original_function.my_scope.get_type_of('sn_' + o_param['identifier'].data)
             
             c_param = self['function_call_parameters'][i]
-            if 'accessor' in c_param:
-                c_accessor = c_param['accessor'].data
-            else:
-                c_accessor = 'look'
             
             params.append(c_param.to_code(original_accessor = o_accessor, original_type = o_type, function_name = self['identifier'].data, param_name = o_param['identifier'].data))
 
@@ -545,9 +573,13 @@ class IfBlock(Node):
 
         scope.currentscope = scope.ScopeObject(scope.currentscope)
 
+        return_satisfaction_list = []
+
         code = ''
         cur = self['if_branch']
-        statements = newindent.join([x.to_code() for x in cur['statements']])
+        statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent, satisfied=False)
+        return_satisfaction_list.append(return_is_statisfied)
+
         condition = cur['expression'].to_code()
         code += f'if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
@@ -557,7 +589,9 @@ class IfBlock(Node):
             scope.currentscope = scope.ScopeObject(scope.currentscope)
 
             cur = self['elseif_branch']
-            statements = newindent.join([x.to_code() for x in cur['statements']])
+            statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent, satisfied=False)
+            return_satisfaction_list.append(return_is_statisfied)
+
             condition = cur['expression'].to_code()
             code += f'{oldindent}else if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
@@ -567,12 +601,17 @@ class IfBlock(Node):
             scope.currentscope = scope.ScopeObject(scope.currentscope)
 
             cur = self['else_branch']
-            statements = newindent.join([x.to_code() for x in cur['statements']])
+            statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent, satisfied=False)
+            return_satisfaction_list.append(return_is_statisfied)
+
             code += f'{oldindent}else {{\n{newindent}{statements}{oldindent}}}\n'
 
             scope.currentscope = scope.currentscope.parent
         
         indent_level -= 1
+
+        self.satisfies_return = all(return_satisfaction_list)
+
         return code
 
 class MatchBlock(Node):
