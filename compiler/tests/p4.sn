@@ -1,0 +1,20 @@
+/* multiline
+   comment
+   test */
+function test1() { /*
+    hello
+    this
+    is
+    my
+    comment */
+    print 1
+}
+
+function test2() {
+    /* // */
+    // /* */ */
+}
+
+function main() {
+    print 1
+}

@@ -3,21 +3,36 @@
 grammar Serene {
     # File structure and whitespace
     rule TOP {
-        ^ <functions> $
+        ^ <.separator>? <functions> $
     }
     token ws {
         <!ww> \h* 
     }
     token separator {
-        \h*\v\s*
+        <line_separator> | <end_separator>
+    }
+    token line_separator {
+        [ \h* <.comment>? \v ]+ \h*
+    }
+    token end_separator {
+        [ \h* <.comment>? \v ]* [ \h* <.comment>? $ ]
+    }
+    token comment {
+        <line_comment> | <multiline_comment>
+    }
+    token line_comment {
+        '//' \V* $$
+    }
+    token multiline_comment {
+        "/*" .*? "*/" $$
     }
 
     # Main language grammar
     token functions {
-        [<function> | <.comment>]+ %% <.separator>
+        <function>* %% <.separator>
     }
     token statements {
-        [<statement> <.comment> | <statement> | <.comment>]* %% <.separator>
+        <statement>* %% <.separator>
     }
     token statement {
         | <print_statement>
@@ -67,9 +82,6 @@ grammar Serene {
     token type {
         | <base_type> '{' <type> '}'
         | <base_type>
-    }
-    token comment {
-        '//' \V* $$
     }
     token assignment_op {
         | '='
@@ -308,11 +320,7 @@ sub print_parsed ($match, $n_indent) {
         }
     }
     if $match.caps[0].^name eq 'Nil' {
-        if $match.starts-with("//") {   # Resolves issue with comments
-            $r ~= "''";
-        } else {
-            $r ~= "'" ~ $match.subst(/"'"/, "''", :g) ~ "'";
-        }
+        $r ~= "'" ~ $match.subst(/"'"/, "''", :g) ~ "'";
     }
     return $r;
 }
