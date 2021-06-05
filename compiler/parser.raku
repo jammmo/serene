@@ -241,7 +241,7 @@ grammar Serene {
 
     rule if_block {
         <if_branch>
-        [ <.separator>? <elseif_branch> ]?
+        [ <.separator>? <elseif_branch> ]*
         [ <.separator>? <else_branch> ]?
     }
 

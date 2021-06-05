@@ -585,10 +585,15 @@ class IfBlock(Node):
 
         scope.currentscope = scope.currentscope.parent
 
-        if 'elseif_branch' in self:
+        if 'else_branch' in self:
+            bound_elseif = len(self.data) - 1
+        else:
+            bound_elseif = len(self.data)
+        
+        for i in range(1, bound_elseif):
             scope.currentscope = scope.ScopeObject(scope.currentscope)
 
-            cur = self['elseif_branch']
+            cur = self[i]
             statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent, satisfied=False)
             return_satisfaction_list.append(return_is_statisfied)
 
@@ -610,7 +615,7 @@ class IfBlock(Node):
         
         indent_level -= 1
 
-        self.satisfies_return = all(return_satisfaction_list)
+        self.satisfies_return = all(return_satisfaction_list) and ('else_branch' in self)
 
         return code
 

@@ -25,7 +25,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.serene",
-				"match": "\\b(if|else|while|for|match|return|break|continue|either)\\b"
+				"match": "\\b(if|else|elseif|while|for|match|return|break|continue|either)\\b"
 			},
 			{
 				"name": "keyword.other.serene",

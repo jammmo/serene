@@ -1,0 +1,31 @@
+function test1() -> Int {
+    const a = 5
+    const b = 11
+    if (a == 2) {
+        return a
+    } elseif (a == 3) {
+        return b
+    } elseif (a == 4) {
+        return a
+    }
+    return a
+}
+
+function test2() -> Int {
+    const a = 5
+    const b = 11
+    if (a == 2) {
+        return a
+    } elseif (a == 3) {
+        return b
+    } elseif (a == 4) {
+        return a
+    } else {
+        return a
+    }
+}
+
+function main() {
+    run test1()
+    run test2()
+}
