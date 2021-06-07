@@ -2,7 +2,7 @@ import yaml
 import sys
 import argparse
 
-from node import Node
+from nodes import Node
 import scope
 
 def main():

@@ -1,137 +1,8 @@
 from __future__ import annotations
 import scope
+import nodes
 
 indent_level = 0
-
-# Base Classes ________________________________________________________________
-
-class NodeMap:
-    def __init__(self, L: list[dict]):
-        if type(L) != list:
-            raise TypeError
-        self.data = [Node.create(x) for x in L]
-    
-    def __getitem__(self, x: int | str):
-        if isinstance(x, int):
-            return self.data[x]
-        if isinstance(x, str):
-            for y in self.data:
-                if y.nodetype == x:
-                    return y
-        raise TypeError
-    
-    def __contains__(self, x):
-        if type(x) == int:
-            return x in self.data[x]
-        if type(x) == str:
-            for y in self.data:
-                if y.nodetype == x:
-                    return True
-            return False
-        raise TypeError
-    
-    def count(self, x):
-        c = 0
-        for y in self.data:
-            if y.nodetype == x:
-                c += 1
-        return c
-    
-    def __len__(self):
-        return len(self.data)
-
-    def __str__(self):
-        raise TypeError
-    
-    def __repr__(self):
-        return '\n'.join(repr(x) for x in self.data)
-
-# Node should be constructed with 'create', not regular constructor
-class Node:
-    @staticmethod
-    def create(D: dict) -> Node:
-        if type(D) == dict:
-            assert(len(D) == 1)
-            nodetype = list(D.keys())[0]
-            mapping = {
-                'function':                FunctionNode,
-                'function_parameter':      FunctionParameterNode,
-                'type':                    TypeNode,
-                'statement':               StatementNode,
-                'var_statement':           VarStatement,
-                'const_statement':         ConstStatement,
-                'set_statement':           SetStatement,
-                'print_statement':         PrintStatement,
-                'run_statement':           RunStatement,
-                'return_statement':        ReturnStatement,
-                'break_statement':         BreakStatement,
-                'continue_statement':      ContinueStatement,
-                'expression':              ExpressionNode,
-                'term':                    TermNode,
-                'base_expression':         BaseExpressionNode,
-                'function_call':           FunctionCallNode,
-                'method_call':             MethodCallNode,
-                'function_call_parameter': FunctionCallParameterNode,
-                'for_loop':                ForLoopNode,
-                'while_loop':              WhileLoopNode,
-                'if_block':                IfBlock,
-                'match_block':             MatchBlock,
-            }
-            if nodetype in mapping:
-                return mapping[nodetype](D)
-            else:
-                return Node(D)
-        else:
-            raise TypeError
-
-    def __init__(self, D):
-        self.nodetype = list(D.keys())[0]
-        inside = D[self.nodetype]
-        if type(inside) == list:
-            self.data = NodeMap(inside)
-        else:
-            self.data = inside
-        
-    def __getitem__(self, x) -> Node:
-        if type(self.data) == NodeMap:
-            y = self.data[x]
-            if isinstance(y, Node):
-                return y
-        raise TypeError
-    
-    def get_scalar(self, x):
-        y = self.data[x]
-        if isinstance(y.data, str) or isinstance(y.data, int):
-            return y.data
-        else:
-            raise TypeError
-    
-    def __contains__(self, x):
-        if type(self.data) == NodeMap:
-            return x in self.data
-        else:
-            raise TypeError
-    
-    def count(self, x):
-        if (type(x) != str) or (type(self.data) != NodeMap):
-            raise TypeError
-        return self.data.count(x)
-    
-    def __iter__(self):
-        if type(self.data) == NodeMap:
-            return iter(self.data.data)
-        else:
-            return iter([])
-    
-    def __str__(self):
-        raise TypeError
-
-    def __repr__(self):
-        if type(self.data) == NodeMap:
-            return '<' + self.nodetype + '>\n  ' + '\n  '.join(repr(self.data).split('\n')) + '\n</' + self.nodetype + '>'
-        else:
-            return '<' + self.nodetype + ': ' + repr(self.data if self.data != '' else None) + '>'
-
 
 # Functions ___________________________________________________________________
 
@@ -153,7 +24,7 @@ def sub_indent():
 
 # Subclasses __________________________________________________________________
 
-class FunctionNode(Node):
+class FunctionNode(nodes.Node):
     def __init__(self, D):
         super().__init__(D)
         self.my_scope = scope.ScopeObject(scope.top_scope)
@@ -196,7 +67,7 @@ class FunctionNode(Node):
 
         return code
 
-class FunctionParameterNode(Node):
+class FunctionParameterNode(nodes.Node):
     # Function parameters need to be processed before other code so that function calls can be verified regardless of the order that functions are defined
     def __init__(self, D):
         super().__init__(D)
@@ -224,7 +95,7 @@ class FunctionParameterNode(Node):
     def to_code(self):
         return self.code
 
-class TypeNode(Node):
+class TypeNode(nodes.Node):
     def to_code(self):
         base = self.get_scalar('base_type')
         mapping = {'Int':    'int64_t',
@@ -244,7 +115,7 @@ class TypeNode(Node):
         else:
             return code
 
-class StatementNode(Node):
+class StatementNode(nodes.Node):
     @staticmethod
     def process_statements(node, indent, satisfied):
         statement_list = []
@@ -262,7 +133,7 @@ class StatementNode(Node):
         self.satisfies_return = self[1].satisfies_return if hasattr(self[1], 'satisfies_return') else False
         return code
 
-class VarStatement(Node):
+class VarStatement(nodes.Node):
     def to_code(self):
         var_name = self.get_scalar('identifier')
 
@@ -272,7 +143,7 @@ class VarStatement(Node):
         scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=True, var_type=expr_type))
         return f'auto sn_{var_name} = {expr_code};\n'
 
-class ConstStatement(Node):
+class ConstStatement(nodes.Node):
     def to_code(self):
         var_name = self.get_scalar('identifier')
 
@@ -282,7 +153,7 @@ class ConstStatement(Node):
         scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=False, var_type=expr_type))
         return f'const auto sn_{var_name} = {expr_code};\n'
 
-class SetStatement(Node):
+class SetStatement(nodes.Node):
     def to_code(self):
         var_name = self.get_scalar('identifier')
 
@@ -302,17 +173,17 @@ class SetStatement(Node):
             else:
                 raise scope.SereneScopeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
 
-class PrintStatement(Node):
+class PrintStatement(nodes.Node):
     def to_code(self):
         expr_code = [x.to_code() for x in self]
         expr_code.append('std::endl;\n')
         return 'std::cout << ' + ' << '.join(expr_code)
 
-class RunStatement(Node):
+class RunStatement(nodes.Node):
     def to_code(self):
         return self['term'].to_code() + ';\n'
 
-class ReturnStatement(Node):
+class ReturnStatement(nodes.Node):
     def __init__(self, D):
         super().__init__(D)
         self.satisfies_return = True
@@ -321,15 +192,15 @@ class ReturnStatement(Node):
         expr_code = self['expression'].to_code()
         return f'return {expr_code};\n'
 
-class BreakStatement(Node):
+class BreakStatement(nodes.Node):
     def to_code(self):
         return 'break;\n'
 
-class ContinueStatement(Node):
+class ContinueStatement(nodes.Node):
     def to_code(self):
         return 'continue;\n'
 
-class ExpressionNode(Node):
+class ExpressionNode(nodes.Node):
     def get_type(self):
         if (self.count("term") > 1):
             raise NotImplementedError("get_type() for ExpressionNode with infix operators")
@@ -360,7 +231,7 @@ class ExpressionNode(Node):
 
         return code
 
-class TermNode(Node):
+class TermNode(nodes.Node):
     def get_type(self):
         if len(self.data) > 1:
             raise NotImplementedError
@@ -399,7 +270,7 @@ class TermNode(Node):
                 code += '[' + x['expression'].to_code() + ']'
         return code
 
-class BaseExpressionNode(Node):
+class BaseExpressionNode(nodes.Node):
     def get_type(self):
         if 'literal' in self:
             if 'int_literal' in self['literal']:
@@ -450,19 +321,19 @@ class BaseExpressionNode(Node):
         elif 'expression' in self:
             return '(' + self['expression'].to_code() + ')'
 
-class FunctionCallNode(Node):
+class FunctionCallNode(nodes.Node):
     def to_code(self):
         if self.get_scalar('identifier') not in scope.function_names:
             raise scope.SereneScopeError(f"Function '{self.get_scalar('identifier')}' is not defined at line number {scope.line_number}.")
         code = 'sn_' + self.get_scalar('identifier') + '('
 
-        num_called_params = len(self['function_call_parameters'].data) if type(self['function_call_parameters'].data) == NodeMap else 0
+        num_called_params = len(self['function_call_parameters'].data) if type(self['function_call_parameters'].data) == nodes.NodeMap else 0
         for y in scope.functions:
             if self.get_scalar('identifier') == y.get_scalar('identifier'):
                 break
         original_function = y
 
-        if type(original_function['function_parameters'].data) != NodeMap:
+        if type(original_function['function_parameters'].data) != nodes.NodeMap:
             num_original_params = 0
         else:
             num_original_params = len(original_function['function_parameters'].data)
@@ -488,7 +359,7 @@ class FunctionCallNode(Node):
         code += ', '.join(params) + ')'
         return code
 
-class MethodCallNode(Node):
+class MethodCallNode(nodes.Node):
     def to_code(self):
         code = '.sn_' + self.get_scalar('identifier') + '('
         params = []
@@ -498,7 +369,7 @@ class MethodCallNode(Node):
         code += ', '.join(params) + ')'
         return code
 
-class FunctionCallParameterNode(Node):
+class FunctionCallParameterNode(nodes.Node):
     def to_code(self, original_accessor, original_type, function_name, param_name):
         if 'accessor' in self:
             my_accessor = self.get_scalar('accessor')
@@ -515,7 +386,7 @@ class FunctionCallParameterNode(Node):
 
         return code
 
-class ForLoopNode(Node):
+class ForLoopNode(nodes.Node):
     def to_code(self):
         newindent, oldindent = add_indent()
 
@@ -539,7 +410,7 @@ class ForLoopNode(Node):
 
         return code
 
-class WhileLoopNode(Node):
+class WhileLoopNode(nodes.Node):
     def to_code(self):
         newindent, oldindent = add_indent()
 
@@ -554,7 +425,7 @@ class WhileLoopNode(Node):
 
         return code
 
-class IfBlock(Node):
+class IfBlock(nodes.Node):
     def to_code(self):
         newindent, oldindent = add_indent()
 
@@ -606,7 +477,7 @@ class IfBlock(Node):
 
         return code
 
-class MatchBlock(Node):
+class MatchBlock(nodes.Node):
     def to_code(self):
         newindent, oldindent = add_indent()
 
