@@ -1,3 +1,4 @@
+from __future__ import annotations
 import scope
 
 indent_level = 0
@@ -5,15 +6,15 @@ indent_level = 0
 # Base Classes ________________________________________________________________
 
 class NodeMap:
-    def __init__(self, L):  # L is a list of Node objects
+    def __init__(self, L: list[dict]):
         if type(L) != list:
             raise TypeError
         self.data = [Node.create(x) for x in L]
     
-    def __getitem__(self, x):
-        if type(x) == int:
+    def __getitem__(self, x: int | str):
+        if isinstance(x, int):
             return self.data[x]
-        if type(x) == str:
+        if isinstance(x, str):
             for y in self.data:
                 if y.nodetype == x:
                     return y
@@ -47,54 +48,37 @@ class NodeMap:
 
 # Node should be constructed with 'create', not regular constructor
 class Node:
-    def create(D):
+    @staticmethod
+    def create(D: dict) -> Node:
         if type(D) == dict:
             assert(len(D) == 1)
             nodetype = list(D.keys())[0]
-            if (nodetype == 'function'):
-                return FunctionNode(D)
-            elif (nodetype == 'function_parameter'):
-                return FunctionParameterNode(D)
-            elif (nodetype == 'type'):
-                return TypeNode(D)
-            elif (nodetype == 'statement'):
-                return StatementNode(D)
-            elif (nodetype == 'var_statement'):
-                return VarStatement(D)
-            elif (nodetype == 'const_statement'):
-                return ConstStatement(D)
-            elif (nodetype == 'set_statement'):
-                return SetStatement(D)
-            elif (nodetype == 'print_statement'):
-                return PrintStatement(D)
-            elif (nodetype == 'run_statement'):
-                return RunStatement(D)
-            elif (nodetype == 'return_statement'):
-                return ReturnStatement(D)
-            elif (nodetype == 'break_statement'):
-                return BreakStatement(D)
-            elif (nodetype == 'continue_statement'):
-                return ContinueStatement(D)
-            elif (nodetype == 'expression'):
-                return ExpressionNode(D)
-            elif (nodetype == 'term'):
-                return TermNode(D)
-            elif (nodetype == 'base_expression'):
-                return BaseExpressionNode(D)
-            elif (nodetype == 'function_call'):
-                return FunctionCallNode(D)
-            elif (nodetype == 'method_call'):
-                return MethodCallNode(D)
-            elif (nodetype == 'function_call_parameter'):
-                return FunctionCallParameterNode(D)
-            elif (nodetype == 'for_loop'):
-                return ForLoopNode(D)
-            elif (nodetype == 'while_loop'):
-                return WhileLoopNode(D)
-            elif (nodetype == 'if_block'):
-                return IfBlock(D)
-            elif (nodetype == 'match_block'):
-                return MatchBlock(D)
+            mapping = {
+                'function':                FunctionNode,
+                'function_parameter':      FunctionParameterNode,
+                'type':                    TypeNode,
+                'statement':               StatementNode,
+                'var_statement':           VarStatement,
+                'const_statement':         ConstStatement,
+                'set_statement':           SetStatement,
+                'print_statement':         PrintStatement,
+                'run_statement':           RunStatement,
+                'return_statement':        ReturnStatement,
+                'break_statement':         BreakStatement,
+                'continue_statement':      ContinueStatement,
+                'expression':              ExpressionNode,
+                'term':                    TermNode,
+                'base_expression':         BaseExpressionNode,
+                'function_call':           FunctionCallNode,
+                'method_call':             MethodCallNode,
+                'function_call_parameter': FunctionCallParameterNode,
+                'for_loop':                ForLoopNode,
+                'while_loop':              WhileLoopNode,
+                'if_block':                IfBlock,
+                'match_block':             MatchBlock,
+            }
+            if nodetype in mapping:
+                return mapping[nodetype](D)
             else:
                 return Node(D)
         else:
@@ -108,9 +92,17 @@ class Node:
         else:
             self.data = inside
         
-    def __getitem__(self, x):
+    def __getitem__(self, x) -> Node:
         if type(self.data) == NodeMap:
-            return self.data[x]
+            y = self.data[x]
+            if isinstance(y, Node):
+                return y
+        raise TypeError
+    
+    def get_scalar(self, x):
+        y = self.data[x]
+        if isinstance(y.data, str) or isinstance(y.data, int):
+            return y.data
         else:
             raise TypeError
     
@@ -155,11 +147,11 @@ class FunctionNode(Node):
         newindent = ('    '*indent_level)
 
         scope.currentscope = self.my_scope
-        scope.current_func_name =  self['identifier'].data
+        scope.current_func_name =  self.get_scalar('identifier')
 
         if 'type' in self:
             if ('type' not in self['type']):
-                scope.current_func_type = self['type']['base_type'].data
+                scope.current_func_type = self['type'].get_scalar('base_type')
             else:
                 raise NotImplementedError("Function with generic return type")
             
@@ -168,18 +160,18 @@ class FunctionNode(Node):
         else:
             return_is_statisfied = True     # No need to return a value anywhere
             func_type = 'void'
-        func_name = 'sn_' + self['identifier'].data
+        func_name = self.get_scalar('identifier')
         func_parameters = ', '.join([x.to_code() for x in self['function_parameters']])
 
         statements, return_is_statisfied = StatementNode.process_statements(node=self['statements'], indent=newindent, satisfied=return_is_statisfied)
         
         if not return_is_statisfied:
-            raise scope.SereneTypeError(f"Function '{self['identifier'].data}' is missing a return value in at least one execution path.")
+            raise scope.SereneTypeError(f"Function '{self.get_scalar('identifier')}' is missing a return value in at least one execution path.")
 
         if (statements != ''):
-            code = f'{func_type} {func_name}({func_parameters}) {{\n{newindent}{statements}{oldindent}}}'
+            code = f'{func_type} sn_{func_name}({func_parameters}) {{\n{newindent}{statements}{oldindent}}}'
         else:
-            code = f'{func_type} {func_name}({func_parameters}) {{\n\n{oldindent}}}'
+            code = f'{func_type} sn_{func_name}({func_parameters}) {{\n\n{oldindent}}}'
 
         indent_level -= 1
         scope.currentscope = scope.currentscope.parent
@@ -196,16 +188,16 @@ class FunctionParameterNode(Node):
         
         code = self['type'].to_code()
         if 'accessor' in self:
-            accessor = self['accessor'].data
+            accessor = self.get_scalar('accessor')
             if accessor == 'mutate':
                 code += '&'
         else:
             accessor = 'look'
-        var_name = 'sn_' + self['identifier'].data
-        code += ' ' + var_name
+        var_name = self.get_scalar('identifier')
+        code += ' ' + 'sn_'+ var_name
 
-        if len(self['type'].data) == 1 and self['type']['base_type'].data in ('String', 'Char', 'Int', 'Float', 'Bool'):
-            my_type = self['type']['base_type'].data
+        if len(self['type'].data) == 1 and self['type'].get_scalar('base_type') in ('String', 'Char', 'Int', 'Float', 'Bool'):
+            my_type = self['type'].get_scalar('base_type')
         else:
             raise NotImplementedError(self['type']['base_type'].data)
 
@@ -219,7 +211,7 @@ class FunctionParameterNode(Node):
 
 class TypeNode(Node):
     def to_code(self):
-        base = self['base_type'].data
+        base = self.get_scalar('base_type')
         if base == 'Int':
             code = 'int64_t'
         elif base == 'Bool':
@@ -244,6 +236,7 @@ class TypeNode(Node):
             return code
 
 class StatementNode(Node):
+    @staticmethod
     def process_statements(node, indent, satisfied):
         statement_list = []
         return_is_statisfied = satisfied
@@ -255,14 +248,14 @@ class StatementNode(Node):
         return indent.join(statement_list), return_is_statisfied
 
     def to_code(self):
-        scope.line_number = self[0].data
+        scope.line_number = self.get_scalar(0)
         code = self[1].to_code()
         self.satisfies_return = self[1].satisfies_return if hasattr(self[1], 'satisfies_return') else False
         return code
 
 class VarStatement(Node):
     def to_code(self):
-        var_name = 'sn_' + self['identifier'].data
+        var_name = self.get_scalar('identifier')
 
         expr_code = self['expression'].to_code()
         expr_type = self['expression'].get_type()
@@ -270,11 +263,11 @@ class VarStatement(Node):
             expr_type = 'Int'
 
         scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=True, var_type=expr_type))
-        return f'auto {var_name} = {expr_code};\n'
+        return f'auto sn_{var_name} = {expr_code};\n'
 
 class ConstStatement(Node):
     def to_code(self):
-        var_name = 'sn_' + self['identifier'].data
+        var_name = self.get_scalar('identifier')
 
         expr_code = self['expression'].to_code()
         expr_type = self['expression'].get_type()
@@ -282,27 +275,27 @@ class ConstStatement(Node):
             expr_type = 'Int'
 
         scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=False, var_type=expr_type))
-        return f'const auto {var_name} = {expr_code};\n'
+        return f'const auto sn_{var_name} = {expr_code};\n'
 
 class SetStatement(Node):
     def to_code(self):
-        var_name = 'sn_' + self['identifier'].data
+        var_name = self.get_scalar('identifier')
 
         if scope.currentscope.check_set(var_name):
-            assign_op = self['assignment_op'].data
+            assign_op = self.get_scalar('assignment_op')
             expr_code = self['expression'].to_code()
             expr_type = self['expression'].get_type()
 
             correct_type = scope.currentscope.get_type_of(var_name)
             if expr_type != correct_type:
-                raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{self['identifier'].data}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
+                raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{self.get_scalar('identifier')}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
 
-            return f'{var_name} {assign_op} {expr_code};\n'
+            return f'sn_{var_name} {assign_op} {expr_code};\n'
         else:
             if scope.currentscope.check_read(var_name):
-                raise scope.SereneScopeError(f"Variable '{self['identifier'].data}' cannot be mutated at line number {scope.line_number}.")
+                raise scope.SereneScopeError(f"Variable '{var_name}' cannot be mutated at line number {scope.line_number}.")
             else:
-                raise scope.SereneScopeError(f"Variable '{self['identifier'].data}' is not defined at line number {scope.line_number}.")
+                raise scope.SereneScopeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
 
 class PrintStatement(Node):
     def to_code(self):
@@ -344,7 +337,7 @@ class ExpressionNode(Node):
             cur = self[i]
             if (cur.nodetype == 'unary_op') or (cur.nodetype == 'infix_op'):
                 if type(cur.data) != str:
-                    code += ' ' + cur[0].data + ' '
+                    code += ' ' + cur.get_scalar(0) + ' '
                 else:
                     code += ' ' + cur.data + ' '
             elif cur.nodetype == 'term':
@@ -358,8 +351,7 @@ class ExpressionNode(Node):
             self.var_to_access = last_term.var_to_access
             if enclosing_accessor is not None:
                 if not scope.currentscope.check_pass(self.var_to_access, enclosing_accessor):
-                    var_name = self.var_to_access[3:]
-                    raise scope.SereneScopeError(f"Variable '{var_name}' cannot be passed with accessor '{enclosing_accessor}' at line number {scope.line_number}.")
+                    raise scope.SereneScopeError(f"Variable '{self.var_to_access}' cannot be passed with accessor '{enclosing_accessor}' at line number {scope.line_number}.")
 
         return code
 
@@ -376,7 +368,7 @@ class TermNode(Node):
         if inner_expr.nodetype == 'identifier':
             self.is_temporary = False
             code = base_expr.to_code()      # This is a bit redundant, but it's done to check read access on the identifier
-            self.var_to_access = code
+            self.var_to_access = inner_expr.data
         elif (inner_expr.nodetype == 'expression'):
             code = '(' + inner_expr.to_code() + ')'
             self.is_temporary = inner_expr.is_temporary
@@ -389,13 +381,12 @@ class TermNode(Node):
         for i in range(1, len(self.data)):
             x = self[i]
             if x.nodetype == 'field_access':
-                code += '.sn_' + x['identifier'].data
+                code += '.sn_' + x.get_scalar('identifier')
             elif x.nodetype == 'method_call':
                 if not self.is_temporary:
                     if 'mutate_method_symbol' in x:
                         if not scope.currentscope.check_pass(self.var_to_access, 'mutate'):
-                            var_name = self.var_to_access[3:]
-                            raise scope.SereneScopeError(f"Mutating methods cannot be called on variable '{var_name}' at line number {scope.line_number}.")
+                            raise scope.SereneScopeError(f"Mutating methods cannot be called on variable '{self.var_to_access}' at line number {scope.line_number}.")
                     # Method calls return temporary values, so only the first method call in a term needs to be scope-checked
                     self.is_temporary = True
                 code += x.to_code()
@@ -419,17 +410,17 @@ class BaseExpressionNode(Node):
             else:
                 raise NotImplementedError
         elif 'identifier' in self:
-            var_name = 'sn_' + self['identifier'].data
+            var_name = self.get_scalar('identifier')
             return scope.currentscope.get_type_of(var_name)
         elif 'function_call' in self:
             for y in scope.functions:
-                if self['function_call']['identifier'].data == y['identifier'].data:
+                if self['function_call'].get_scalar('identifier') == y.get_scalar('identifier'):
                     break
             original_function = y
             if 'type' not in original_function:
-                raise scope.SereneTypeError(f"Function '{self['function_call']['identifier'].data}' with no return value cannot be used as an expression at line number {scope.line_number}.")
+                raise scope.SereneTypeError(f"Function '{self['function_call'].get_scalar('identifier')}' with no return value cannot be used as an expression at line number {scope.line_number}.")
             if 'type' not in original_function['type']:
-                return original_function['type']['base_type'].data
+                return original_function['type'].get_scalar('base_type')
             else:
                 raise NotImplementedError
         else:
@@ -441,28 +432,28 @@ class BaseExpressionNode(Node):
         elif 'constructor_call' in self:
             raise NotImplementedError
         elif 'identifier' in self:
-            var_name = 'sn_' + self['identifier'].data
+            var_name = self.get_scalar('identifier')
             if scope.currentscope.check_read(var_name):     # If the variable also needs to be mutated/moved, that will already be checked within TermNode or ExpressionNode
-                return var_name
+                return 'sn_' + var_name
             else:
-                raise scope.SereneScopeError(f"Variable '{self['identifier'].data}' is not defined at line number {scope.line_number}.")
+                raise scope.SereneScopeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
         elif 'literal' in self:
             if 'bool_literal' in self['literal']:
-                return self['literal'][0].data.lower()
+                return self['literal'].get_scalar(0).lower()
             else:
-                return self['literal'][0].data
+                return self['literal'].get_scalar(0)
         elif 'expression' in self:
             return '(' + self['expression'].to_code() + ')'
 
 class FunctionCallNode(Node):
     def to_code(self):
-        if self['identifier'].data not in scope.function_names:
-            raise scope.SereneScopeError(f"Function '{self['identifier'].data}' is not defined at line number {scope.line_number}.")
-        code = 'sn_' + self['identifier'].data + '('
+        if self.get_scalar('identifier') not in scope.function_names:
+            raise scope.SereneScopeError(f"Function '{self.get_scalar('identifier')}' is not defined at line number {scope.line_number}.")
+        code = 'sn_' + self.get_scalar('identifier') + '('
 
         num_called_params = len(self['function_call_parameters'].data) if type(self['function_call_parameters'].data) == NodeMap else 0
         for y in scope.functions:
-            if self['identifier'].data == y['identifier'].data:
+            if self.get_scalar('identifier') == y.get_scalar('identifier'):
                 break
         original_function = y
 
@@ -471,30 +462,30 @@ class FunctionCallNode(Node):
         else:
             num_original_params = len(original_function['function_parameters'].data)
         if num_called_params > num_original_params:
-            raise scope.SereneScopeError(f"Function '{self['identifier'].data}' is given too many parameters when called at line number {scope.line_number}.")
+            raise scope.SereneScopeError(f"Function '{self.get_scalar('identifier')}' is given too many parameters when called at line number {scope.line_number}.")
         if num_called_params < num_original_params:
-            raise scope.SereneScopeError(f"Function '{self['identifier'].data}' is given too few parameters when called at line number {scope.line_number}.")
+            raise scope.SereneScopeError(f"Function '{self.get_scalar('identifier')}' is given too few parameters when called at line number {scope.line_number}.")
 
         params = []
         for i in range(num_called_params):
             o_param = original_function['function_parameters'][i]
             if 'accessor' in o_param:
-                o_accessor = o_param['accessor'].data
+                o_accessor = o_param.get_scalar('accessor')
             else:
                 o_accessor = 'look'
             
-            o_type = original_function.my_scope.get_type_of('sn_' + o_param['identifier'].data)
+            o_type = original_function.my_scope.get_type_of(o_param.get_scalar('identifier'))
             
             c_param = self['function_call_parameters'][i]
             
-            params.append(c_param.to_code(original_accessor = o_accessor, original_type = o_type, function_name = self['identifier'].data, param_name = o_param['identifier'].data))
+            params.append(c_param.to_code(original_accessor = o_accessor, original_type = o_type, function_name = self.get_scalar('identifier'), param_name = o_param.get_scalar('identifier')))
 
         code += ', '.join(params) + ')'
         return code
 
 class MethodCallNode(Node):
     def to_code(self):
-        code = '.sn_' + self['identifier'].data + '('
+        code = '.sn_' + self.get_scalar('identifier') + '('
         params = []
         for x in self['function_call_parameters']:
             raise NotImplementedError
@@ -505,7 +496,7 @@ class MethodCallNode(Node):
 class FunctionCallParameterNode(Node):
     def to_code(self, original_accessor, original_type, function_name, param_name):
         if 'accessor' in self:
-            my_accessor = self['accessor'].data
+            my_accessor = self.get_scalar('accessor')
         else:
             my_accessor = 'look'
         
@@ -528,18 +519,18 @@ class ForLoopNode(Node):
 
         scope.currentscope = scope.ScopeObject(scope.currentscope, loop=True)
 
-        loopvar = 'sn_' + self['identifier'].data
+        loopvar = self.get_scalar('identifier')
         scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False))
 
         if self.count('expression') == 2:   # start and endpoint
             startval = self[1].to_code()
             endval = self[2].to_code()
             statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous two lines due to the side effects
-            code = f'for (int {loopvar} = {startval}; {loopvar} < {endval}; {loopvar}++) {{\n{newindent}{statements}{oldindent}}}\n'
+            code = f'for (int sn_{loopvar} = {startval}; sn_{loopvar} < {endval}; sn_{loopvar}++) {{\n{newindent}{statements}{oldindent}}}\n'
         else:
             myrange = self['expression'].to_code()
             statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous line due to the side effects
-            code = f'for (const auto& {loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
+            code = f'for (const auto& sn_{loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
         
         indent_level -= 1
         scope.currentscope = scope.currentscope.parent

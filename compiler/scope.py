@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 line_number = 1
 
 class SereneScopeError(Exception):
@@ -134,5 +136,5 @@ top_scope = ScopeObject(None)
 currentscope = top_scope
 current_func_name = None
 current_func_type = None
-function_names = []
+function_names: list[str] = []
 functions = None

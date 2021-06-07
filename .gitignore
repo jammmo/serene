@@ -1,3 +1,5 @@
 archived/node_modules/
 compiler/outputs/*.yaml
 compiler/__pycache__/
+.mypy_cache
+.vscode
