@@ -133,6 +133,24 @@ class Node:
             return '<' + self.nodetype + ': ' + repr(self.data if self.data != '' else None) + '>'
 
 
+# Functions ___________________________________________________________________
+
+def add_indent():
+    global indent_level
+    oldindent = ('    '*indent_level)
+    indent_level += 1
+    newindent = ('    '*indent_level)
+
+    return newindent, oldindent
+
+def sub_indent():
+    global indent_level
+    oldindent = ('    '*indent_level)
+    indent_level -= 1
+    newindent = ('    '*indent_level)
+
+    return newindent, oldindent    
+
 # Subclasses __________________________________________________________________
 
 class FunctionNode(Node):
@@ -141,10 +159,7 @@ class FunctionNode(Node):
         self.my_scope = scope.ScopeObject(scope.top_scope)
     
     def to_code(self):
-        global indent_level
-        oldindent = ('    '*indent_level)
-        indent_level += 1
-        newindent = ('    '*indent_level)
+        newindent, oldindent = add_indent()
 
         scope.currentscope = self.my_scope
         scope.current_func_name =  self.get_scalar('identifier')
@@ -173,7 +188,7 @@ class FunctionNode(Node):
         else:
             code = f'{func_type} sn_{func_name}({func_parameters}) {{\n\n{oldindent}}}'
 
-        indent_level -= 1
+        sub_indent()
         scope.currentscope = scope.currentscope.parent
 
         scope.current_func_name = None  # For now, function definitions cannot be nested
@@ -212,22 +227,16 @@ class FunctionParameterNode(Node):
 class TypeNode(Node):
     def to_code(self):
         base = self.get_scalar('base_type')
-        if base == 'Int':
-            code = 'int64_t'
-        elif base == 'Bool':
-            code = 'bool'
-        elif base == 'String':
-            code = 'std::string'
-        elif base == 'String':
-            code = 'char'
-        elif base == 'Float':
-            code = 'double'
-        elif base == 'Char':
-            code = 'char'
-        elif base == 'Vector':
-            code = 'SN_Vector'
-        elif base == 'Array':
-            code = 'SN_Array'
+        mapping = {'Int':    'int64_t',
+                   'Bool':   'bool',
+                   'String': 'std::string',
+                   'Float':  'double',
+                   'Char':   'char',
+                   'Vector': 'SN_Vector',
+                   'Array':  'SN_Array',
+                  }
+        if base in mapping:
+            code = mapping[base]
         else:
             raise NotImplementedError
         if 'type' in self:  # Generic type
@@ -259,8 +268,6 @@ class VarStatement(Node):
 
         expr_code = self['expression'].to_code()
         expr_type = self['expression'].get_type()
-        if expr_type == 'Number':
-            expr_type = 'Int'
 
         scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=True, var_type=expr_type))
         return f'auto sn_{var_name} = {expr_code};\n'
@@ -271,8 +278,6 @@ class ConstStatement(Node):
 
         expr_code = self['expression'].to_code()
         expr_type = self['expression'].get_type()
-        if expr_type == 'Number':
-            expr_type = 'Int'
 
         scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=False, var_type=expr_type))
         return f'const auto sn_{var_name} = {expr_code};\n'
@@ -512,10 +517,7 @@ class FunctionCallParameterNode(Node):
 
 class ForLoopNode(Node):
     def to_code(self):
-        global indent_level
-        oldindent = ('    '*indent_level)
-        indent_level += 1
-        newindent = ('    '*indent_level)
+        newindent, oldindent = add_indent()
 
         scope.currentscope = scope.ScopeObject(scope.currentscope, loop=True)
 
@@ -532,17 +534,14 @@ class ForLoopNode(Node):
             statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous line due to the side effects
             code = f'for (const auto& sn_{loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
         
-        indent_level -= 1
+        sub_indent()
         scope.currentscope = scope.currentscope.parent
 
         return code
 
 class WhileLoopNode(Node):
     def to_code(self):
-        global indent_level
-        oldindent = ('    '*indent_level)
-        indent_level += 1
-        newindent = ('    '*indent_level)
+        newindent, oldindent = add_indent()
 
         scope.currentscope = scope.ScopeObject(scope.currentscope, loop=True)
 
@@ -550,17 +549,14 @@ class WhileLoopNode(Node):
         condition = self['expression'].to_code()
         code = f'while ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
-        indent_level -= 1
+        sub_indent()
         scope.currentscope = scope.currentscope.parent
 
         return code
 
 class IfBlock(Node):
     def to_code(self):
-        global indent_level
-        oldindent = ('    '*indent_level)
-        indent_level += 1
-        newindent = ('    '*indent_level)
+        newindent, oldindent = add_indent()
 
         scope.currentscope = scope.ScopeObject(scope.currentscope)
 
@@ -604,7 +600,7 @@ class IfBlock(Node):
 
             scope.currentscope = scope.currentscope.parent
         
-        indent_level -= 1
+        sub_indent()
 
         self.satisfies_return = all(return_satisfaction_list) and ('else_branch' in self)
 
@@ -612,10 +608,7 @@ class IfBlock(Node):
 
 class MatchBlock(Node):
     def to_code(self):
-        global indent_level
-        oldindent = ('    '*indent_level)
-        indent_level += 1
-        newindent = ('    '*indent_level)
+        newindent, oldindent = add_indent()
 
         subject = self['expression'].to_code()
         subject_type = self['expression'].get_type()
@@ -648,5 +641,5 @@ class MatchBlock(Node):
                     branches.append(branchcode)
                 
                 scope.currentscope = scope.currentscope.parent
-        indent_level -= 1
+        sub_indent()
         return (f'{oldindent}else ').join(branches)

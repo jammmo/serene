@@ -42,13 +42,13 @@ class ScopeObject:
 
     def add_binding(self, binding_object):
         if binding_object.name in self:
-            raise SereneScopeError(f"Variable '{binding_object.name[3:]}' defined at line {line_number} already exists in this scope.")
+            raise SereneScopeError(f"Variable '{binding_object.name}' defined at line {line_number} already exists in this scope.")
         self.bindings[binding_object.name] = binding_object
     
     def kill_binding(self, name):
         if name in self:
             if currentscope.loop:
-                raise SereneScopeError(f"Variable '{name[3:]}' is moved or destroyed at line {line_number} in a loop where it may be accessed again.")
+                raise SereneScopeError(f"Variable '{name}' is moved or destroyed at line {line_number} in a loop where it may be accessed again.")
             self.victim_bindings[name] = self.bindings[name]
             del self.bindings[name]
     
