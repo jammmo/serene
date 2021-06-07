@@ -1,0 +1,185 @@
+
+- functions: 
+  - function: 
+    - identifier: 'test1'
+    - function_parameters: ''
+    - statements: 
+      - statement: 
+        - const_statement: 
+          - identifier: 'age'
+          - type: 
+            - base_type: 'Int'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '20'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'age'
+  - function: 
+    - identifier: 'test2'
+    - function_parameters: ''
+    - statements: 
+      - statement: 
+        - var_statement: 
+          - identifier: 'age'
+          - type: 
+            - base_type: 'Int'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '20'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'age'
+      - statement: 
+        - set_statement: 
+          - identifier: 'age'
+          - assignment_op: '='
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '21'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'age'
+      - statement: 
+        - set_statement: 
+          - identifier: 'age'
+          - assignment_op: '='
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'age'
+            - infix_op: '+'
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '1'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'age'
+      - statement: 
+        - set_statement: 
+          - identifier: 'age'
+          - assignment_op: '+='
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '1'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'age'
+  - function: 
+    - identifier: 'test3'
+    - function_parameters: ''
+    - statements: 
+      - statement: 
+        - const_statement: 
+          - identifier: 'base'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '5'
+      - statement: 
+        - const_statement: 
+          - identifier: 'height'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '8'
+      - statement: 
+        - const_statement: 
+          - identifier: 'area'
+          - type: 
+            - base_type: 'Float'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - expression: 
+                  - term: 
+                    - base_expression: 
+                      - literal: 
+                        - int_literal: '1'
+                  - infix_op: '/'
+                  - term: 
+                    - base_expression: 
+                      - literal: 
+                        - int_literal: '2'
+            - infix_op: '*'
+            - term: 
+              - base_expression: 
+                - identifier: 'cylinder'
+              - field_access: 
+                - identifier: 'dimensions'
+              - field_access: 
+                - identifier: 'base'
+            - infix_op: '*'
+            - term: 
+              - base_expression: 
+                - identifier: 'cylinder'
+              - field_access: 
+                - identifier: 'dimensions'
+              - field_access: 
+                - identifier: 'height'
+      - statement: 
+        - run_statement: 
+          - identifier: 'animals'
+          - method_call: 
+            - identifier: 'aardvark'
+            - mutate_method_symbol: '!'
+            - function_call_parameters: 
+              - function_call_parameter: 
+                - accessor: 'mutate'
+                - expression: 
+                  - term: 
+                    - base_expression: 
+                      - identifier: 'array1'
+              - function_call_parameter: 
+                - accessor: 'move'
+                - expression: 
+                  - term: 
+                    - base_expression: 
+                      - identifier: 'array2'
+              - function_call_parameter: 
+                - accessor: 'copy'
+                - expression: 
+                  - term: 
+                    - base_expression: 
+                      - identifier: 'array3'
+              - function_call_parameter: 
+                - expression: 
+                  - term: 
+                    - base_expression: 
+                      - identifier: 'array4'
+  - function: 
+    - identifier: 'test4'
+    - function_parameters: ''
+    - statements: 
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'name'

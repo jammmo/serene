@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+import sys
+if sys.version_info < (3, 6):
+    print("Needs Python 3.6 or later.")
+    exit()
+
+import os
+import argparse
+import shutil
+
+if shutil.which('raku') is None:
+    print("Raku must be installed.")
+    exit()
+
+# Not needed yet, currently just outputs a .cc file
+# if shutil.which('g++') is None:
+#     print("g++ must be installed.")
+#     exit()
+
+parser = argparse.ArgumentParser('Compile a Serene program.')
+parser.add_argument('INPUT', type=str, help='path to file containing Serene code')
+parser.add_argument('-p', '--parse', help='parse only; does not generate C++ code', action='store_true')
+parser.add_argument('-o', '--output', type=str, help='name of C++ source code')
+
+args = parser.parse_args()
+
+if args.output:
+    if args.parse:
+        print("Options -p and -o cannot be used together.")
+        exit()
+    
+    output_type = 'o'
+    os.system("raku parser.raku " + output_type + " " + args.INPUT + " " + args.output)
+else:
+    output_type = 'p' if args.parse else 'c'
+    os.system("raku parser.raku " + output_type + " " + args.INPUT + " " + "''")

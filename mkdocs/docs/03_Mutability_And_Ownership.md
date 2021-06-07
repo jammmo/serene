@@ -55,7 +55,7 @@ function sortedCopy(copy s: String) -> String {
 function charArrayToString(move u: Array{Char}) -> String {
 	var s = ""
 	for (x in u) {
-		s.append!(x)
+		run s.append!(x)
 	}
 	return s
 }

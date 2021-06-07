@@ -1,0 +1,252 @@
+
+- functions: 
+  - function: 
+    - identifier: 'binarySearchAndDelete'
+    - function_parameters: 
+      - function_parameter: 
+        - accessor: 'mutate'
+        - identifier: 'u'
+        - type: 
+          - base_type: 'Vector'
+          - type: 
+            - base_type: 'Int'
+      - function_parameter: 
+        - identifier: 'x'
+        - type: 
+          - base_type: 'Int'
+    - statements: 
+      - statement: 
+        - var_statement: 
+          - identifier: 'low'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '0'
+      - statement: 
+        - var_statement: 
+          - identifier: 'high'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'u'
+              - field_access: 
+                - identifier: 'length'
+      - statement: 
+        - while_loop: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'low'
+            - infix_op: 
+              - comparison_op: '<'
+            - term: 
+              - base_expression: 
+                - identifier: 'high'
+          - statements: 
+            - statement: 
+              - var_statement: 
+                - identifier: 'mid'
+                - expression: 
+                  - term: 
+                    - base_expression: 
+                      - expression: 
+                        - term: 
+                          - base_expression: 
+                            - identifier: 'low'
+                        - infix_op: '+'
+                        - term: 
+                          - base_expression: 
+                            - identifier: 'high'
+                  - infix_op: '/'
+                  - term: 
+                    - base_expression: 
+                      - literal: 
+                        - int_literal: '2'
+            - statement: 
+              - if_block: 
+                - if_branch: 
+                  - expression: 
+                    - term: 
+                      - base_expression: 
+                        - identifier: 'u'
+                      - index_call: 
+                        - expression: 
+                          - term: 
+                            - base_expression: 
+                              - identifier: 'mid'
+                    - infix_op: 
+                      - comparison_op: '<'
+                    - term: 
+                      - base_expression: 
+                        - identifier: 'x'
+                  - statements: 
+                    - statement: 
+                      - set_statement: 
+                        - identifier: 'low'
+                        - assignment_op: '='
+                        - expression: 
+                          - term: 
+                            - base_expression: 
+                              - identifier: 'mid'
+                          - infix_op: '+'
+                          - term: 
+                            - base_expression: 
+                              - literal: 
+                                - int_literal: '1'
+                - else_branch: 
+                  - statements: 
+                    - statement: 
+                      - set_statement: 
+                        - identifier: 'high'
+                        - assignment_op: '='
+                        - expression: 
+                          - term: 
+                            - base_expression: 
+                              - identifier: 'mid'
+      - statement: 
+        - if_block: 
+          - if_branch: 
+            - expression: 
+              - term: 
+                - base_expression: 
+                  - identifier: 'u'
+                - index_call: 
+                  - expression: 
+                    - term: 
+                      - base_expression: 
+                        - identifier: 'low'
+              - infix_op: 
+                - comparison_op: '=='
+              - term: 
+                - base_expression: 
+                  - identifier: 'x'
+            - statements: 
+              - statement: 
+                - run_statement: 
+                  - identifier: 'u'
+                  - method_call: 
+                    - identifier: 'delete'
+                    - mutate_method_symbol: '!'
+                    - function_call_parameters: 
+                      - function_call_parameter: 
+                        - expression: 
+                          - term: 
+                            - base_expression: 
+                              - identifier: 'low'
+  - function: 
+    - identifier: 'main'
+    - function_parameters: ''
+    - statements: 
+      - statement: 
+        - var_statement: 
+          - identifier: 'u'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - function_call: 
+                  - identifier: 'Vector'
+                  - function_call_parameters: 
+                    - function_call_parameter: 
+                      - expression: 
+                        - term: 
+                          - base_expression: 
+                            - identifier: 'Int'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - string_literal: '"Length of u: "'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'u'
+              - field_access: 
+                - identifier: 'length'
+      - statement: 
+        - for_loop: 
+          - identifier: 'i'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '0'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - int_literal: '5'
+          - statements: 
+            - statement: 
+              - run_statement: 
+                - identifier: 'u'
+                - method_call: 
+                  - identifier: 'append'
+                  - mutate_method_symbol: '!'
+                  - function_call_parameters: 
+                    - function_call_parameter: 
+                      - expression: 
+                        - term: 
+                          - base_expression: 
+                            - identifier: 'i'
+                        - infix_op: '*'
+                        - term: 
+                          - base_expression: 
+                            - literal: 
+                              - int_literal: '2'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - string_literal: '"Length of u: "'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'u'
+              - field_access: 
+                - identifier: 'length'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'u'
+      - statement: 
+        - run_statement: 
+          - function_call: 
+            - identifier: 'binarySearchAndDelete'
+            - function_call_parameters: 
+              - function_call_parameter: 
+                - expression: 
+                  - term: 
+                    - base_expression: 
+                      - identifier: 'u'
+              - function_call_parameter: 
+                - expression: 
+                  - term: 
+                    - base_expression: 
+                      - literal: 
+                        - int_literal: '6'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - literal: 
+                  - string_literal: '"Length of u: "'
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'u'
+              - field_access: 
+                - identifier: 'length'
+      - statement: 
+        - print_statement: 
+          - expression: 
+            - term: 
+              - base_expression: 
+                - identifier: 'u'

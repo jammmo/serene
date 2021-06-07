@@ -1,0 +1,34 @@
+//This is mostly gibberish, it's just to check syntax parsing
+
+//This function is blank
+function hello1() {
+}
+
+function hello2() {
+    // This function is blank except for this comment
+}
+
+// New Comment
+
+function main(x: Float, y: Int) {
+    // This is a comment !@#$%^&*()
+    var a = 123 // This is another comment)*&(&"")''
+    set a *= 2
+
+    
+    var b: Int = a
+    const c = b
+    const d: Float = x
+    const e: Int = y
+
+    print c
+    print d
+
+
+    run hello1()
+    run hello2()
+
+    print "Hello"   // Prints like: Hello
+    print "'Hello'" // Prints like: 'Hello'
+    // Independent comment!
+}

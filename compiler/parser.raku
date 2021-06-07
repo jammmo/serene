@@ -1,0 +1,401 @@
+#use Grammar::Tracer;
+
+grammar Serene {
+    # File structure and whitespace
+    rule TOP {
+        ^ <.separator>? <functions> $
+    }
+    token ws {
+        <!ww> \h* 
+    }
+    token separator {
+        <line_separator> | <end_separator>
+    }
+    token line_separator {
+        [ \h* <.comment>? \v ]+ \h*
+    }
+    token end_separator {
+        [ \h* <.comment>? \v ]* [ \h* <.comment>? $ ]
+    }
+    token comment {
+        <line_comment> | <multiline_comment>
+    }
+    token line_comment {
+        '//' \V* $$
+    }
+    token multiline_comment {
+        "/*" .*? "*/" $$
+    }
+
+    # Main language grammar
+    token functions {
+        <function>* %% <.separator>
+    }
+    token statements {
+        <statement>* %% <.separator>
+    }
+    token statement {
+        | <print_statement>
+        | <var_statement>
+        | <const_statement>
+        | <set_statement>
+        | <run_statement>
+        | <return_statement>
+        | <break_statement>
+        | <continue_statement>
+        | <while_loop>
+        | <for_loop>
+        | <if_block>
+        | <match_block>
+    }
+
+    token literal {
+        | <int_literal>
+        | <float_literal>
+        | <string_literal>
+        | <char_literal>
+        | <bool_literal>
+    }
+    token int_literal {
+        \d+
+    }
+    token float_literal {
+        \d+ "." \d*
+    }
+    token string_literal {
+        '"' [ '\\"' | '\\\\' | <-[ " \\ ]> ]* '"'
+    }
+    token char_literal {
+        "'" [ "\\'" | "\\\\" | <-[ \' \\ ]> ]* "'"
+    }
+    token bool_literal {
+        'True' | 'False'
+    }
+
+    token identifier {
+        <.lower> <.alnum>*
+    }
+
+    token base_type {
+        <.upper> <.alnum>*
+    }
+    token type {
+        | <base_type> '{' <type> '}'
+        | <base_type>
+    }
+    token assignment_op {
+        | '='
+        | '+='
+        | '-='
+        | '*='
+        | '/='
+        | '%='
+    }
+
+    token infix_op {
+        | <comparison_op>
+        | '+'
+        | '-'
+        | '*'
+        | '/'
+        | '%'
+        | 'and'
+        | 'or'
+    }
+
+    token comparison_op {
+        | '=='
+        | '>'
+        | '<'
+        | '>='
+        | '<='
+        | '!='
+    }
+
+    token unary_op {
+        | '-'
+        | 'not'
+    }
+
+    token accessor {
+        | 'mutate'
+        | 'move'
+        | 'copy'
+    }
+
+    # Function definitions and calls
+    rule function {
+        'function' <identifier>
+        '(' <function_parameters> ')'
+        [ '->' <type> ]?
+        '{' <.separator>
+        <statements>
+        '}'
+    }
+
+    rule function_parameters {
+        <function_parameter>* %% ','
+    }
+
+    rule function_parameter {
+        <accessor>? <identifier> ':' <type>
+    }
+
+    token function_call {
+        <identifier> '(' <function_call_parameters> ')'
+    }
+
+    rule function_call_parameters {
+        <function_call_parameter>* %% ','
+    }
+
+    rule function_call_parameter {
+        <accessor>? <expression>
+    }
+
+    token constructor_call {
+        <base_type> '(' <constructor_call_parameters> ')'
+    }
+
+    rule constructor_call_parameters {
+        <constructor_call_parameter>* %% ','
+    }
+
+    rule constructor_call_parameter {
+        | [<accessor>? <expression>]
+        | <type>
+    }
+
+    token mutate_method_symbol {
+        '!'
+    }
+
+    token method_call {
+        '.' <identifier> <mutate_method_symbol>? '(' <function_call_parameters> ')'
+    }
+
+    token field_access {
+        '.' <identifier>
+    }
+
+    # Indexing with square brackets
+    token index_call {
+        '[' <expression> ']'
+    }
+
+    # Expressions
+    rule expression {
+        <unary_op>? <term> [ <infix_op> <unary_op>? <term> ]*
+    }
+
+    rule base_expression {
+        | <function_call>
+        | <constructor_call>
+        | <identifier>
+        | <literal>
+        | '(' <expression> ')'
+    }
+
+    token term {
+        <base_expression> [ <method_call> | <field_access> | <index_call> ]*
+    }
+
+    # Types of statements
+    rule print_statement {
+        'print' <expression> [ ',' <expression> ]*
+    }
+
+    rule var_statement {
+        | 'var' <identifier> '=' <expression>
+        | 'var' <identifier> ':' <type> '=' <expression>
+    }
+
+    rule const_statement {
+        | 'const' <identifier> '=' <expression>
+        | 'const' <identifier> ':' <type> '=' <expression>
+    }
+
+    rule set_statement {
+        'set' <identifier> <assignment_op> <expression>
+    }
+
+    rule run_statement {
+        | 'run' <term>
+    } #should all terms be allowed? 'run a.b()' is fine, but what about 'run a.b().c' or 'run a.b()[5]'?
+
+    rule return_statement {
+        'return' <expression>
+    }
+
+    rule break_statement {
+        'break'
+    }
+
+    rule continue_statement {
+        'continue'
+    }
+
+    # Blocks
+    rule while_loop {
+        'while' '(' <expression> ')' <.separator>? '{' <.separator>
+        <statements>
+        '}'
+    }
+
+    rule for_loop {
+        | [ 'for' '(' <identifier> 'in' <expression> ')' <.separator>? '{' <.separator>
+            <statements>
+            '}' ]
+        | [ 'for' '(' <identifier> '=' <expression> ',' <expression> ')' <.separator>? '{' <.separator>
+            <statements>
+            '}' ] 
+    }
+
+    rule if_block {
+        <if_branch>
+        [ <.separator>? <elseif_branch> ]*
+        [ <.separator>? <else_branch> ]?
+    }
+
+    rule if_branch {
+        'if' '(' <expression> ')' <.separator>? '{' <.separator>
+        <statements>
+        '}'        
+    }
+
+    rule elseif_branch {
+        'elseif' '(' <expression> ')' <.separator>? '{' <.separator>
+        <statements>
+        '}'
+    }
+
+    rule else_branch {
+        'else' <.separator>? '{' <.separator>
+        <statements>
+        '}'
+    }
+
+    rule match_block {
+        'match' '(' <expression> ')' <.separator>? '{' <.separator>
+        [ <match_branch> <.separator> ]+
+        '}'    
+    }
+
+    rule match_branch {
+        | [ <expression> [ ',' <expression> ]* '->' '{' <.separator>
+            <statements>
+            '}' ]
+        | [ 'else' '->' '{' <.separator>
+            <statements>
+            '}' ]
+        | [ <expression> [ ',' <expression> ]* '->' <statement> ]
+        | [ 'else' '->' <statement> ]
+    }
+}
+
+
+my $original;
+
+sub line_num ($pos) {
+    my @a = $original.indices("\n");
+    my $num = 1;
+    for @a {
+        if $pos > $_ {
+            $num += 1;
+        } else {
+            last;
+        }
+    }
+    return $num;
+}
+
+sub print_parsed ($match, $n_indent) {
+    my $r = '';
+    for $match.caps {
+        if $_.key eq 'statement' {
+            $r ~= "\n" ~ ( '  ' x $n_indent ) ~ "- " ~ $_.key ~ ": ";
+            $r ~= "\n" ~ ( '  ' x ($n_indent + 1)) ~ "- line_number: " ~ line_num($_.value.from()) ~ print_parsed($_.value, $n_indent + 1)
+        } else {
+            $r ~= "\n" ~ ( '  ' x $n_indent ) ~ "- " ~ $_.key ~ ": " ~ print_parsed($_.value, $n_indent + 1);
+        }
+    }
+    if $match.caps[0].^name eq 'Nil' {
+        $r ~= "'" ~ $match.subst(/"'"/, "''", :g) ~ "'";
+    }
+    return $r;
+}
+
+sub MAIN($output_type, $file, $output_file) {
+    if not $file.IO.e {
+        say 'File "', $file, '" does not exist.';
+        exit();
+    }
+
+    if $output_type eq 'p' {
+        say 'Parsing ', $file, ' now...';
+    } else {
+        say 'Compiling ', $file, ' now...';        
+    }
+
+    my $parsed = Serene.parsefile($file);
+
+    if not $parsed {
+        say "COMPILE ERROR:";
+        say "Invalid syntax.";
+        say "Did not compile.";
+        exit();
+    }
+
+    $original = $parsed.target;
+    my $output = print_parsed($parsed, 0);
+
+    if $output_type eq 'p' {
+        say $output;
+        #spurt 'parsed.yaml', $output;
+    } elsif $output_type eq 'c' {
+        my $py = $*PROGRAM.dirname.IO.add('compile.py').absolute;
+        say 'Running ', $py, "\n";
+
+        try {
+            my $py_process = run 'python', $py, :in;
+            $py_process.in.say: $output;
+            $py_process.in.close;
+
+            CATCH {
+                when X::Proc::Unsuccessful {
+                    if $py_process.exitcode == 126 {
+                        say "Did not compile."
+                    } else {
+                        $*ERR.say: .message;
+                    }
+                }
+            }
+        }
+    } elsif $output_type eq 'o' {
+        my $py = $*PROGRAM.dirname.IO.add('compile.py').absolute;
+        say 'Running ', $py;
+
+        my $output_path = $*PROGRAM.dirname.IO.add($output_file).absolute;
+        if not (($output_path.IO.extension eq 'cpp') or ($output_path.IO.extension eq 'cc')) {
+            say 'Invalid output file name.';
+            exit();
+        }
+
+        try {
+            my $py_process = run 'python', $py, "-o", $output_path, :in;
+            $py_process.in.say: $output;
+            $py_process.in.close;
+            say 'Saved output to file ', $output_path;
+
+            CATCH {
+                when X::Proc::Unsuccessful {
+                    if $py_process.exitcode == 126 {
+                        say "Did not compile."
+                    } else {
+                        $*ERR.say: .message;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+//This is mostly gibberish, it's just to check syntax parsing and scoping/ownership rules
+//Test this with -p option to only parse and not compile
+
+function main() {
+    var b = something()
+    const f = something()
+    const g = something()
+    const i = something()
+    const k = something()
+
+    var a = b.c!().d!().e[f + 3][g].h[i[0]].j()[(k.inner * 2)/3]
+}

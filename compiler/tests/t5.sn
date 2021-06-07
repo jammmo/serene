@@ -1,0 +1,23 @@
+// function test1() {
+//     var x = "Hello"
+//     set x = 5
+// }
+
+// function test2() {
+//     var x = 5
+//     set x = True
+// }
+
+function main() {
+    var x = "Hello World"
+    run test3(mutate x) 
+    run test3("Hello Mountains")  // Mutate isn't needed here because the expression "Hello Mountains" is temporary
+
+    //run test3(x)      // Error: Needs to be called with "mutate"
+    //run test3(x, x)   // Error: Wrong number of parameters
+    //run test3(5)      // Error: Incorrect type   
+}
+
+function test3(mutate x: String) {
+    set x = "Hello Ocean"
+}
