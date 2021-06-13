@@ -42,7 +42,7 @@ grammar Serene {
     # File structure and whitespace
     rule TOP {
         :my Int $*LAST;
-        ^ [ <.separator>? <functions> || <error("")> ] $
+        ^ [ <.separator>? <functions> <.separator>? || <error("")> ] $
     }
     token ws {
         <!ww> \h* 
@@ -267,7 +267,7 @@ grammar Serene {
     } #should all terms be allowed? 'run a.b()' is fine, but what about 'run a.b().c' or 'run a.b()[5]'?
 
     rule return_statement {
-        'return' <expression>
+        [ 'return' <expression> ] | [ 'return' $$ ]
     }
 
     rule break_statement {

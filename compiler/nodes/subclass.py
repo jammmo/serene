@@ -186,19 +186,31 @@ class RunStatement(nodes.Node):
 class ReturnStatement(nodes.Node):
     def __init__(self, D):
         super().__init__(D)
-        self.satisfies_return = True
+        if type(self.data) == nodes.NodeMap:
+            self.satisfies_return = True
+        else:
+            self.satisfies_return = False   # "return" without value
     
     def to_code(self):
-        expr_code = self['expression'].to_code()
-        return f'return {expr_code};\n'
+        if type(self.data) == nodes.NodeMap:
+            expr_code = self['expression'].to_code()
+            return f'return {expr_code};\n'
+        else:
+            return 'return;\n'
 
 class BreakStatement(nodes.Node):
     def to_code(self):
-        return 'break;\n'
+        if len(scope.loops) > 0:
+            return 'break;\n'
+        else:
+            raise scope.SereneScopeError("'break' cannot be used outside of a loop.")
 
 class ContinueStatement(nodes.Node):
     def to_code(self):
-        return 'continue;\n'
+        if len(scope.loops) > 0:
+            return 'continue;\n'
+        else:
+            raise scope.SereneScopeError("'continue' cannot be used outside of a loop.")
 
 class ExpressionNode(nodes.Node):
     def get_type(self):
@@ -391,6 +403,7 @@ class ForLoopNode(nodes.Node):
         newindent, oldindent = add_indent()
 
         scope.currentscope = scope.ScopeObject(scope.currentscope, loop=True)
+        scope.loops.append(self)
 
         loopvar = self.get_scalar('identifier')
         scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False))
@@ -407,6 +420,7 @@ class ForLoopNode(nodes.Node):
         
         sub_indent()
         scope.currentscope = scope.currentscope.parent
+        assert(scope.loops.pop() is self)
 
         return code
 
@@ -415,6 +429,7 @@ class WhileLoopNode(nodes.Node):
         newindent, oldindent = add_indent()
 
         scope.currentscope = scope.ScopeObject(scope.currentscope, loop=True)
+        scope.loops.append(self)
 
         statements = newindent.join([x.to_code() for x in self['statements']])
         condition = self['expression'].to_code()
@@ -422,6 +437,7 @@ class WhileLoopNode(nodes.Node):
 
         sub_indent()
         scope.currentscope = scope.currentscope.parent
+        assert(scope.loops.pop() is self)
 
         return code
 

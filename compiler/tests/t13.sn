@@ -1,0 +1,9 @@
+function main() {
+    var i = 10
+    while (True) {
+        if (i <= 0) {
+            return
+        }
+        set i -= 1
+    }
+}
