@@ -253,17 +253,21 @@ class TermNode(nodes.Node):
         base_expr = self[0]
         inner_expr = base_expr[0]
 
+        current_type = None
         if inner_expr.nodetype == 'identifier':
             self.is_temporary = False
             code = base_expr.to_code()      # This is a bit redundant, but it's done to check read access on the identifier
+            current_type = base_expr.get_type()
             self.var_to_access = inner_expr.data
         elif (inner_expr.nodetype == 'expression'):
             code = '(' + inner_expr.to_code() + ')'
+            current_type = inner_expr.get_type()
             self.is_temporary = inner_expr.is_temporary
             if not self.is_temporary:
                 self.var_to_access = inner_expr.var_to_access
         else:
             code = base_expr.to_code()
+            current_type = base_expr.get_type()
             self.is_temporary = True
 
         for i in range(1, len(self.data)):
@@ -277,7 +281,7 @@ class TermNode(nodes.Node):
                             raise scope.SereneScopeError(f"Mutating methods cannot be called on variable '{self.var_to_access}' at line number {scope.line_number}.")
                     # Method calls return temporary values, so only the first method call in a term needs to be scope-checked
                     self.is_temporary = True
-                code += x.to_code()
+                raise NotImplementedError #code += x.to_code(on_type=None)
             elif x.nodetype == 'index_call':
                 code += '[' + x['expression'].to_code() + ']'
         return code
@@ -372,7 +376,7 @@ class FunctionCallNode(nodes.Node):
         return code
 
 class MethodCallNode(nodes.Node):
-    def to_code(self):
+    def to_code(self, on_type):
         code = '.sn_' + self.get_scalar('identifier') + '('
         params = []
         for x in self['function_call_parameters']:

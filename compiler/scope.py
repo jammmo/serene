@@ -132,6 +132,20 @@ class ScopeObject:
         else:
             return False
 
+class TypeObject:
+    def __init__(self, members: dict[str, str | TypeVar], methods: dict[str, str | TypeVar], typevar: TypeVar | None = None):
+        self.members = members
+        self.methods = methods
+        self.typevar = typevar
+
+class TypeVar:
+    pass
+
+vector_type_var = TypeVar()
+array_type_var = TypeVar()
+standard_types = {'Vector': TypeObject(members={"length": "Int"}, methods={"append!": "", "delete!": "", "pop!": vector_type_var}, typevar=vector_type_var),
+                  'Array':  TypeObject(members={"length": "Int"}, methods={}, typevar=array_type_var)}
+
 top_scope = ScopeObject(None)
 currentscope = top_scope
 current_func_name = None
