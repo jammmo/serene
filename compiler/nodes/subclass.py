@@ -203,14 +203,14 @@ class BreakStatement(nodes.Node):
         if len(scope.loops) > 0:
             return 'break;\n'
         else:
-            raise scope.SereneScopeError("'break' cannot be used outside of a loop.")
+            raise scope.SereneScopeError(f"'break' cannot be used outside of a loop at line number {scope.line_number}.")
 
 class ContinueStatement(nodes.Node):
     def to_code(self):
         if len(scope.loops) > 0:
             return 'continue;\n'
         else:
-            raise scope.SereneScopeError("'continue' cannot be used outside of a loop.")
+            raise scope.SereneScopeError(f"'continue' cannot be used outside of a loop at line number {scope.line_number}.")
 
 class ExpressionNode(nodes.Node):
     def get_type(self):
@@ -406,14 +406,23 @@ class ForLoopNode(nodes.Node):
         scope.loops.append(self)
 
         loopvar = self.get_scalar('identifier')
-        scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False))
+        
 
         if self.count('expression') == 2:   # start and endpoint
+            var_type = self[1].get_type()
+            if var_type != self[2].get_type():
+                raise scope.SereneTypeError(f"Mismatching types in for-loop at line number {scope.line_number}.")
+            scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
+
             startval = self[1].to_code()
             endval = self[2].to_code()
+
             statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous two lines due to the side effects
             code = f'for (int sn_{loopvar} = {startval}; sn_{loopvar} < {endval}; sn_{loopvar}++) {{\n{newindent}{statements}{oldindent}}}\n'
         else:
+            raise NotImplementedError
+            scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
+
             myrange = self['expression'].to_code()
             statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous line due to the side effects
             code = f'for (const auto& sn_{loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
