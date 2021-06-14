@@ -1,0 +1,7 @@
+function test1(mutate a: Vector{Int}) {
+    run a.append!(10)
+}
+
+function main() {
+    
+}

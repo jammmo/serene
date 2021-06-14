@@ -1,4 +1,6 @@
 from __future__ import annotations
+from typing import Type
+import typecheck
 import scope
 import nodes
 
@@ -83,9 +85,13 @@ class FunctionParameterNode(nodes.Node):
         code += ' ' + 'sn_'+ var_name
 
         if len(self['type'].data) == 1 and self['type'].get_scalar('base_type') in ('String', 'Char', 'Int', 'Float', 'Bool'):
-            my_type = self['type'].get_scalar('base_type')
+            my_type = typecheck.TypeObject(self['type'].get_scalar('base_type'))
         else:
-            raise NotImplementedError(self['type']['base_type'].data)
+            if self['type'].get_scalar('base_type') in ('Vector', 'Array'):
+                if len(self['type']['type'].data) == 1 and self['type']['type'].get_scalar('base_type') in ('String', 'Char', 'Int', 'Float', 'Bool'):
+                    my_type = typecheck.TypeObject(self['type'].get_scalar('base_type'), params=[typecheck.TypeObject(self['type']['type'].get_scalar('base_type'))])
+            else:
+                raise NotImplementedError(self['type']['base_type'].data)
 
         # Adds to the scope INSIDE the function, not the scope where the function is defined
         scope.currentscope.add_binding(scope.ParameterObject(var_name, accessor, my_type))
@@ -215,8 +221,18 @@ class ContinueStatement(nodes.Node):
 class ExpressionNode(nodes.Node):
     def get_type(self):
         if (self.count("term") > 1):
-            raise NotImplementedError("get_type() for ExpressionNode with infix operators")
-        return self['term'].get_type()
+            this_type = None
+            for x in self:
+                if x.nodetype != "term":
+                    continue
+                if this_type is None:
+                    this_type = x.get_type()
+                else:
+                    if x.get_type() != this_type:
+                        raise scope.SereneTypeError(f"Mismatching types for infix operator(s) at line number {scope.line_number}.")
+            return this_type
+        else:
+            return self['term'].get_type()
     
     def to_code(self, enclosing_accessor=None):     # enclosing_accessor should only be passed to top-level expression with an applied accessor
         code = ''
@@ -257,23 +273,27 @@ class TermNode(nodes.Node):
         if inner_expr.nodetype == 'identifier':
             self.is_temporary = False
             code = base_expr.to_code()      # This is a bit redundant, but it's done to check read access on the identifier
-            current_type = base_expr.get_type()
+            if (len(self.data) > 1):
+                current_type = base_expr.get_type()
             self.var_to_access = inner_expr.data
         elif (inner_expr.nodetype == 'expression'):
             code = '(' + inner_expr.to_code() + ')'
-            current_type = inner_expr.get_type()
+            if (len(self.data) > 1):
+                current_type = inner_expr.get_type()
             self.is_temporary = inner_expr.is_temporary
             if not self.is_temporary:
                 self.var_to_access = inner_expr.var_to_access
         else:
             code = base_expr.to_code()
-            current_type = base_expr.get_type()
+            if (len(self.data) > 1):
+                current_type = base_expr.get_type()
             self.is_temporary = True
 
         for i in range(1, len(self.data)):
             x = self[i]
             if x.nodetype == 'field_access':
                 code += '.sn_' + x.get_scalar('identifier')
+                current_type = None
             elif x.nodetype == 'method_call':
                 if not self.is_temporary:
                     if 'mutate_method_symbol' in x:
@@ -281,26 +301,39 @@ class TermNode(nodes.Node):
                             raise scope.SereneScopeError(f"Mutating methods cannot be called on variable '{self.var_to_access}' at line number {scope.line_number}.")
                     # Method calls return temporary values, so only the first method call in a term needs to be scope-checked
                     self.is_temporary = True
-                raise NotImplementedError #code += x.to_code(on_type=None)
+                if current_type is None:
+                    raise NotImplementedError
+                else:
+                    if current_type.base in ('Vector', 'Array') and current_type.params[0].params is None:
+                        code += x.to_code(on_type=current_type)
+                    elif current_type.base == "String" and current_type.params is None:
+                        code += x.to_code(on_type=current_type)
+                    else:
+                        raise NotImplementedError
             elif x.nodetype == 'index_call':
                 code += '[' + x['expression'].to_code() + ']'
+                current_type = None
+            else:
+                raise NotImplementedError
         return code
 
 class BaseExpressionNode(nodes.Node):
     def get_type(self):
         if 'literal' in self:
             if 'int_literal' in self['literal']:
-                return 'Int'
+                return typecheck.TypeObject('Int')
             elif 'float_literal' in self['literal']:
-                return 'Float'
+                return typecheck.TypeObject('Float')
             elif 'bool_literal' in self['literal']:
-                return 'Bool'
+                return typecheck.TypeObject('Bool')
             elif 'string_literal' in self['literal']:
-                return 'String'
+                return typecheck.TypeObject('String')
             elif 'char_literal' in self['literal']:
-                return 'Char'
+                return typecheck.TypeObject('Char')
             else:
                 raise NotImplementedError
+        elif 'expression' in self:
+            return self['expression'].get_type()
         elif 'identifier' in self:
             var_name = self.get_scalar('identifier')
             return scope.currentscope.get_type_of(var_name)
@@ -312,7 +345,7 @@ class BaseExpressionNode(nodes.Node):
             if 'type' not in original_function:
                 raise scope.SereneTypeError(f"Function '{self['function_call'].get_scalar('identifier')}' with no return value cannot be used as an expression at line number {scope.line_number}.")
             if 'type' not in original_function['type']:
-                return original_function['type'].get_scalar('base_type')
+                return typecheck.TypeObject(original_function['type'].get_scalar('base_type'))
             else:
                 raise NotImplementedError
         else:
@@ -377,16 +410,45 @@ class FunctionCallNode(nodes.Node):
 
 class MethodCallNode(nodes.Node):
     def to_code(self, on_type):
-        code = '.sn_' + self.get_scalar('identifier') + '('
+        method_name = self.get_scalar('identifier')
+        if on_type.base in typecheck.standard_types:
+            orig_type = typecheck.standard_types[on_type.base]
+            if 'mutate_method_symbol' in self:
+                full_method_name = method_name + '!'
+            else:
+                full_method_name = method_name
+            if full_method_name not in orig_type.methods:
+                raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
+        else:
+            raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
+        code = '.sn_' + method_name + '('
+
         params = []
-        for x in self['function_call_parameters']:
-            raise NotImplementedError
-            # params.append(x.to_code())  # This doesn't work anymore
+        orig_params = orig_type.methods[full_method_name][1]
+        num_called_params = len(self['function_call_parameters'].data)
+
+        if num_called_params > len(orig_params):
+            raise scope.SereneScopeError(f"Method '{method_name}' is given too many parameters when called at line number {scope.line_number}.")
+        if num_called_params < len(orig_params):
+            raise scope.SereneScopeError(f"Function '{method_name}' is given too few parameters when called at line number {scope.line_number}.")
+
+        for i in range(num_called_params):
+            o_param = orig_params[i]
+            o_accessor = o_param.accessor
+            
+            o_type = o_param.var_type
+            if not isinstance(o_type, str):
+                raise NotImplementedError
+            
+            c_param = self['function_call_parameters'][i]
+            
+            params.append(c_param.to_code(original_accessor = o_accessor, original_type = o_type, function_name = method_name, param_name = o_param.name, method=True))
+
         code += ', '.join(params) + ')'
         return code
 
 class FunctionCallParameterNode(nodes.Node):
-    def to_code(self, original_accessor, original_type, function_name, param_name):
+    def to_code(self, original_accessor, original_type, function_name, param_name, method=False):
         if 'accessor' in self:
             my_accessor = self.get_scalar('accessor')
         else:
@@ -395,10 +457,16 @@ class FunctionCallParameterNode(nodes.Node):
         code = self['expression'].to_code(enclosing_accessor=my_accessor) # This will raise exceptions for incorrect accesses
 
         if (not self['expression'].is_temporary) and (my_accessor != original_accessor) and (my_accessor != 'copy'):
-            raise scope.SereneScopeError(f"Function '{function_name}' is called with incorrect accessor for parameter '{param_name}' at line number {scope.line_number}.")
+            if method:
+                raise scope.SereneScopeError(f"Method '{function_name}' is called with incorrect accessor for parameter '{param_name}' at line number {scope.line_number}.")
+            else:
+                raise scope.SereneScopeError(f"Function '{function_name}' is called with incorrect accessor for parameter '{param_name}' at line number {scope.line_number}.")
 
         if original_type != self['expression'].get_type():
-            raise scope.SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to function '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
+            if method:
+                raise scope.SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to method '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
+            else:
+                raise scope.SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to function '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
 
         return code
 
@@ -424,9 +492,13 @@ class ForLoopNode(nodes.Node):
             statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous two lines due to the side effects
             code = f'for (int sn_{loopvar} = {startval}; sn_{loopvar} < {endval}; sn_{loopvar}++) {{\n{newindent}{statements}{oldindent}}}\n'
         else:
-            raise NotImplementedError
-            scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
-
+            expr_type = self['expression'].get_type()
+            if expr_type.base in ('Array', 'Vector') and expr_type.params[0].params is None:
+                var_type = expr_type.params[0].base
+                scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
+            else:
+                raise NotImplementedError
+            
             myrange = self['expression'].to_code()
             statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous line due to the side effects
             code = f'for (const auto& sn_{loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
