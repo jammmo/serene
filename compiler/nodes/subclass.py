@@ -260,54 +260,88 @@ class ExpressionNode(nodes.Node):
         return code
 
 class TermNode(nodes.Node):
-    def get_type(self):
+    def get_type_sequence(self):
+        L = []
+        base_type = self[0].get_type()
+        L.append(base_type)
         if len(self.data) > 1:
-            if len(self.data) == 2 and self[1].nodetype == 'index_call':
-                base_type = self['base_expression'].get_type()
-                if base_type.base in ('Vector', 'Array') and base_type.params[0].params is None:
-                    if self['index_call']['expression'].get_type().base != 'Int':
-                        raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
-                    return typecheck.TypeObject(base_type.params[0].base)
-                elif base_type.base == 'String':
-                    if self['index_call']['expression'].get_type().base != 'Int':
-                        raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
-                    return typecheck.TypeObject('Char')
+            for i in range(1, len(self.data)):
+                cur = self[i]
+                prev = self[i-1]
+                prev_type = L[-1]
+                if prev_type.base in typecheck.standard_types:
+                    orig_type = typecheck.standard_types[prev_type.base]
+                    if cur.nodetype == 'field_access':
+                        field_name = cur['identifier'].data
+                        if field_name in orig_type.members:
+                            member_type = orig_type.members[field_name]
+                            if type(member_type) == str:
+                                L.append(typecheck.TypeObject(member_type))
+                            else:
+                                raise NotImplementedError   # Member with generic type
+                        else:
+                            raise scope.SereneTypeError(f"Invalid field access in expression at line number {scope.line_number}.")
+                    elif cur.nodetype == 'method_call':
+                        method_name = cur['identifier'].data
+                        if method_name in orig_type.methods:
+                            method_return_type = orig_type.methods[method_name][0]
+                            if type(method_return_type) == str:
+                                if method_return_type == '':
+                                    if i + 1 == len(self.data):
+                                        L.append(None)
+                                    else:
+                                        raise NotImplementedError
+                                L.append(typecheck.TypeObject(method_return_type))
+                            else:
+                                raise NotImplementedError   # Member with generic type
+                    elif cur.nodetype == 'index_call':
+                        if prev_type.base in ('Vector', 'Array') and prev_type.params[0].params is None:
+                            if self['index_call']['expression'].get_type().base != 'Int':
+                                raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+                            L.append(typecheck.TypeObject(prev_type.params[0].base))
+                        elif prev_type.base == 'String':
+                            if self['index_call']['expression'].get_type().base != 'Int':
+                                raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+                            L.append(typecheck.TypeObject('Char'))
+                    else:
+                        raise NotImplementedError
                 else:
-                    raise NotImplementedError
-            else:
-                raise NotImplementedError
+                    raise scope.SereneTypeError(f"Unknown type in expression at line number {scope.line_number}")
+
+        return L
+    
+    def get_type(self):
+        this_type = self.get_type_sequence()[-1]
+        if this_type is None:
+            raise scope.SereneTypeError(f"Unknown type in expression at line number {scope.line_number}")
         else:
-            return self['base_expression'].get_type()
+            return this_type
     
     def to_code(self):
         base_expr = self[0]
         inner_expr = base_expr[0]
 
-        current_type = None
+        if len(self.data) > 1:
+            type_seq = self.get_type_sequence()
+
         if inner_expr.nodetype == 'identifier':
             self.is_temporary = False
             code = base_expr.to_code()      # This is a bit redundant, but it's done to check read access on the identifier
-            if (len(self.data) > 1):
-                current_type = base_expr.get_type()
             self.var_to_access = inner_expr.data
         elif (inner_expr.nodetype == 'expression'):
             code = '(' + inner_expr.to_code() + ')'
-            if (len(self.data) > 1):
-                current_type = inner_expr.get_type()
             self.is_temporary = inner_expr.is_temporary
             if not self.is_temporary:
                 self.var_to_access = inner_expr.var_to_access
         else:
             code = base_expr.to_code()
-            if (len(self.data) > 1):
-                current_type = base_expr.get_type()
             self.is_temporary = True
 
         for i in range(1, len(self.data)):
+            current_type = type_seq[i-1]
             x = self[i]
             if x.nodetype == 'field_access':
                 code += '.sn_' + x.get_scalar('identifier')
-                current_type = None
             elif x.nodetype == 'method_call':
                 if not self.is_temporary:
                     if 'mutate_method_symbol' in x:
@@ -326,7 +360,6 @@ class TermNode(nodes.Node):
                         raise NotImplementedError
             elif x.nodetype == 'index_call':
                 code += '[' + x['expression'].to_code() + ']'
-                current_type = None
             else:
                 raise NotImplementedError
         return code
