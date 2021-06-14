@@ -262,8 +262,22 @@ class ExpressionNode(nodes.Node):
 class TermNode(nodes.Node):
     def get_type(self):
         if len(self.data) > 1:
-            raise NotImplementedError
-        return self['base_expression'].get_type()
+            if len(self.data) == 2 and self[1].nodetype == 'index_call':
+                base_type = self['base_expression'].get_type()
+                if base_type.base in ('Vector', 'Array') and base_type.params[0].params is None:
+                    if self['index_call']['expression'].get_type().base != 'Int':
+                        raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+                    return typecheck.TypeObject(base_type.params[0].base)
+                elif base_type.base == 'String':
+                    if self['index_call']['expression'].get_type().base != 'Int':
+                        raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+                    return typecheck.TypeObject('Char')
+                else:
+                    raise NotImplementedError
+            else:
+                raise NotImplementedError
+        else:
+            return self['base_expression'].get_type()
     
     def to_code(self):
         base_expr = self[0]
@@ -433,16 +447,19 @@ class MethodCallNode(nodes.Node):
             raise scope.SereneScopeError(f"Function '{method_name}' is given too few parameters when called at line number {scope.line_number}.")
 
         for i in range(num_called_params):
-            o_param = orig_params[i]
-            o_accessor = o_param.accessor
+            orig_param = orig_params[i]
+            orig_accessor = orig_param.accessor
             
-            o_type = o_param.var_type
-            if not isinstance(o_type, str):
-                raise NotImplementedError
+            orig_type = orig_param.var_type
+            if isinstance(orig_type, typecheck.TypeVar):
+                if on_type.base in ('Vector', 'Array') and on_type.params[0].params is None:
+                    orig_type = typecheck.TypeObject(on_type.params[0].base)
+                else:
+                    raise NotImplementedError
             
             c_param = self['function_call_parameters'][i]
             
-            params.append(c_param.to_code(original_accessor = o_accessor, original_type = o_type, function_name = method_name, param_name = o_param.name, method=True))
+            params.append(c_param.to_code(original_accessor = orig_accessor, original_type = orig_type, function_name = method_name, param_name = orig_param.name, method=True))
 
         code += ', '.join(params) + ')'
         return code
@@ -495,7 +512,7 @@ class ForLoopNode(nodes.Node):
             expr_type = self['expression'].get_type()
             if expr_type.base in ('Array', 'Vector') and expr_type.params[0].params is None:
                 var_type = expr_type.params[0].base
-                scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
+                scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=typecheck.TypeObject(var_type)))
             else:
                 raise NotImplementedError
             

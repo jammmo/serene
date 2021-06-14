@@ -1,0 +1,8 @@
+// Ensure functions cannot be defined multiple times - this should not compile!
+function main() {
+
+}
+
+function main() {
+
+}

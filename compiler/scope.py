@@ -17,12 +17,14 @@ class VariableObject:
         self.name = name
         self.mutable = mutable
         self.var_type = var_type
+        assert type(self.var_type) != str
 
 class ParameterObject:
     def __init__(self, name, accessor, var_type):
         self.name = name
         self.accessor = accessor
         self.var_type = var_type
+        assert type(self.var_type) != str
 
 class ScopeObject:
     def __init__(self, parent, loop = False):

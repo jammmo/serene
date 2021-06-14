@@ -41,7 +41,7 @@ grammar Serene {
 
     # File structure and whitespace
     rule TOP {
-        :my Int $*LAST;
+        :my Int $*LAST = 0;
         ^ [ <.separator>? <functions> <.separator>? || <error("")> ] $
     }
     token ws {
