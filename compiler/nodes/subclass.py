@@ -22,7 +22,27 @@ def sub_indent():
     indent_level -= 1
     newindent = ('    '*indent_level)
 
-    return newindent, oldindent    
+    return newindent, oldindent
+
+def get_cpp_type(my_type):
+    assert type(my_type) == typecheck.TypeObject
+    base = my_type.base
+    mapping = {'Int':    'int64_t',
+               'Bool':   'bool',
+               'String': 'std::string',
+               'Float':  'double',
+               'Char':   'char',
+               'Vector': 'SN_Vector',
+               'Array':  'SN_Array',
+              }
+    if base in mapping:
+        cpp_type = mapping[base]
+    else:
+        raise NotImplementedError
+    if my_type.params is None:
+        return cpp_type
+    else:  # Generic type
+        return cpp_type + '<' + get_cpp_type(my_type.params[0]) + '>'
 
 # Subclasses __________________________________________________________________
 
@@ -102,6 +122,16 @@ class FunctionParameterNode(nodes.Node):
         return self.code
 
 class TypeNode(nodes.Node):
+    def get_type(self):
+        base = self['base_type'].data
+        num_generic_params = self.count('type')
+        if num_generic_params == 0:
+            return typecheck.TypeObject(base)
+        elif num_generic_params == 1:
+            return typecheck.TypeObject(base, [self['type'].get_type()])
+        else:
+            raise NotImplementedError
+
     def to_code(self):
         base = self.get_scalar('base_type')
         mapping = {'Int':    'int64_t',
@@ -146,8 +176,15 @@ class VarStatement(nodes.Node):
         expr_code = self['expression'].to_code()
         expr_type = self['expression'].get_type()
 
+        if 'type' in self:
+            written_type = self['type'].get_type()
+            if written_type != expr_type:
+                raise scope.SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
+
         scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=True, var_type=expr_type))
-        return f'auto sn_{var_name} = {expr_code};\n'
+
+        cpp_type = get_cpp_type(expr_type)
+        return f'{cpp_type} sn_{var_name} = {expr_code};\n'
 
 class ConstStatement(nodes.Node):
     def to_code(self):
@@ -156,8 +193,15 @@ class ConstStatement(nodes.Node):
         expr_code = self['expression'].to_code()
         expr_type = self['expression'].get_type()
 
+        if 'type' in self:
+            written_type = self['type'].get_type()
+            if written_type != expr_type:
+                raise scope.SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
+
         scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=False, var_type=expr_type))
-        return f'const auto sn_{var_name} = {expr_code};\n'
+
+        cpp_type = get_cpp_type(expr_type)
+        return f'const {cpp_type} sn_{var_name} = {expr_code};\n'
 
 class SetStatement(nodes.Node):
     def to_code(self):
@@ -551,7 +595,8 @@ class ForLoopNode(nodes.Node):
             
             myrange = self['expression'].to_code()
             statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous line due to the side effects
-            code = f'for (const auto& sn_{loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
+            cpp_type = get_cpp_type(typecheck.TypeObject(var_type))
+            code = f'for (const {cpp_type}& sn_{loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
         
         sub_indent()
         scope.currentscope = scope.currentscope.parent
