@@ -1,0 +1,29 @@
+function test1() -> Int {
+    while (True) {
+        continue
+    }
+}
+
+function test2() -> Int {
+    while (True) {
+        return 1
+    }
+}
+
+function test3() -> Int {
+    while (((((((True))))))) {
+        return 1
+    }
+}
+
+function test4() -> Int {
+    while (True) {
+        while (True) {
+            return 1
+        }
+    }
+}
+
+function main() {
+
+}
