@@ -1,0 +1,7 @@
+function test1() {
+    break
+}
+
+function main() {
+    continue
+}

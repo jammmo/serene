@@ -69,6 +69,7 @@ class Node:
                 'base_expression':         nodes.BaseExpressionNode,
                 'function_call':           nodes.FunctionCallNode,
                 'method_call':             nodes.MethodCallNode,
+                'constructor_call':        nodes.ConstructorCallNode,
                 'function_call_parameter': nodes.FunctionCallParameterNode,
                 'for_loop':                nodes.ForLoopNode,
                 'while_loop':              nodes.WhileLoopNode,

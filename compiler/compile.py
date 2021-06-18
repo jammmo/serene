@@ -23,6 +23,10 @@ def main():
 
     scope.functions = Node.create(tree)
     for x in scope.functions:
+        if x['identifier'].data in scope.function_names:
+            print("COMPILE ERROR:", f"Function '{x['identifier'].data}' has more than one definition.", sep="\n")
+            exit(126)
+
         scope.function_names.append(x['identifier'].data)
 
     if 'main' not in scope.function_names:

@@ -1,0 +1,9 @@
+function test1() -> String {
+    while (True) {
+        return "Hello"
+    }
+}
+
+function main() {
+
+}

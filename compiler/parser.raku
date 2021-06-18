@@ -1,15 +1,54 @@
 #use Grammar::Tracer;
 
+my $original;
+
 grammar Serene {
+    # Error reporting
+    method error($message) {
+        say "COMPILE ERROR:";
+        if ($message eq "") {
+            my $line = $*LAST + 1;
+            if $line > $original.lines.elems {
+                say "Invalid syntax at end of file.";
+                say "Did not compile.";
+                exit();
+            }
+
+            my $text = $original.lines[$line - 1].trim();
+
+            until $text.contains(/\w/) {
+                $line += 1;
+                if $line > $original.lines.elems {
+                    say "Invalid syntax at end of file.";
+                    say "Did not compile.";
+                    exit();
+                }
+                $text = $original.lines[$line - 1].trim();
+            }
+            say "Invalid syntax at line number ", $line , ":";
+            say "  - Code: ``` ", $text, " ```";
+            say "";
+        } else {
+            my $line = line_num(self.pos);
+            say "Invalid syntax at line number ", $line , ":";
+            say "  - Code: ``` ", $original.lines[$line - 1].trim(), " ```";
+            say "  - ", $message;
+            say "";
+        }
+        say "Did not compile.";
+        exit();
+    }
+
     # File structure and whitespace
     rule TOP {
-        ^ <.separator>? <functions> $
+        :my Int $*LAST = 0;
+        ^ [ <.separator>? <functions> <.separator>? || <error("")> ] $
     }
     token ws {
         <!ww> \h* 
     }
     token separator {
-        <line_separator> | <end_separator>
+        [ <line_separator> | <end_separator> ] { $*LAST = max(line_num(self.pos), $*LAST) }
     }
     token line_separator {
         [ \h* <.comment>? \v ]+ \h*
@@ -18,7 +57,7 @@ grammar Serene {
         [ \h* <.comment>? \v ]* [ \h* <.comment>? $ ]
     }
     token comment {
-        <line_comment> | <multiline_comment>
+        [ <line_comment> | <multiline_comment> ] { $*LAST = max(line_num(self.pos), $*LAST) }
     }
     token line_comment {
         '//' \V* $$
@@ -29,13 +68,13 @@ grammar Serene {
 
     # Main language grammar
     token functions {
-        <function>* %% <.separator>
+        [ <function> || [ <var_statement> || <const_statement>] <error("Global variables are not allowed.")> ]* %% <.separator>
     }
     token statements {
-        <statement>* %% <.separator>
+         <statement>* %% [ <.separator> || <.ws> ';' <error("Statements are terminated with newline characters, not semicolons.")> ]
     }
     token statement {
-        | <print_statement>
+        [ <print_statement>
         | <var_statement>
         | <const_statement>
         | <set_statement>
@@ -46,7 +85,11 @@ grammar Serene {
         | <while_loop>
         | <for_loop>
         | <if_block>
-        | <match_block>
+        | <match_block> ]
+        
+        || [ <function_call> <error("Function calls cannot be used as statements. Use the 'run' keyword.")> ]
+
+        || [ <base_expression> [ <method_call> | <field_access> | <index_call> ]*? <method_call> <error("Method calls cannot be used as statements. Use the 'run' keyword.")> ]
     }
 
     token literal {
@@ -206,17 +249,17 @@ grammar Serene {
     }
 
     rule var_statement {
-        | 'var' <identifier> '=' <expression>
-        | 'var' <identifier> ':' <type> '=' <expression>
+        'var' <identifier> [ ':' <type> ]? [ '=' || <error("Incorrect assignment operator.")> ] <expression>
     }
 
     rule const_statement {
-        | 'const' <identifier> '=' <expression>
-        | 'const' <identifier> ':' <type> '=' <expression>
+        'const' <identifier> [ ':' <type> ]? [ '=' || <error("Incorrect assignment operator.")> ] <expression>
     }
 
     rule set_statement {
-        'set' <identifier> <assignment_op> <expression>
+        'set' <identifier>
+        [ ':' <type> <error("'set' statement cannot be used with an explicit type, as the type of the variable is already assigned.")>]?
+        [ <assignment_op> || <error("Incorrect assignment operator.")> ] <expression>
     }
 
     rule run_statement {
@@ -224,7 +267,7 @@ grammar Serene {
     } #should all terms be allowed? 'run a.b()' is fine, but what about 'run a.b().c' or 'run a.b()[5]'?
 
     rule return_statement {
-        'return' <expression>
+        [ 'return' <expression> ] | [ 'return' $$ ]
     }
 
     rule break_statement {
@@ -252,7 +295,7 @@ grammar Serene {
     }
 
     rule if_block {
-        <if_branch>
+        [ <if_branch> || <elseif_branch> <error("'elseif' branch has no corresponding 'if' branch.")> || <else_branch> <error("'else' branch has no corresponding 'if' branch.")> ]
         [ <.separator>? <elseif_branch> ]*
         [ <.separator>? <else_branch> ]?
     }
@@ -293,8 +336,6 @@ grammar Serene {
     }
 }
 
-
-my $original;
 
 sub line_num ($pos) {
     my @a = $original.indices("\n");
@@ -337,16 +378,9 @@ sub MAIN($output_type, $file, $output_file) {
         say 'Compiling ', $file, ' now...';        
     }
 
-    my $parsed = Serene.parsefile($file);
+    $original = slurp $file;
+    my $parsed = Serene.parse($original);
 
-    if not $parsed {
-        say "COMPILE ERROR:";
-        say "Invalid syntax.";
-        say "Did not compile.";
-        exit();
-    }
-
-    $original = $parsed.target;
     my $output = print_parsed($parsed, 0);
 
     if $output_type eq 'p' {

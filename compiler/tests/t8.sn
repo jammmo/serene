@@ -24,7 +24,7 @@ function main() {
     }
     print "Length of u: ", u.length     // Length of u: 5
     print u                             // [0, 2, 4, 6, 8]
-    run binarySearchAndDelete(u, 6)
+    run binarySearchAndDelete(mutate u, 6)
     print "Length of u: ", u.length     // Length of u: 4
     print u                             // [0, 2, 4, 8]
 }
