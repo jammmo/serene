@@ -446,6 +446,8 @@ class BaseExpressionNode(nodes.Node):
                 return typecheck.TypeObject(original_function['type'].get_scalar('base_type'))
             else:
                 raise NotImplementedError
+        elif 'constructor_call' in self:
+            return self['constructor_call'].get_type()
         else:
             raise NotImplementedError
         
@@ -453,7 +455,7 @@ class BaseExpressionNode(nodes.Node):
         if 'function_call' in self:
             return self['function_call'].to_code()
         elif 'constructor_call' in self:
-            raise NotImplementedError
+            return self['constructor_call'].to_code()
         elif 'identifier' in self:
             var_name = self.get_scalar('identifier')
             if scope.currentscope.check_read(var_name):     # If the variable also needs to be mutated/moved, that will already be checked within TermNode or ExpressionNode
@@ -547,6 +549,74 @@ class MethodCallNode(nodes.Node):
 
         code += ', '.join(params) + ')'
         return code
+
+class ConstructorCallNode(nodes.Node):
+    def get_type(self):
+        if self.get_scalar("base_type") == 'Array':
+            if len(self['constructor_call_parameters'].data) >= 1 and self['constructor_call_parameters'][0][0].nodetype == 'expression':
+                return typecheck.TypeObject(base='Array', params=[self['constructor_call_parameters'][0][0].get_type()])
+            else:
+                raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")        
+        elif self.get_scalar("base_type") == 'Vector':
+            if len(self['constructor_call_parameters'].data) == 1 and self['constructor_call_parameters'][0][0].nodetype == 'type':    # Vector(Int), Vector(String), etc.
+                type_node = self['constructor_call_parameters'][0][0]
+                if 'type' in type_node:
+                    raise NotImplementedError
+                return typecheck.TypeObject(base='Vector', params=[typecheck.TypeObject(base=type_node.get_scalar('base_type'))])
+            elif len(self['constructor_call_parameters'].data) >= 1 and self['constructor_call_parameters'][0][0].nodetype == 'expression':
+                return typecheck.TypeObject(base='Vector', params=[self['constructor_call_parameters'][0][0].get_type()])
+            else:
+                raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+        else:
+            raise scope.SereneTypeError(f"Type constructor called at line number {scope.line_number} is not defined.")
+    
+    def to_code(self):
+        if self.get_scalar("base_type") == 'Array':
+            if len(self['constructor_call_parameters'].data) >= 1 and self['constructor_call_parameters'][0][0].nodetype == 'expression':
+                elems = []
+                elem_type = None
+                for i in range(len(self['constructor_call_parameters'].data)):
+                    cur = self['constructor_call_parameters'][i][0]
+                    if cur.nodetype != 'expression':
+                        raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                    elems.append(cur.to_code())
+                    if elem_type is None:
+                        elem_type = cur.get_type()
+                    elif elem_type != cur.get_type():
+                        raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                inner_code = ', '.join(elems)
+                type_param = get_cpp_type(elem_type)
+                return f"SN_Array<{type_param}>({inner_code})"
+            else:
+               raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.") 
+        elif self.get_scalar("base_type") == 'Vector':
+            if len(self['constructor_call_parameters'].data) == 1 and self['constructor_call_parameters'][0][0].nodetype == 'type':    # Vector(Int), Vector(String), etc.
+                type_node = self['constructor_call_parameters'][0][0]
+                if 'type' in type_node:
+                    raise NotImplementedError
+                type_param = get_cpp_type(typecheck.TypeObject(base=type_node.get_scalar('base_type')))
+                return f"SN_Vector<{type_param}>()"
+            elif len(self['constructor_call_parameters'].data) >= 1 and self['constructor_call_parameters'][0][0].nodetype == 'expression':
+                elems = []
+                elem_type = None
+                for i in range(len(self['constructor_call_parameters'].data)):
+                    cur = self['constructor_call_parameters'][i][0]
+                    if cur.nodetype != 'expression':
+                        raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                    elems.append(cur.to_code())
+                    if elem_type is None:
+                        elem_type = cur.get_type()
+                    elif elem_type != cur.get_type():
+                        raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                inner_code = ', '.join(elems)
+                type_param = get_cpp_type(elem_type)
+                return f"SN_Vector<{type_param}>({inner_code})"
+            else:
+                raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                        
+        else:
+            raise scope.SereneTypeError(f"Type constructor called at line number {scope.line_number} is not defined.")
+        
 
 class FunctionCallParameterNode(nodes.Node):
     def to_code(self, original_accessor, original_type, function_name, param_name, method=False):
