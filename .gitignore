@@ -1,5 +1,5 @@
 archived/
-compiler/outputs/*
+compiler/outputs/
 compiler/__pycache__/
 compiler/nodes/__pycache__/
 .mypy_cache
