@@ -243,6 +243,10 @@ grammar Serene {
         <base_expression> [ <method_call> | <field_access> | <index_call> ]*
     }
 
+    token place_term {
+        <base_expression> [ <field_access> | <index_call> ]*
+    }
+
     # Types of statements
     rule print_statement {
         'print' <expression> [ ',' <expression> ]*
@@ -257,9 +261,9 @@ grammar Serene {
     }
 
     rule set_statement {
-        'set' <identifier>
+        'set' [ <place_term> || <identifier> ]
         [ ':' <type> <error("'set' statement cannot be used with an explicit type, as the type of the variable is already assigned.")>]?
-        [ <assignment_op> || <error("Incorrect assignment operator.")> ] <expression>
+        <assignment_op> <expression>    # throw error("Incorrect assignment operator.") here?
     }
 
     rule run_statement {

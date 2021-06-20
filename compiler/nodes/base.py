@@ -66,6 +66,7 @@ class Node:
                 'continue_statement':      nodes.ContinueStatement,
                 'expression':              nodes.ExpressionNode,
                 'term':                    nodes.TermNode,
+                'place_term':              nodes.PlaceTermNode,
                 'base_expression':         nodes.BaseExpressionNode,
                 'function_call':           nodes.FunctionCallNode,
                 'method_call':             nodes.MethodCallNode,

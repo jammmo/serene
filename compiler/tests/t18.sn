@@ -1,0 +1,10 @@
+function main() {
+    var a = Array(1, 2, 3)
+    var b = a   // This copies a!
+
+    set a[2] = 100
+    set b[0] = -5
+
+    print a     // 1, 2, 100
+    print b     // -5, 2, 3
+}

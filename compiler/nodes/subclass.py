@@ -205,18 +205,26 @@ class ConstStatement(nodes.Node):
 
 class SetStatement(nodes.Node):
     def to_code(self):
-        var_name = self.get_scalar('identifier')
+        if 'place_term' in self:
+            if self['place_term']['base_expression'][0].nodetype != 'identifier':
+                raise scope.SereneTypeError(f"Invalid expression for left-hand side of 'set' statement at line number {scope.line_number}.")
+            var_name = self['place_term']['base_expression'].get_scalar('identifier')
+            lhs_code = self['place_term'].to_code()
+            correct_type = self['place_term'].get_type()
+        else:
+            var_name = self.get_scalar('identifier')
+            lhs_code = 'sn_' + var_name
+            correct_type = scope.currentscope.get_type_of(var_name)
 
         if scope.currentscope.check_set(var_name):
-            assign_op = self.get_scalar('assignment_op')
             expr_code = self['expression'].to_code()
             expr_type = self['expression'].get_type()
 
-            correct_type = scope.currentscope.get_type_of(var_name)
             if expr_type != correct_type:
                 raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{self.get_scalar('identifier')}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
 
-            return f'sn_{var_name} {assign_op} {expr_code};\n'
+            assign_op = self.get_scalar('assignment_op')
+            return f'{lhs_code} {assign_op} {expr_code};\n'
         else:
             if scope.currentscope.check_read(var_name):
                 raise scope.SereneScopeError(f"Variable '{var_name}' cannot be mutated at line number {scope.line_number}.")
@@ -414,6 +422,9 @@ class TermNode(nodes.Node):
             else:
                 raise NotImplementedError
         return code
+
+class PlaceTermNode(TermNode):  # Identical to TermNode, except with no method calls (prevented in the parsing stage). Used for 'set' statements
+    pass
 
 class BaseExpressionNode(nodes.Node):
     def get_type(self):
