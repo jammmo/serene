@@ -595,7 +595,7 @@ class ConstructorCallNode(nodes.Node):
                         elem_type = cur.get_type()
                     elif elem_type != cur.get_type():
                         raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
-                inner_code = ', '.join(elems)
+                inner_code = '{' + ', '.join(elems) + '}'
                 type_param = get_cpp_type(elem_type)
                 return f"SN_Array<{type_param}>({inner_code})"
             else:
@@ -619,7 +619,7 @@ class ConstructorCallNode(nodes.Node):
                         elem_type = cur.get_type()
                     elif elem_type != cur.get_type():
                         raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
-                inner_code = ', '.join(elems)
+                inner_code = '{' + ', '.join(elems) + '}'
                 type_param = get_cpp_type(elem_type)
                 return f"SN_Vector<{type_param}>({inner_code})"
             else:

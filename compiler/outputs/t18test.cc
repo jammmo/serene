@@ -1,4 +1,7 @@
 #include <iostream>
+#include <cstdint>
+#include <string>
+#include <stdexcept>
 #include <vector>
 
 template<typename Data>
@@ -28,4 +31,18 @@ std::ostream& operator<<(std::ostream& os, const SN_Array<Data>& obj) {
     }
     os << obj.items[obj.sn_length - 1] << "]";
     return os;
+}
+
+void sn_main() {
+    SN_Array<int64_t> sn_a = SN_Array<int64_t>({1, 2, 3});
+    SN_Array<int64_t> sn_b = sn_a;
+    sn_a[2] = 100;
+    sn_b[0] =  - 5;
+    std::cout << sn_a << std::endl;
+    std::cout << sn_b << std::endl;
+}
+
+int main() {
+    sn_main();
+    return 0;
 }
