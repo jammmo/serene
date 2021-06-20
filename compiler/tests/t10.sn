@@ -1,7 +1,7 @@
 function removeChar(mutate s: String, c: Char) {
     // Remove all instances of a character in a string
     var i = 0
-    while (i < s.length) {
+    while (i < s.length()) {
         if (s[i] == c) {
             // Exclamation marks are required for methods that mutate the object they act on
             run s.delete!(i)

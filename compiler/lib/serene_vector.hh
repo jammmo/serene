@@ -4,25 +4,29 @@
 template<typename Data>
 class SN_Vector {
 private:
+    int length;
     std::vector<Data> items;
 public:
-    int sn_length;
     SN_Vector() {
-        sn_length = 0;
+        length = 0;
     }
 
     SN_Vector(std::vector<Data>&& data) {
         sn_length = data.size();
         items = data;
     }
+    
+    int sn_length() {
+        return length;
+    }
 
     auto sn_append(Data item) {
         items.push_back(item);
-        sn_length = items.size();
+        length = items.size();
     }
     auto sn_delete(unsigned int index) {
         items.erase(items.begin() + index);
-        sn_length = items.size();
+        length = items.size();
     }
 
     Data& operator[] (unsigned int index) {
@@ -36,9 +40,9 @@ public:
 template<typename Data>
 std::ostream& operator<<(std::ostream& os, const SN_Vector<Data>& obj) {
     os << "[";
-    for (int i = 0; i < obj.sn_length - 1; i++) {
+    for (int i = 0; i < obj.length - 1; i++) {
         os << obj.items[i] << ", ";
     }
-    os << obj.items[obj.sn_length - 1] << "]";
+    os << obj.items[obj.length - 1] << "]";
     return os;
 }

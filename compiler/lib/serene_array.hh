@@ -4,12 +4,16 @@
 template<typename Data>
 class SN_Array {
 private:
+    int length;
     std::vector<Data> items;
 public:
-    int sn_length;
     SN_Array(std::vector<Data>&& data) {
-        sn_length = data.size();
+        length = data.size();
         items = data;
+    }
+
+    int sn_length() {
+        return length;
     }
 
     Data& operator[] (unsigned int index) {
@@ -23,9 +27,9 @@ public:
 template<typename Data>
 std::ostream& operator<<(std::ostream& os, const SN_Array<Data>& obj) {
     os << "[";
-    for (int i = 0; i < obj.sn_length - 1; i++) {
+    for (int i = 0; i < obj.length - 1; i++) {
         os << obj.items[i] << ", ";
     }
-    os << obj.items[obj.sn_length - 1] << "]";
+    os << obj.items[obj.length - 1] << "]";
     return os;
 }
