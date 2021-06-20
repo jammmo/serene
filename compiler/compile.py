@@ -1,6 +1,7 @@
 import yaml
 import sys
 import argparse
+import textwrap
 
 from nodes import Node
 import scope
@@ -44,7 +45,14 @@ def main():
         print(f"At source line number {scope.line_number}:")
         raise exc
 
-    code = '#include <iostream>\n#include <cstdint>\n#include <string>\n\n'
+    code = textwrap.dedent("""\
+                           #include <iostream>
+                           #include <cstdint>
+                           #include <string>
+                           #include "../lib/serene_array.hh"
+                           #include "../lib/serene_vector.hh"
+                           
+                           """)
     code += '\n\n'.join(function_code)
     code += '\n\nint main() {\n    sn_main();\n    return 0;\n}\n'
 
