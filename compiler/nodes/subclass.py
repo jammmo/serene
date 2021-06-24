@@ -35,10 +35,10 @@ def get_cpp_type(my_type):
                'Vector': 'SN_Vector',
                'Array':  'SN_Array',
               }
-    if base in mapping:
-        cpp_type = mapping[base]
-    else:
-        raise NotImplementedError
+    if base not in mapping:
+        raise scope.SereneTypeError(f"Unknown type at line number {scope.line_number}.")
+    cpp_type = mapping[base]
+  
     if my_type.params is None:
         return cpp_type
     else:  # Generic type
@@ -58,16 +58,12 @@ class FunctionNode(nodes.Node):
         scope.current_func_name =  self.get_scalar('identifier')
 
         if 'type' in self:
-            if ('type' not in self['type']):
-                scope.current_func_type = self['type'].get_type()
-            else:
-                raise NotImplementedError("Function with generic return type")
-            
-            return_is_statisfied = False
-            func_type = self['type'].to_code()
+            scope.current_func_type = self['type'].get_type()
+            func_type = self['type'].to_code()  # C++ return type
+            return_is_statisfied = False            
         else:
-            return_is_statisfied = True     # No need to return a value anywhere
             func_type = 'void'
+            return_is_statisfied = True     # No need to return a value anywhere            
         func_name = self.get_scalar('identifier')
         func_parameters = ', '.join([x.to_code() for x in self['function_parameters']])
 
@@ -97,10 +93,17 @@ class FunctionParameterNode(nodes.Node):
         code = self['type'].to_code()
         if 'accessor' in self:
             accessor = self.get_scalar('accessor')
-            if accessor == 'mutate':
-                code += '&'
         else:
             accessor = 'look'
+        
+        if accessor == 'look':
+            code += ' const&'
+        elif accessor == 'mutate':
+            code += '&'
+        elif accessor == 'move':
+            code += '&&'
+        # When accessor is 'copy', the default pass-by-value behavior in C++ is correct, so no additional modifiers are needed
+
         var_name = self.get_scalar('identifier')
         code += ' ' + 'sn_'+ var_name
 
@@ -133,23 +136,7 @@ class TypeNode(nodes.Node):
             raise NotImplementedError
 
     def to_code(self):
-        base = self.get_scalar('base_type')
-        mapping = {'Int':    'int64_t',
-                   'Bool':   'bool',
-                   'String': 'std::string',
-                   'Float':  'double',
-                   'Char':   'char',
-                   'Vector': 'SN_Vector',
-                   'Array':  'SN_Array',
-                  }
-        if base in mapping:
-            code = mapping[base]
-        else:
-            raise NotImplementedError
-        if 'type' in self:  # Generic type
-            return code + '<' + self['type'].to_code() + '>'
-        else:
-            return code
+        return get_cpp_type(self.get_type())
 
 class StatementNode(nodes.Node):
     @staticmethod
@@ -300,9 +287,9 @@ class ExpressionNode(nodes.Node):
             cur = self[i]
             if (cur.nodetype == 'unary_op') or (cur.nodetype == 'infix_op'):
                 if type(cur.data) != str:
-                    code += ' ' + cur.get_scalar(0) + ' '
+                    code += (' ' if cur.nodetype == 'infix_op' else '') + cur.get_scalar(0) + ' '
                 else:
-                    code += ' ' + cur.data + ' '
+                    code += (' ' if cur.nodetype == 'infix_op' else '') + cur.data + (' ' if cur.data != '-' else '')
             elif cur.nodetype == 'term':
                 last_term = cur
                 code += cur.to_code()
@@ -453,10 +440,8 @@ class BaseExpressionNode(nodes.Node):
             original_function = y
             if 'type' not in original_function:
                 raise scope.SereneTypeError(f"Function '{self['function_call'].get_scalar('identifier')}' with no return value cannot be used as an expression at line number {scope.line_number}.")
-            if 'type' not in original_function['type']:
-                return typecheck.TypeObject(original_function['type'].get_scalar('base_type'))
             else:
-                raise NotImplementedError
+                return original_function['type'].get_type()
         elif 'constructor_call' in self:
             return self['constructor_call'].get_type()
         else:

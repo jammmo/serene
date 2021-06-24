@@ -8,7 +8,8 @@ function charArrayToString(move u: Array{Char}) -> String {
 }
 
 function main() {
-    // Char is not implemented yet, so charArrayToString() can't be tested here
+    var a = Array('I', 't', ' ', 'w', 'o', 'r', 'k', 's', '!')
+    print charArrayToString(move a)
 }
 
 // These should not compile (for scoping/mutability reasons, though there may also be other reasons)

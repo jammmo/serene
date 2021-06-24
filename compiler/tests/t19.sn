@@ -1,0 +1,32 @@
+function sorted(copy list: Array{Int}) -> Array{Int} {
+    // Implements selection sort on a copy of the original list
+    if (list.length() <= 1) {
+        return list
+    }
+
+    for (i = 0, list.length() - 1) {
+        var min_value = list[i]
+        var min_index = i
+        for (j = i + 1, list.length()) {
+            if (list[j] < min_value) {
+                set min_index = j
+                set min_value = list[j]
+            }
+        }
+
+        if (i != min_index) {
+            set list[min_index] = list[i]
+            set list[i] = min_value
+        }
+    }
+    return list
+}
+
+function main() {
+    var x = Array(17, -11, -245, 83, 20, 83, 90, -1, -1, 9)
+
+    var x_sorted = sorted(copy x)
+
+    print x
+    print x_sorted
+}
