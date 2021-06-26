@@ -1,0 +1,16 @@
+type Person struct {
+    age: Int,
+    name: String,
+    birthday: Date
+}
+
+type Date struct {
+    month: Int,
+    day: Int,
+    year: Int,
+}
+
+function main() {
+    var jason = Person(41, "Jason Segel")
+    set jason.age += 1
+}

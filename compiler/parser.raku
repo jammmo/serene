@@ -42,7 +42,7 @@ grammar Serene {
     # File structure and whitespace
     rule TOP {
         :my Int $*LAST = 0;
-        ^ [ <.separator>? <functions> <.separator>? || <error("")> ] $
+        ^ [ <.separator>? <definitions> <.separator>? || <error("")> ] $
     }
     token ws {
         <!ww> \h* 
@@ -67,8 +67,8 @@ grammar Serene {
     }
 
     # Main language grammar
-    token functions {
-        [ <function> || [ <var_statement> || <const_statement>] <error("Global variables are not allowed.")> ]* %% <.separator>
+    token definitions {
+        [ <function> || <struct_definition> || [ <var_statement> || <const_statement>] <error("Global variables are not allowed.")> ]* %% <.separator>
     }
     token statements {
          <statement>* %% [ <.separator> || <.ws> ';' <error("Statements are terminated with newline characters, not semicolons.")> ]
@@ -116,6 +116,10 @@ grammar Serene {
     }
 
     token identifier {
+        [ [ 'look' || 'mutate' || 'move' || 'copy' || 'var' || 'const' || 'set' || 'function' || 'type' ||
+            'if' || 'elseif' || 'else' || 'for' || 'while' || 'break' || 'return' || 'and' || 'or' || 'not' ||
+            'run' || 'match' || 'struct' || 'import' || 'private' || 'in' ]
+          <|w> <error("Cannot use reserved keyword as identifier.")> ] ||
         <.lower> <.alnum>*
     }
 
@@ -164,6 +168,13 @@ grammar Serene {
         | 'mutate'
         | 'move'
         | 'copy'
+    }
+
+    # Type definitions
+    rule struct_definition {
+        'type' <base_type> 'struct' '{' <.separator>
+        [ <identifier> ':' <type> ',' <.separator> ]* [ <identifier> ':' <type> <.separator> ]?
+        '}'
     }
 
     # Function definitions and calls

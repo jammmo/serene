@@ -139,5 +139,6 @@ currentscope = top_scope
 current_func_name = None
 current_func_type = None
 loops: list = []
-function_names: list[str] = []
 functions = None
+function_names: list[str] = []
+definitions = None

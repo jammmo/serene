@@ -22,13 +22,20 @@ def main():
         print(e)
         exit()
 
-    scope.functions = Node.create(tree)
-    for x in scope.functions:
-        if x['identifier'].data in scope.function_names:
-            print("COMPILE ERROR:", f"Function '{x['identifier'].data}' has more than one definition.", sep="\n")
-            exit(126)
-
-        scope.function_names.append(x['identifier'].data)
+    scope.definitions = Node.create(tree)
+    scope.functions = []
+    for x in scope.definitions:
+        if x.nodetype == 'function':
+            if x['identifier'].data in scope.function_names:
+                print("COMPILE ERROR:", f"Function '{x['identifier'].data}' has more than one definition.", sep="\n")
+                exit(126)
+            else:
+                scope.functions.append(x)
+                scope.function_names.append(x['identifier'].data)
+        elif x.nodetype == 'struct_definition':
+            raise NotImplementedError(x.nodetype)
+        else:
+            raise NotImplementedError(x.nodetype)
 
     if 'main' not in scope.function_names:
         print("COMPILE ERROR:", "No 'main()' function is defined.", sep="\n")
