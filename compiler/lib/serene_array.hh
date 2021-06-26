@@ -20,11 +20,11 @@ public:
         return items.at(index);
     }
 
-    auto begin() {
+    auto begin() const {
         return items.begin();
     }
 
-    auto end() {
+    auto end() const {
         return items.end();
     }
 

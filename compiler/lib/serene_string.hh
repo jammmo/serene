@@ -1,26 +1,33 @@
 #include <iostream>
 #include <vector>
+#include <string>
 
-template<typename Data>
-class SN_Vector {
+class SN_String {
 private:
     int length;
-    std::vector<Data> items;
+    std::vector<char> items;
 public:
-    SN_Vector() {
+    SN_String() {
         length = 0;
     }
 
-    SN_Vector(std::vector<Data>&& data) {
+    SN_String(std::vector<char>&& data) {
         length = data.size();
         items = data;
+    }
+
+    SN_String(std::string&& data) {
+        length = data.size();
+        for (auto x : data) {
+            items.push_back(x);
+        }       
     }
     
     int sn_length() {
         return length;
     }
 
-    auto sn_append(Data item) {
+    auto sn_append(char item) {
         items.push_back(item);
         length = items.size();
     }
@@ -29,7 +36,7 @@ public:
         length = items.size();
     }
 
-    Data& operator[] (unsigned int index) {
+    char& operator[] (unsigned int index) {
         return items.at(index);
     }
 
@@ -41,16 +48,12 @@ public:
         return items.end();
     }
 
-    template<typename X>
-    friend std::ostream& operator<<(std::ostream& os, const SN_Vector<X>& obj);
+    friend std::ostream& operator<<(std::ostream& os, const SN_String& obj);
 };
 
-template<typename Data>
-std::ostream& operator<<(std::ostream& os, const SN_Vector<Data>& obj) {
-    os << "[";
-    for (int i = 0; i < obj.length - 1; i++) {
-        os << obj.items[i] << ", ";
+std::ostream& operator<<(std::ostream& os, const SN_String& obj) {
+    for (auto x : obj) {
+        os << x;
     }
-    os << obj.items[obj.length - 1] << "]";
     return os;
 }

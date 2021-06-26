@@ -29,7 +29,7 @@ def get_cpp_type(my_type):
     base = my_type.base
     mapping = {'Int':    'int64_t',
                'Bool':   'bool',
-               'String': 'std::string',
+               'String': 'SN_String',
                'Float':  'double',
                'Char':   'char',
                'Vector': 'SN_Vector',
@@ -463,6 +463,8 @@ class BaseExpressionNode(nodes.Node):
         elif 'literal' in self:
             if 'bool_literal' in self['literal']:
                 return self['literal'].get_scalar(0).lower()
+            elif 'string_literal' in self['literal']:
+                return f"SN_String({self['literal'].get_scalar(0)})"
             else:
                 return self['literal'].get_scalar(0)
         elif 'expression' in self:
