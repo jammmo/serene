@@ -302,7 +302,9 @@ class ExpressionNode(nodes.Node):
             if enclosing_accessor is not None:
                 if not scope.currentscope.check_pass(self.var_to_access, enclosing_accessor):
                     raise scope.SereneScopeError(f"Variable '{self.var_to_access}' cannot be passed with accessor '{enclosing_accessor}' at line number {scope.line_number}.")
-
+                if enclosing_accessor == 'move':
+                    code = f"std::move({code})"
+        
         return code
 
 class TermNode(nodes.Node):
@@ -620,7 +622,13 @@ class FunctionCallParameterNode(nodes.Node):
             my_accessor = self.get_scalar('accessor')
         else:
             my_accessor = 'look'
-        
+
+        if original_type != self['expression'].get_type():
+            if method:
+                raise scope.SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to method '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
+            else:
+                raise scope.SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to function '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
+
         code = self['expression'].to_code(enclosing_accessor=my_accessor) # This will raise exceptions for incorrect accesses
 
         if (not self['expression'].is_temporary) and (my_accessor != original_accessor) and (my_accessor != 'copy'):
@@ -628,12 +636,6 @@ class FunctionCallParameterNode(nodes.Node):
                 raise scope.SereneScopeError(f"Method '{function_name}' is called with incorrect accessor for parameter '{param_name}' at line number {scope.line_number}.")
             else:
                 raise scope.SereneScopeError(f"Function '{function_name}' is called with incorrect accessor for parameter '{param_name}' at line number {scope.line_number}.")
-
-        if original_type != self['expression'].get_type():
-            if method:
-                raise scope.SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to method '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
-            else:
-                raise scope.SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to function '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
 
         return code
 

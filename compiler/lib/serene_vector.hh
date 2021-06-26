@@ -33,6 +33,14 @@ public:
         return items.at(index);
     }
 
+    auto begin() {
+        return items.begin();
+    }
+
+    auto end() {
+        return items.end();
+    }
+
     template<typename X>
     friend std::ostream& operator<<(std::ostream& os, const SN_Vector<X>& obj);
 };
