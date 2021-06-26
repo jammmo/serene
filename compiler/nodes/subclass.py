@@ -208,7 +208,7 @@ class SetStatement(nodes.Node):
             expr_type = self['expression'].get_type()
 
             if expr_type != correct_type:
-                raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{self.get_scalar('identifier')}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
+                raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{var_name}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
 
             assign_op = self.get_scalar('assignment_op')
             return f'{lhs_code} {assign_op} {expr_code};\n'

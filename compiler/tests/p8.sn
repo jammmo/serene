@@ -1,0 +1,8 @@
+// These should not compile!
+function main() {
+    print not 5
+    print "hello" * "hello"
+
+    var a = 5
+    set a += "hello"
+}

@@ -16,6 +16,7 @@ class NodeMap:
             for y in self.data:
                 if y.nodetype == x:
                     return y
+            raise IndexError
         raise TypeError
     
     def __contains__(self, x):
