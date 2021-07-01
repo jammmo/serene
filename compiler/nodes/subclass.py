@@ -35,14 +35,16 @@ def get_cpp_type(my_type):
                'Vector': 'SN_Vector',
                'Array':  'SN_Array',
               }
-    if base not in mapping:
+    if base in mapping:
+        cpp_type = mapping[base]
+        if my_type.params is None:
+            return cpp_type
+        else:  # Generic type
+            return cpp_type + '<' + get_cpp_type(my_type.params[0]) + '>'
+    elif base in typecheck.user_defined_types:
+        return f"SN_{base}"
+    else:
         raise scope.SereneTypeError(f"Unknown type at line number {scope.line_number}.")
-    cpp_type = mapping[base]
-  
-    if my_type.params is None:
-        return cpp_type
-    else:  # Generic type
-        return cpp_type + '<' + get_cpp_type(my_type.params[0]) + '>'
 
 # Subclasses __________________________________________________________________
 
@@ -317,51 +319,55 @@ class TermNode(nodes.Node):
                 cur = self[i]
                 prev = self[i-1]
                 prev_type = L[-1]
+
                 if prev_type.base in typecheck.standard_types:
                     orig_type = typecheck.standard_types[prev_type.base]
-                    if cur.nodetype == 'field_access':
-                        field_name = cur['identifier'].data
-                        if field_name in orig_type.members:
-                            member_type = orig_type.members[field_name]
-                            if type(member_type) == str:
-                                L.append(typecheck.TypeObject(member_type))
-                            else:
-                                raise NotImplementedError   # Member with generic type
-                        else:
-                            raise scope.SereneTypeError(f"Invalid field access in expression at line number {scope.line_number}.")
-                    elif cur.nodetype == 'method_call':
-                        method_name = cur['identifier'].data
-                        if method_name in orig_type.methods:
-                            method_return_type = orig_type.methods[method_name][0]
-                            if type(method_return_type) == str:
-                                if method_return_type == '':
-                                    if i + 1 == len(self.data):
-                                        L.append(None)
-                                    else:
-                                        raise NotImplementedError
-                                L.append(typecheck.TypeObject(method_return_type))
-                            else:
-                                raise NotImplementedError   # Member with generic type
-                    elif cur.nodetype == 'index_call':
-                        if prev_type.base in ('Vector', 'Array') and prev_type.params[0].params is None:
-                            if self['index_call']['expression'].get_type().base != 'Int':
-                                raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
-                            L.append(typecheck.TypeObject(prev_type.params[0].base))
-                        elif prev_type.base == 'String':
-                            if self['index_call']['expression'].get_type().base != 'Int':
-                                raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
-                            L.append(typecheck.TypeObject('Char'))
-                    else:
-                        raise NotImplementedError
+                elif prev_type.base in typecheck.user_defined_types:
+                    orig_type = typecheck.user_defined_types[prev_type.base]
                 else:
-                    raise scope.SereneTypeError(f"Unknown type in expression at line number {scope.line_number}")
-
+                    raise scope.SereneTypeError(f"Unknown type in expression at line number {scope.line_number}.")
+                
+                if cur.nodetype == 'field_access':
+                    field_name = cur['identifier'].data
+                    if field_name in orig_type.members:
+                        member_type = orig_type.members[field_name]
+                        if member_type.params is None:
+                            L.append(member_type)
+                        else:
+                            raise NotImplementedError   # Member with generic type
+                    else:
+                        raise scope.SereneTypeError(f"Invalid field access in expression at line number {scope.line_number}.")
+                elif cur.nodetype == 'method_call':
+                    method_name = cur['identifier'].data
+                    if method_name in orig_type.methods:
+                        method_return_type = orig_type.methods[method_name][0]
+                        if type(method_return_type) == str:
+                            if method_return_type == '':
+                                if i + 1 == len(self.data):
+                                    L.append(None)
+                                else:
+                                    raise NotImplementedError
+                            L.append(typecheck.TypeObject(method_return_type))
+                        else:
+                            raise NotImplementedError   # Member with generic type
+                elif cur.nodetype == 'index_call':
+                    if prev_type.base in ('Vector', 'Array') and prev_type.params[0].params is None:
+                        if self['index_call']['expression'].get_type().base != 'Int':
+                            raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+                        L.append(typecheck.TypeObject(prev_type.params[0].base))
+                    elif prev_type.base == 'String':
+                        if self['index_call']['expression'].get_type().base != 'Int':
+                            raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+                        L.append(typecheck.TypeObject('Char'))
+                else:
+                    raise NotImplementedError
+            
         return L
     
     def get_type(self):
         this_type = self.get_type_sequence()[-1]
         if this_type is None:
-            raise scope.SereneTypeError(f"Unknown type in expression at line number {scope.line_number}")
+            raise scope.SereneTypeError(f"Unknown type in expression at line number {scope.line_number}.")
         else:
             return this_type
     
@@ -552,12 +558,13 @@ class MethodCallNode(nodes.Node):
 
 class ConstructorCallNode(nodes.Node):
     def get_type(self):
-        if self.get_scalar("base_type") == 'Array':
+        type_name = self.get_scalar("base_type")
+        if type_name == 'Array':
             if len(self['constructor_call_parameters'].data) >= 1 and self['constructor_call_parameters'][0][0].nodetype == 'expression':
                 return typecheck.TypeObject(base='Array', params=[self['constructor_call_parameters'][0][0].get_type()])
             else:
                 raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")        
-        elif self.get_scalar("base_type") == 'Vector':
+        elif type_name == 'Vector':
             if len(self['constructor_call_parameters'].data) == 1 and self['constructor_call_parameters'][0][0].nodetype == 'type':    # Vector(Int), Vector(String), etc.
                 type_node = self['constructor_call_parameters'][0][0]
                 if 'type' in type_node:
@@ -567,11 +574,14 @@ class ConstructorCallNode(nodes.Node):
                 return typecheck.TypeObject(base='Vector', params=[self['constructor_call_parameters'][0][0].get_type()])
             else:
                 raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+        elif type_name in typecheck.user_defined_types:
+            return typecheck.TypeObject(base=type_name)
         else:
             raise scope.SereneTypeError(f"Type constructor called at line number {scope.line_number} is not defined.")
     
     def to_code(self):
-        if self.get_scalar("base_type") == 'Array':
+        type_name = self.get_scalar("base_type")
+        if type_name == 'Array':
             if len(self['constructor_call_parameters'].data) >= 1 and self['constructor_call_parameters'][0][0].nodetype == 'expression':
                 elems = []
                 elem_type = None
@@ -589,7 +599,7 @@ class ConstructorCallNode(nodes.Node):
                 return f"SN_Array<{type_param}>({inner_code})"
             else:
                raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.") 
-        elif self.get_scalar("base_type") == 'Vector':
+        elif type_name == 'Vector':
             if len(self['constructor_call_parameters'].data) == 1 and self['constructor_call_parameters'][0][0].nodetype == 'type':    # Vector(Int), Vector(String), etc.
                 type_node = self['constructor_call_parameters'][0][0]
                 if 'type' in type_node:
@@ -613,7 +623,28 @@ class ConstructorCallNode(nodes.Node):
                 return f"SN_Vector<{type_param}>({inner_code})"
             else:
                 raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
-                        
+        elif type_name in typecheck.user_defined_types:
+            type_spec = typecheck.user_defined_types[type_name]
+            fields = []
+            field_type = None
+
+            if len(self['constructor_call_parameters'].data) > len(type_spec.constructor_params):
+                raise scope.SereneTypeError(f"Constructor for type '{type_name}' is given too many parameters when called at line number {scope.line_number}.")
+            if len(self['constructor_call_parameters'].data) < len(type_spec.constructor_params):
+                raise scope.SereneTypeError(f"Constructor for type '{type_name}' is given too few parameters when called at line number {scope.line_number}.")
+
+            for i in range(len(self['constructor_call_parameters'].data)):
+                cur = self['constructor_call_parameters'][i][0]
+                if cur.nodetype != 'expression':
+                    raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                fields.append(cur.to_code())
+                
+                field_type = type_spec.members[type_spec.constructor_params[i]]
+                if field_type != cur.get_type():
+                    raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+            
+            inner_code = '{' + ', '.join(fields) + '}'
+            return f"(SN_{type_name} {inner_code})"
         else:
             raise scope.SereneTypeError(f"Type constructor called at line number {scope.line_number} is not defined.")
         
@@ -821,3 +852,30 @@ class MatchBlock(nodes.Node):
         sub_indent()
         self.satisfies_return = all(return_satisfaction_list) and has_else
         return (f'{oldindent}else ').join(branches)
+
+class StructDefinitionNode(nodes.Node):
+    def get_type_spec(self):
+        members = {}
+        methods = {}
+        constructor_params = []
+        for i in range(1, len(self.data)):
+            x = self[i]
+            member_name = x.get_scalar('identifier')
+            if (member_name in members) or (member_name in methods):
+                raise scope.SereneTypeError(f"Found multiple definitions for member '{member_name}' of struct '{self.get_scalar('base_type')}'.")
+            members[member_name] = x['type'].get_type()
+            constructor_params.append(member_name)
+        return typecheck.TypeSpecification(members=members, methods=methods, constructor_params=constructor_params)
+    
+    def to_code(self):
+        struct_name = self.get_scalar('base_type')
+        cpp_fields = []
+        for i in range(1, len(self.data)):
+            x = self[i]
+            member_name = x.get_scalar('identifier')
+            member_type = x['type'].get_type()
+            cpp_fields.append(f"    {get_cpp_type(member_type)} sn_{member_name}")
+        
+        inner_code = ';\n'.join(cpp_fields) + ';\n'
+        return f"struct SN_{struct_name} {{\n{inner_code}}};"
+

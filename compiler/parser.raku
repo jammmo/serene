@@ -171,9 +171,13 @@ grammar Serene {
     }
 
     # Type definitions
+    rule struct_member {
+        <identifier> ':' <type>
+    }
+
     rule struct_definition {
         'type' <base_type> 'struct' '{' <.separator>
-        [ <identifier> ':' <type> ',' <.separator> ]* [ <identifier> ':' <type> <.separator> ]?
+        [ <struct_member> ',' <.separator> ]* [ <struct_member> <.separator> ]?
         '}'
     }
 

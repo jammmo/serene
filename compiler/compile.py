@@ -5,6 +5,7 @@ import textwrap
 
 from nodes import Node
 import scope
+import typecheck
 
 def main():
     parser = argparse.ArgumentParser()
@@ -24,6 +25,7 @@ def main():
 
     scope.definitions = Node.create(tree)
     scope.functions = []
+    struct_definitions = []
     for x in scope.definitions:
         if x.nodetype == 'function':
             if x['identifier'].data in scope.function_names:
@@ -33,13 +35,29 @@ def main():
                 scope.functions.append(x)
                 scope.function_names.append(x['identifier'].data)
         elif x.nodetype == 'struct_definition':
-            raise NotImplementedError(x.nodetype)
+            struct_name = x.get_scalar('base_type')
+            if (struct_name in typecheck.user_defined_types) or (struct_name in typecheck.standard_types):
+                raise scope.SereneTypeError(f"Found duplicate type definition for type '{struct_name}'.")
+            else:
+                struct_definitions.append(x)
+                typecheck.user_defined_types[struct_name] = x.get_type_spec()
         else:
             raise NotImplementedError(x.nodetype)
 
     if 'main' not in scope.function_names:
         print("COMPILE ERROR:", "No 'main()' function is defined.", sep="\n")
         exit(126)
+
+    struct_definition_code = []
+    try:
+        for x in struct_definitions:
+            struct_definition_code.append(x.to_code())
+    except (scope.SereneScopeError, scope.SereneTypeError) as exc:
+        print("COMPILE ERROR:", exc.message, sep="\n")
+        exit(126)
+    except Exception as exc:
+        print(f"At struct definition for '{x.get_scalar('base_type')}':")
+        raise exc
 
     function_code = []
     try:
@@ -60,8 +78,9 @@ def main():
                            #include "../lib/serene_vector.hh"
                            
                            """)
-    code += '\n\n'.join(function_code)
-    code += '\n\nint main() {\n    sn_main();\n    return 0;\n}\n'
+    code += '\n\n'.join(struct_definition_code) + '\n\n'
+    code += '\n\n'.join(function_code) + '\n\n'
+    code += 'int main() {\n    sn_main();\n    return 0;\n}\n'
 
     if args.output:
         with open(args.output, 'w') as file:

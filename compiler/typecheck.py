@@ -2,10 +2,11 @@ from __future__ import annotations
 import scope
 
 class TypeSpecification:
-    def __init__(self, members: dict[str, str | TypeVar], methods: dict, typevar: TypeVar | None = None):
+    def __init__(self, members: dict[str, str | TypeVar], methods: dict, typevar: TypeVar | None = None, constructor_params = None):
         self.members = members
         self.methods = methods
         self.typevar = typevar
+        self.constructor_params = constructor_params
 
 class TypeObject:
     def __init__(self, base: str, params: list[TypeObject] | None = None):
@@ -45,3 +46,5 @@ standard_types = {'Vector': TypeSpecification(members={},
                                                        "pop!":    ("Char", [])
                                                       },
                                               typevar=vector_type_var)}
+
+user_defined_types: dict = {}

@@ -77,6 +77,7 @@ class Node:
                 'while_loop':              nodes.WhileLoopNode,
                 'if_block':                nodes.IfBlock,
                 'match_block':             nodes.MatchBlock,
+                'struct_definition':       nodes.StructDefinitionNode,
             }
             if nodetype in mapping:
                 return mapping[nodetype](D)
