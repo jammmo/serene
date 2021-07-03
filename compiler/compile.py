@@ -48,9 +48,11 @@ def main():
         print("COMPILE ERROR:", "No 'main()' function is defined.", sep="\n")
         exit(126)
 
+    struct_forward_declarations = []
     struct_definition_code = []
     try:
         for x in struct_definitions:
+            struct_forward_declarations.append(x.to_forward_declaration())
             struct_definition_code.append(x.to_code())
     except (scope.SereneScopeError, scope.SereneTypeError) as exc:
         print("COMPILE ERROR:", exc.message, sep="\n")
@@ -60,8 +62,10 @@ def main():
         raise exc
 
     function_code = []
+    function_forward_declarations = []
     try:
         for x in scope.functions:
+            function_forward_declarations.append(x.to_forward_declaration())
             function_code.append(x.to_code())
     except (scope.SereneScopeError, scope.SereneTypeError) as exc:
         print("COMPILE ERROR:", exc.message, sep="\n")
@@ -78,15 +82,21 @@ def main():
                            #include "../lib/serene_vector.hh"
                            
                            """)
-    code += '\n\n'.join(struct_definition_code) + '\n\n'
-    code += '\n\n'.join(function_code) + '\n\n'
+    code += "template<typename T>"   + "\n" + \
+            "T& lvalue_ref(T&& a) {" + "\n" + \
+            "    return a;"          + "\n" + \
+            "}"                      + "\n\n"
+    code += ('\n'.join(struct_forward_declarations)   + '\n\n') if len(struct_forward_declarations) > 0 else ''
+    code += ('\n'.join(function_forward_declarations) + '\n\n') if len(function_forward_declarations) > 0 else ''
+    code += ('\n\n'.join(struct_definition_code)      + '\n\n') if len(struct_definition_code) > 0 else ''
+    code += ('\n\n'.join(function_code)               + '\n\n') if len(function_code) > 0 else ''
     code += 'int main() {\n    sn_main();\n    return 0;\n}\n'
 
     if args.output:
         with open(args.output, 'w') as file:
             file.write(code)
     else:
-        print(code)
+        print(code, end='')
 
 
 if __name__ == '__main__':    

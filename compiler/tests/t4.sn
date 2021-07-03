@@ -1,7 +1,4 @@
-function readLine() -> String {
-    // Assume this is implemented elsewhere
-    return ""
-}
+
 
 function makeChoice() -> Bool {
     while (True) {
@@ -16,6 +13,11 @@ function makeChoice() -> Bool {
             }
         }
     }
+}
+
+function readLine() -> String {
+    // Assume this is implemented elsewhere
+    return ""
 }
 
 function main() {

@@ -53,11 +53,23 @@ class FunctionNode(nodes.Node):
         super().__init__(D)
         self.my_scope = scope.ScopeObject(scope.top_scope)
     
+    def to_forward_declaration(self):
+        if 'type' in self:
+            func_type = self['type'].to_code()  # C++ return type        
+        else:
+            func_type = 'void'
+        func_name = self.get_scalar('identifier')
+        func_parameters = ', '.join([x.to_code() for x in self['function_parameters']])
+
+        code = f'{func_type} sn_{func_name}({func_parameters});'
+
+        return code
+    
     def to_code(self):
         newindent, oldindent = add_indent()
 
         scope.currentscope = self.my_scope
-        scope.current_func_name =  self.get_scalar('identifier')
+        scope.current_func_name = self.get_scalar('identifier')
 
         if 'type' in self:
             scope.current_func_type = self['type'].get_type()
@@ -637,14 +649,18 @@ class ConstructorCallNode(nodes.Node):
                 cur = self['constructor_call_parameters'][i][0]
                 if cur.nodetype != 'expression':
                     raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
-                fields.append(cur.to_code())
                 
                 field_type = type_spec.members[type_spec.constructor_params[i]]
                 if field_type != cur.get_type():
                     raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                
+                if field_type.base in typecheck.user_defined_types:
+                    fields.append(f"lvalue_ref({cur.to_code()})")
+                else:
+                    fields.append(cur.to_code())
             
             inner_code = '{' + ', '.join(fields) + '}'
-            return f"(SN_{type_name} {inner_code})"
+            return f"SN_{type_name} {inner_code}"
         else:
             raise scope.SereneTypeError(f"Type constructor called at line number {scope.line_number} is not defined.")
         
@@ -867,6 +883,10 @@ class StructDefinitionNode(nodes.Node):
             constructor_params.append(member_name)
         return typecheck.TypeSpecification(members=members, methods=methods, constructor_params=constructor_params)
     
+    def to_forward_declaration(self):
+        struct_name = self.get_scalar('base_type')
+        return f"struct SN_{struct_name};"
+
     def to_code(self):
         struct_name = self.get_scalar('base_type')
         cpp_fields = []
@@ -874,7 +894,10 @@ class StructDefinitionNode(nodes.Node):
             x = self[i]
             member_name = x.get_scalar('identifier')
             member_type = x['type'].get_type()
-            cpp_fields.append(f"    {get_cpp_type(member_type)} sn_{member_name}")
+            if member_type.base in typecheck.user_defined_types:
+                cpp_fields.append(f"    {get_cpp_type(member_type)}& sn_{member_name}")
+            else:
+                cpp_fields.append(f"    {get_cpp_type(member_type)} sn_{member_name}")                
         
         inner_code = ';\n'.join(cpp_fields) + ';\n'
         return f"struct SN_{struct_name} {{\n{inner_code}}};"

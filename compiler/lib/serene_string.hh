@@ -49,6 +49,10 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& os, const SN_String& obj);
+
+    bool operator==(SN_String const& rhs) const {
+        return items == rhs.items;
+    }
 };
 
 std::ostream& operator<<(std::ostream& os, const SN_String& obj) {
