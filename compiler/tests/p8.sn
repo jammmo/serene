@@ -1,8 +1,12 @@
 // These should not compile!
 function main() {
+    print 5 and 2
     print not 5
     print "hello" * "hello"
 
-    var a = 5
-    set a += "hello"
+    print 5 < "hello"
+    print "hello" < "hello"
+
+    var a = "hello"
+    set a += "goodbye"
 }

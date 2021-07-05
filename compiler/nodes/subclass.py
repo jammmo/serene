@@ -225,6 +225,9 @@ class SetStatement(nodes.Node):
                 raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{var_name}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
 
             assign_op = self.get_scalar('assignment_op')
+            if assign_op != '=':
+                if expr_type.base not in ('Int', 'Float'):
+                    raise scope.SereneTypeError(f"Incorrect type for '{assign_op}' assignment operator at line number {scope.line_number}.")
             return f'{lhs_code} {assign_op} {expr_code};\n'
         else:
             if scope.currentscope.check_read(var_name):
@@ -295,15 +298,30 @@ class ExpressionNode(nodes.Node):
             return self['term'].get_type()
     
     def to_code(self, enclosing_accessor=None):     # enclosing_accessor should only be passed to top-level expression with an applied accessor
+        self.get_type()     # Just for error-checking
         code = ''
         last_term = None
         for i in range(len(self.data)):
             cur = self[i]
-            if (cur.nodetype == 'unary_op') or (cur.nodetype == 'infix_op'):
+            if (cur.nodetype == 'unary_op'):
+                if cur.data == 'not':
+                    if self[i+1].get_type().base != 'Bool':
+                        raise scope.SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
+                code += cur.data + (' ' if cur.data != '-' else '')
+            elif (cur.nodetype == 'infix_op'):
                 if type(cur.data) != str:
-                    code += (' ' if cur.nodetype == 'infix_op' else '') + cur.get_scalar(0) + ' '
+                    if cur.get_scalar(0) in ('>', '<', '>=', '<='):
+                        if self[i-1].get_type().base not in ('Int', 'Float'):
+                            raise scope.SereneTypeError(f"Incorrect type for inequality expression at line number {scope.line_number}.")
+                    code += ' ' + cur.get_scalar(0) + ' '
                 else:
-                    code += (' ' if cur.nodetype == 'infix_op' else '') + cur.data + (' ' if cur.data != '-' else '')
+                    if cur.data in ('and', 'or'):
+                        if self[i-1].get_type().base != 'Bool':
+                           raise scope.SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
+                    elif cur.data in ('+', '-', '*', '/', '%'):
+                        if self[i-1].get_type().base not in ('Int', 'Float'):
+                           raise scope.SereneTypeError(f"Incorrect type for numeric expression at line number {scope.line_number}.")                 
+                    code += ' ' + cur.data + ' '
             elif cur.nodetype == 'term':
                 last_term = cur
                 code += cur.to_code()
@@ -654,10 +672,7 @@ class ConstructorCallNode(nodes.Node):
                 if field_type != cur.get_type():
                     raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
                 
-                if field_type.base in typecheck.user_defined_types:
-                    fields.append(f"lvalue_ref({cur.to_code()})")
-                else:
-                    fields.append(cur.to_code())
+                fields.append(cur.to_code())
             
             inner_code = '{' + ', '.join(fields) + '}'
             return f"SN_{type_name} {inner_code}"
@@ -894,11 +909,7 @@ class StructDefinitionNode(nodes.Node):
             x = self[i]
             member_name = x.get_scalar('identifier')
             member_type = x['type'].get_type()
-            if member_type.base in typecheck.user_defined_types:
-                cpp_fields.append(f"    {get_cpp_type(member_type)}& sn_{member_name}")
-            else:
-                cpp_fields.append(f"    {get_cpp_type(member_type)} sn_{member_name}")                
-        
+            cpp_fields.append(f"    {get_cpp_type(member_type)} sn_{member_name}")
         inner_code = ';\n'.join(cpp_fields) + ';\n'
         return f"struct SN_{struct_name} {{\n{inner_code}}};"
 

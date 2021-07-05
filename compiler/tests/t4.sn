@@ -1,5 +1,3 @@
-
-
 function makeChoice() -> Bool {
     while (True) {
         var input = readLine()
@@ -15,11 +13,12 @@ function makeChoice() -> Bool {
     }
 }
 
+function main() {
+    print "Result is ", makeChoice()
+}
+
+
 function readLine() -> String {
     // Assume this is implemented elsewhere
     return ""
-}
-
-function main() {
-    print "Result is ", makeChoice()
 }

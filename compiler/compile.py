@@ -82,11 +82,7 @@ def main():
                            #include "../lib/serene_vector.hh"
                            
                            """)
-    code += "template<typename T>"   + "\n" + \
-            "T& lvalue_ref(T&& a) {" + "\n" + \
-            "    return a;"          + "\n" + \
-            "}"                      + "\n\n"
-    code += ('\n'.join(struct_forward_declarations)   + '\n\n') if len(struct_forward_declarations) > 0 else ''
+    #code += ('\n'.join(struct_forward_declarations)   + '\n\n') if len(struct_forward_declarations) > 0 else ''        #Not currently needed
     code += ('\n'.join(function_forward_declarations) + '\n\n') if len(function_forward_declarations) > 0 else ''
     code += ('\n\n'.join(struct_definition_code)      + '\n\n') if len(struct_definition_code) > 0 else ''
     code += ('\n\n'.join(function_code)               + '\n\n') if len(function_code) > 0 else ''
