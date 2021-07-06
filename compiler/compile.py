@@ -86,6 +86,7 @@ def main():
     code = textwrap.dedent("""\
                            #include <iostream>
                            #include <cstdint>
+                           #include "../lib/serene_printing.hh"
                            #include "../lib/serene_array.hh"
                            #include "../lib/serene_string.hh"
                            #include "../lib/serene_vector.hh"

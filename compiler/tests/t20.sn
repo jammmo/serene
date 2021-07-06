@@ -12,5 +12,12 @@ type Date struct {
 
 function main() {
     var jason = Person(41, "Jason Segel", Date(1, 18, 1980))
-    set jason.age += 1
+
+    var older_jason = jason
+
+    set older_jason.age += 1
+    set older_jason.birthday.year -= 1
+
+    print jason
+    print older_jason
 }

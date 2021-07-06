@@ -958,11 +958,19 @@ class StructDefinitionNode(nodes.Node):
     def to_code(self):
         struct_name = self.get_scalar('base_type')
         cpp_fields = []
+        visiting_params = [f"SN_{struct_name}"]
         for i in range(1, len(self.data)):
             x = self[i]
             member_name = x.get_scalar('identifier')
             member_type = x['type'].get_type()
+            visiting_params.append(f"sn_{member_name}")
             cpp_fields.append(f"    {get_cpp_type(member_type)} sn_{member_name}")
         inner_code = ';\n'.join(cpp_fields) + ';\n'
-        return f"struct SN_{struct_name} {{\n{inner_code}}};"
+
+        inner_code += f"\n    friend std::ostream& operator<<(std::ostream& os, const SN_{struct_name}& obj) {{\n        print_struct(os, obj);\n        return os;\n    }}\n"
+
+        visiting_code = ", ".join(visiting_params)
+        code = f"struct SN_{struct_name} {{\n{inner_code}}};\n"
+        code += f"VISITABLE_STRUCT({visiting_code});"
+        return code
 
