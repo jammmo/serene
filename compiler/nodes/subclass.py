@@ -68,7 +68,7 @@ class FunctionNode(nodes.Node):
     def to_code(self):
         newindent, oldindent = add_indent()
 
-        scope.currentscope = self.my_scope
+        scope.current_scope = self.my_scope
         scope.current_func_name = self.get_scalar('identifier')
 
         if 'type' in self:
@@ -92,7 +92,7 @@ class FunctionNode(nodes.Node):
             code = f'{func_type} sn_{func_name}({func_parameters}) {{\n\n{oldindent}}}'
 
         sub_indent()
-        scope.currentscope = scope.currentscope.parent
+        scope.current_scope = scope.current_scope.parent
 
         scope.current_func_name = None  # For now, function definitions cannot be nested
         scope.current_func_type = None
@@ -131,7 +131,7 @@ class FunctionParameterNode(nodes.Node):
                 raise NotImplementedError(self['type']['base_type'].data)
 
         # Adds to the scope INSIDE the function, not the scope where the function is defined
-        scope.currentscope.add_binding(scope.ParameterObject(var_name, accessor, my_type))
+        scope.current_scope.add_binding(scope.ParameterObject(var_name, accessor, my_type))
 
         self.code = code
     
@@ -182,7 +182,7 @@ class VarStatement(nodes.Node):
             if written_type != expr_type:
                 raise scope.SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
 
-        scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=True, var_type=expr_type))
+        scope.current_scope.add_binding(scope.VariableObject(var_name, mutable=True, var_type=expr_type))
 
         cpp_type = get_cpp_type(expr_type)
         return f'{cpp_type} sn_{var_name} = {expr_code};\n'
@@ -199,7 +199,7 @@ class ConstStatement(nodes.Node):
             if written_type != expr_type:
                 raise scope.SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
 
-        scope.currentscope.add_binding(scope.VariableObject(var_name, mutable=False, var_type=expr_type))
+        scope.current_scope.add_binding(scope.VariableObject(var_name, mutable=False, var_type=expr_type))
 
         cpp_type = get_cpp_type(expr_type)
         return f'const {cpp_type} sn_{var_name} = {expr_code};\n'
@@ -215,9 +215,9 @@ class SetStatement(nodes.Node):
         else:
             var_name = self.get_scalar('identifier')
             lhs_code = 'sn_' + var_name
-            correct_type = scope.currentscope.get_type_of(var_name)
+            correct_type = scope.current_scope.get_type_of(var_name)
 
-        if scope.currentscope.check_set(var_name):
+        if scope.current_scope.check_set(var_name):
             expr_code = self['expression'].to_code()
             expr_type = self['expression'].get_type()
 
@@ -230,7 +230,7 @@ class SetStatement(nodes.Node):
                     raise scope.SereneTypeError(f"Incorrect type for '{assign_op}' assignment operator at line number {scope.line_number}.")
             return f'{lhs_code} {assign_op} {expr_code};\n'
         else:
-            if scope.currentscope.check_read(var_name):
+            if scope.current_scope.check_read(var_name):
                 raise scope.SereneScopeError(f"Variable '{var_name}' cannot be mutated at line number {scope.line_number}.")
             else:
                 raise scope.SereneScopeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
@@ -332,7 +332,7 @@ class ExpressionNode(nodes.Node):
         if not self.is_temporary:
             self.var_to_access = last_term.var_to_access
             if enclosing_accessor is not None:
-                if not scope.currentscope.check_pass(self.var_to_access, enclosing_accessor):
+                if not scope.current_scope.check_pass(self.var_to_access, enclosing_accessor):
                     raise scope.SereneScopeError(f"Variable '{self.var_to_access}' cannot be passed with accessor '{enclosing_accessor}' at line number {scope.line_number}.")
                 if enclosing_accessor == 'move':
                     code = f"std::move({code})"
@@ -434,7 +434,7 @@ class TermNode(nodes.Node):
             elif x.nodetype == 'method_call':
                 if not self.is_temporary:
                     if 'mutate_method_symbol' in x:
-                        if not scope.currentscope.check_pass(self.var_to_access, 'mutate'):
+                        if not scope.current_scope.check_pass(self.var_to_access, 'mutate'):
                             raise scope.SereneScopeError(f"Mutating methods cannot be called on variable '{self.var_to_access}' at line number {scope.line_number}.")
                     # Method calls return temporary values, so only the first method call in a term needs to be scope-checked
                     self.is_temporary = True
@@ -475,9 +475,9 @@ class BaseExpressionNode(nodes.Node):
             return self['expression'].get_type()
         elif 'identifier' in self:
             var_name = self.get_scalar('identifier')
-            if not scope.currentscope.check_read(var_name):
+            if not scope.current_scope.check_read(var_name):
                 raise scope.SereneTypeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
-            return scope.currentscope.get_type_of(var_name)
+            return scope.current_scope.get_type_of(var_name)
         elif 'function_call' in self:
             for y in scope.functions:
                 if self['function_call'].get_scalar('identifier') == y.get_scalar('identifier'):
@@ -499,7 +499,7 @@ class BaseExpressionNode(nodes.Node):
             return self['constructor_call'].to_code()
         elif 'identifier' in self:
             var_name = self.get_scalar('identifier')
-            if scope.currentscope.check_read(var_name):     # If the variable also needs to be mutated/moved, that will already be checked within TermNode or ExpressionNode
+            if scope.current_scope.check_read(var_name):     # If the variable also needs to be mutated/moved, that will already be checked within TermNode or ExpressionNode
                 return 'sn_' + var_name
             else:
                 raise scope.SereneScopeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
@@ -718,7 +718,7 @@ class ForLoopNode(nodes.Node):
     def to_code(self):
         newindent, oldindent = add_indent()
 
-        scope.currentscope = scope.ScopeObject(scope.currentscope, loop=True)
+        scope.current_scope = scope.ScopeObject(scope.current_scope, loop=True)
         scope.loops.append(self)
 
         loopvar = self.get_scalar('identifier')
@@ -728,7 +728,7 @@ class ForLoopNode(nodes.Node):
             var_type = self[1].get_type()
             if var_type != self[2].get_type():
                 raise scope.SereneTypeError(f"Mismatching types in for-loop at line number {scope.line_number}.")
-            scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
+            scope.current_scope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
 
             startval = self[1].to_code()
             endval = self[2].to_code()
@@ -739,7 +739,7 @@ class ForLoopNode(nodes.Node):
             expr_type = self['expression'].get_type()
             if expr_type.base in ('Array', 'Vector') and expr_type.params[0].params is None:
                 var_type = expr_type.params[0].base
-                scope.currentscope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=typecheck.TypeObject(var_type)))
+                scope.current_scope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=typecheck.TypeObject(var_type)))
             else:
                 raise NotImplementedError
             
@@ -749,7 +749,7 @@ class ForLoopNode(nodes.Node):
             code = f'for (const {cpp_type}& sn_{loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
         
         sub_indent()
-        scope.currentscope = scope.currentscope.parent
+        scope.current_scope = scope.current_scope.parent
         assert(scope.loops.pop() is self)
 
         return code
@@ -778,7 +778,7 @@ class WhileLoopNode(nodes.Node):
     def to_code(self):
         newindent, oldindent = add_indent()
 
-        scope.currentscope = scope.ScopeObject(scope.currentscope, loop=True)
+        scope.current_scope = scope.ScopeObject(scope.current_scope, loop=True)
         scope.loops.append(self)
 
         statements, return_is_statisfied = StatementNode.process_statements(node=self['statements'], indent=newindent)
@@ -788,7 +788,7 @@ class WhileLoopNode(nodes.Node):
         sub_indent()
         self.satisfies_return = self.is_infinite and return_is_statisfied
 
-        scope.currentscope = scope.currentscope.parent
+        scope.current_scope = scope.current_scope.parent
         assert(scope.loops.pop() is self)
 
         return code
@@ -797,7 +797,7 @@ class IfBlock(nodes.Node):
     def to_code(self):
         newindent, oldindent = add_indent()
 
-        scope.currentscope = scope.ScopeObject(scope.currentscope)
+        scope.current_scope = scope.ScopeObject(scope.current_scope)
 
         return_satisfaction_list = []
 
@@ -809,7 +809,7 @@ class IfBlock(nodes.Node):
         condition = cur['expression'].to_code()
         code += f'if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
-        scope.currentscope = scope.currentscope.parent
+        scope.current_scope = scope.current_scope.parent
 
         if 'else_branch' in self:
             bound_elseif = len(self.data) - 1
@@ -817,7 +817,7 @@ class IfBlock(nodes.Node):
             bound_elseif = len(self.data)
         
         for i in range(1, bound_elseif):
-            scope.currentscope = scope.ScopeObject(scope.currentscope)
+            scope.current_scope = scope.ScopeObject(scope.current_scope)
 
             cur = self[i]
             statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent)
@@ -826,10 +826,10 @@ class IfBlock(nodes.Node):
             condition = cur['expression'].to_code()
             code += f'{oldindent}else if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
-            scope.currentscope = scope.currentscope.parent
+            scope.current_scope = scope.current_scope.parent
         
         if 'else_branch' in self:
-            scope.currentscope = scope.ScopeObject(scope.currentscope)
+            scope.current_scope = scope.ScopeObject(scope.current_scope)
 
             cur = self['else_branch']
             statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent)
@@ -837,7 +837,7 @@ class IfBlock(nodes.Node):
 
             code += f'{oldindent}else {{\n{newindent}{statements}{oldindent}}}\n'
 
-            scope.currentscope = scope.currentscope.parent
+            scope.current_scope = scope.current_scope.parent
         
         sub_indent()
 
@@ -857,7 +857,7 @@ class MatchBlock(nodes.Node):
         branches = []
         for x in self:
             if x.nodetype == 'match_branch':
-                scope.currentscope = scope.ScopeObject(scope.currentscope)
+                scope.current_scope = scope.ScopeObject(scope.current_scope)
                 
                 if 'expression' in x:
                     conditions = []
@@ -886,7 +886,7 @@ class MatchBlock(nodes.Node):
                     branches.append(branchcode)
                 
                 return_satisfaction_list.append(return_is_statisfied)
-                scope.currentscope = scope.currentscope.parent
+                scope.current_scope = scope.current_scope.parent
         sub_indent()
         self.satisfies_return = all(return_satisfaction_list) and has_else
         return (f'{oldindent}else ').join(branches)

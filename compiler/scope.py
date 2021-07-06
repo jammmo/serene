@@ -49,7 +49,7 @@ class ScopeObject:
     
     def kill_binding(self, name):
         if name in self:
-            if currentscope.loop:
+            if current_scope.loop:
                 raise SereneScopeError(f"Variable '{name}' is moved or destroyed at line {line_number} in a loop where it may be accessed again.")
             self.victim_bindings[name] = self.bindings[name]
             del self.bindings[name]
@@ -135,7 +135,7 @@ class ScopeObject:
             return False
 
 top_scope = ScopeObject(None)
-currentscope = top_scope
+current_scope = top_scope
 current_func_name = None
 current_func_type = None
 loops: list = []
