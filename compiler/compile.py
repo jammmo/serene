@@ -3,7 +3,7 @@ import sys
 import argparse
 import textwrap
 
-from nodes import Node
+from nodes import Node, StructDefinitionNode
 import scope
 import typecheck
 
@@ -48,11 +48,20 @@ def main():
         print("COMPILE ERROR:", "No 'main()' function is defined.", sep="\n")
         exit(126)
 
-    struct_forward_declarations = []
+    # struct_forward_declarations = []    # Not currently needed
     struct_definition_code = []
+
+    try:
+        sorted_structs = StructDefinitionNode.topological_ordering()
+    except (scope.SereneTypeError) as exc:
+        print("COMPILE ERROR:", exc.message, sep="\n")
+        exit(126)
+    
+    struct_definitions.sort(key=lambda x: sorted_structs.index(x.get_scalar('base_type')), reverse=True)
+
     try:
         for x in struct_definitions:
-            struct_forward_declarations.append(x.to_forward_declaration())
+            #struct_forward_declarations.append(x.to_forward_declaration())     # Not currently needed
             struct_definition_code.append(x.to_code())
     except (scope.SereneScopeError, scope.SereneTypeError) as exc:
         print("COMPILE ERROR:", exc.message, sep="\n")

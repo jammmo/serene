@@ -1,0 +1,45 @@
+// Test topological ordering of structs
+
+function main() {
+    
+}
+
+type A struct {
+    x: B
+}
+
+type B struct {
+    x: Int,
+    y: G        // without this field, this should compile
+}
+
+type C struct {
+    x: F,
+    y: E
+}
+
+type D struct {
+    x: A,
+    y: Vector{Int},
+    z: Vector{Float}
+}
+
+type E struct {
+    x: B,
+    y: D
+}
+
+type F struct {
+    x: E,
+    y: E,
+    z: D
+}
+
+type G struct {
+    x: F
+}
+
+type H struct {
+    x: G,
+    y: String
+}

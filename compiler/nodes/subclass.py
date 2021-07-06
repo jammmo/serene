@@ -885,6 +885,56 @@ class MatchBlock(nodes.Node):
         return (f'{oldindent}else ').join(branches)
 
 class StructDefinitionNode(nodes.Node):
+    @staticmethod
+    def topological_ordering():
+        # Consider struct definitions as a directed graph
+        G: dict = typecheck.user_defined_types.copy()
+
+        # We don't want the whole TypeSpecification object, just a list of adjacent nodes. (We also don't want to modify the TypeSpecification objects, which are used elsewhere.)
+        for key, value in G.items():
+            G[key] = [x.base for x in value.members.values() if x.base in typecheck.user_defined_types]
+        
+        S = G.copy()    # shallow copy (adjacency lists are aliased between S and G)
+
+        # Find nodes with no incoming edges. (In other words, find structs that are not present as fields in any other structs.)
+        for vertex, edges in G.items():
+            for adjacent_vertex in edges:
+                if adjacent_vertex == vertex:   # Represents a recursive type, which is not currently allowed
+                    raise scope.SereneTypeError(f"Struct '{vertex}' cannot have fields of its own type.")
+                if adjacent_vertex in S:
+                    S.pop(adjacent_vertex)
+        # S should now contain nodes with no incoming edges
+
+        # Perform Kahn's algorithm (as described here: https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm) to find
+        # a topological ordering of graph nodes if one exists. Putting the struct definitions in this order, but reversed,
+        # ensures that all structs in the generated C++ are defined before they are used.
+        L = []      # This will contain the sorted elements
+
+        while len(S) > 0:
+            n = S.popitem()         # tuple of (vertex, edges)
+            L.append(n)
+            
+            i = 0
+            while len(n[1]) > 0:
+                m = n[1].pop()     # remove edge from m to n from the graph (this affects G by aliasing)
+                incoming_edges = False
+                for vertex, edges in G.items():
+                    for x in edges:
+                        if x == m:
+                            incoming_edges = True
+                            break
+                    else:
+                        continue
+                    break
+                if not incoming_edges:
+                    S[m] = G[m]
+        
+        for vertex, edges in G.items():
+            if len(edges) > 0:
+                # Graph has a cycle, and no topological ordering exists
+                raise scope.SereneTypeError("Cyclic struct definitions found, which cannot be constructed.")
+        return [x[0] for x in L]
+
     def get_type_spec(self):
         members = {}
         methods = {}

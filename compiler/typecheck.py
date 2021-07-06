@@ -2,7 +2,7 @@ from __future__ import annotations
 import scope
 
 class TypeSpecification:
-    def __init__(self, members: dict[str, str | TypeVar], methods: dict, typevar: TypeVar | None = None, constructor_params = None):
+    def __init__(self, members: dict, methods: dict, typevar: TypeVar | None = None, constructor_params = None):
         self.members = members
         self.methods = methods
         self.typevar = typevar
