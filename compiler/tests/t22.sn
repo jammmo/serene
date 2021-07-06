@@ -1,0 +1,9 @@
+function main() {
+    var x = Vector(3, 4, 5, 6)
+    var y = x.pop!()
+    print y
+
+    //This shouldn't work!
+    var z = x.pop!() - x.pop!() * x.pop!()
+    print z
+}

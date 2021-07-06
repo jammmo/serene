@@ -33,8 +33,10 @@ public:
         items.erase(items.begin() + index);
         length = items.size();
     }
-    auto sn_pop(unsigned int index) {
+    auto sn_pop() {
+        auto x = items.at(length - 1);
         sn_delete(length - 1);
+        return x;
     }
 
     Data& operator[] (unsigned int index) {

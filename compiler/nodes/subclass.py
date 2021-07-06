@@ -379,6 +379,8 @@ class TermNode(nodes.Node):
                                     raise scope.SereneTypeError(f"Method '{method_name}' in expression at line number {scope.line_number} has no return value.")
                             else:
                                 L.append(typecheck.TypeObject(method_return_type))
+                        elif isinstance(method_return_type, typecheck.TypeVar) and (prev_type.base == 'Vector') and (prev_type.params[0].params is None) and (method_name == 'pop!'):
+                            L.append(typecheck.TypeObject(prev_type.params[0].base))
                         else:
                             raise NotImplementedError   # Member with generic type
                     else:
