@@ -1,9 +1,19 @@
 function main() {
-    var x = Vector(3, 4, 5, 6)
-    var y = x.pop!()
-    print y
+    var a = Vector(1, 2, 3)
+    var b = a.pop!()
+    print b
+
+    var x = Vector(3, 4, 5)
 
     //This shouldn't work!
-    var z = x.pop!() - x.pop!() * x.pop!()
-    print z
+    // var y = x.pop!() - x.pop!() * x.pop!()
+    // print y
+
+    //This shouldn't work either!
+    var y = fn_pop(mutate x) - fn_pop(mutate x) * fn_pop(mutate x)
+    print y
+}
+
+function fn_pop(mutate x: Vector{Int}) -> Int {
+    return x.pop!()
 }

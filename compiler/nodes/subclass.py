@@ -475,6 +475,8 @@ class BaseExpressionNode(nodes.Node):
             return self['expression'].get_type()
         elif 'identifier' in self:
             var_name = self.get_scalar('identifier')
+            if not scope.currentscope.check_read(var_name):
+                raise scope.SereneTypeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
             return scope.currentscope.get_type_of(var_name)
         elif 'function_call' in self:
             for y in scope.functions:
