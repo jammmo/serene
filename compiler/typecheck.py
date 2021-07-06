@@ -20,7 +20,7 @@ class TypeObject:
         else:
             raise TypeError
     
-    def __str__(self):
+    def __repr__(self):
         if self.params is None:
             return self.base
         else:
@@ -47,4 +47,4 @@ standard_types = {'Vector': TypeSpecification(members={},
                                                       },
                                               typevar=vector_type_var)}
 
-user_defined_types: dict = {}
+user_defined_types: dict[str, TypeSpecification] = {}

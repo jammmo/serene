@@ -368,7 +368,7 @@ class TermNode(nodes.Node):
                     else:
                         raise scope.SereneTypeError(f"Invalid field access in expression at line number {scope.line_number}.")
                 elif cur.nodetype == 'method_call':
-                    method_name = cur['identifier'].data
+                    method_name = cur['identifier'].data + ('!' if 'mutate_method_symbol' in cur else '')
                     if method_name in orig_type.methods:
                         method_return_type = orig_type.methods[method_name][0]
                         if type(method_return_type) == str:
@@ -376,10 +376,13 @@ class TermNode(nodes.Node):
                                 if i + 1 == len(self.data):
                                     L.append(None)
                                 else:
-                                    raise NotImplementedError
-                            L.append(typecheck.TypeObject(method_return_type))
+                                    raise scope.SereneTypeError(f"Method '{method_name}' in expression at line number {scope.line_number} has no return value.")
+                            else:
+                                L.append(typecheck.TypeObject(method_return_type))
                         else:
                             raise NotImplementedError   # Member with generic type
+                    else:
+                        raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
                 elif cur.nodetype == 'index_call':
                     if prev_type.base in ('Vector', 'Array') and prev_type.params[0].params is None:
                         if self['index_call']['expression'].get_type().base != 'Int':
@@ -397,7 +400,7 @@ class TermNode(nodes.Node):
     def get_type(self):
         this_type = self.get_type_sequence()[-1]
         if this_type is None:
-            raise scope.SereneTypeError(f"Unknown type in expression at line number {scope.line_number}.")
+            raise scope.SereneTypeError(f"Value of expression at line number {scope.line_number} is void.")
         else:
             return this_type
     

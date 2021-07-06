@@ -1,0 +1,8 @@
+function main() {
+    var a = Vector(1, 2, 3)
+
+    run a.delete!(0)
+    run a.delete!(0)
+    run a.delete!(0)
+    run a.delete!(0)  // Whoops! Exception!
+}

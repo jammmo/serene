@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <exception>
 
 template<typename Data>
 class SN_Vector {
@@ -25,8 +26,15 @@ public:
         length = items.size();
     }
     auto sn_delete(unsigned int index) {
+        if (index >= length) {
+            std::cout << "< Exception: Invalid index. Exiting with error code 1 >" << std::endl;
+            exit(1);
+        }
         items.erase(items.begin() + index);
         length = items.size();
+    }
+    auto sn_pop(unsigned int index) {
+        sn_delete(length - 1);
     }
 
     Data& operator[] (unsigned int index) {
