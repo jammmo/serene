@@ -113,7 +113,11 @@ class ScopeObject:
                         else:
                             return False
                     elif (param_accessor == 'mutate'):
-                        return binding_object.mutable
+                        if binding_object.mutable and binding_object not in current_statement.blacklist:
+                            current_statement.blacklist.append(binding_object)
+                            return True
+                        else:
+                            return False
                     else:
                         raise ValueError
                 elif type(binding_object) == ParameterObject:
@@ -136,6 +140,7 @@ class ScopeObject:
 
 top_scope = ScopeObject(None)
 current_scope = top_scope
+current_statement = None
 current_func_name = None
 current_func_type = None
 loops: list = []

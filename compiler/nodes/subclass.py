@@ -153,6 +153,10 @@ class TypeNode(nodes.Node):
         return get_cpp_type(self.get_type())
 
 class StatementNode(nodes.Node):
+    def __init__(self, D):
+        super().__init__(D)
+        self.blacklist = []
+    
     @staticmethod
     def process_statements(node, indent, satisfied=False):
         statement_list = []
@@ -166,6 +170,7 @@ class StatementNode(nodes.Node):
 
     def to_code(self):
         scope.line_number = self.get_scalar(0)
+        scope.current_statement = self
         code = self[1].to_code()
         self.satisfies_return = self[1].satisfies_return if hasattr(self[1], 'satisfies_return') else False
         return code
