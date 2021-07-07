@@ -46,16 +46,5 @@ function main() {
 // }
 
 
-
-// This still compiles, but it shouldn't. Scoping rules will need to take loops and other control flow into account
-
-// function charArrayToString(move u: Array{Char}) -> String {
-//     var s = ""
-//     for (x in u) {
-//         run s.append!(move u)
-//     }
-//     return s
-// }
-
-// Also, something like 'run s.append!(mutate s)' should never compile.
+// Something like 'run s.append!(mutate s)' should never compile.
 // Variables should only be able to pass themselves as 'look' or 'copy' to non-mutating methods, and only as 'copy' to mutating methods.

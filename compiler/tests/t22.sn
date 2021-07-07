@@ -13,6 +13,9 @@ function main() {
     // var y = fn_pop(mutate x) - fn_pop(mutate x) * fn_pop(mutate x)
     // print y
 
+    //This also doesn't work!
+    var y = fn_print(x) + fn_pop(mutate x)
+
     //This is fine! (although pointless)
     if (x.pop!() == 3) {
         print "Three!"
@@ -24,6 +27,11 @@ function main() {
     }
 }
 
-function fn_pop(mutate x: Vector{Int}) -> Int {
-    return x.pop!()
+function fn_pop(mutate thing: Vector{Int}) -> Int {
+    return thing.pop!()
+}
+
+function fn_print(thing: Vector{Int}) -> Int {
+    print thing
+    return 0
 }

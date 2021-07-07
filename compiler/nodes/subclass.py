@@ -50,8 +50,12 @@ def get_cpp_type(my_type):
 
 class FunctionNode(nodes.Node):
     def __init__(self, D):
-        super().__init__(D)
+        # The scope is set up before super() is initialized because Node.__init__() initializes the children nodes,
+        # including FunctionParameterNode, which needs to access the corresponding function scope.
         self.my_scope = scope.ScopeObject(scope.top_scope)
+        scope.init_scope = self.my_scope
+
+        super().__init__(D)
     
     def to_forward_declaration(self):
         if 'type' in self:
@@ -131,7 +135,7 @@ class FunctionParameterNode(nodes.Node):
                 raise NotImplementedError(self['type']['base_type'].data)
 
         # Adds to the scope INSIDE the function, not the scope where the function is defined
-        scope.current_scope.add_binding(scope.ParameterObject(var_name, accessor, my_type))
+        scope.init_scope.add_binding(scope.ParameterObject(var_name, accessor, my_type))
 
         self.code = code
     

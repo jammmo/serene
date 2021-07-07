@@ -140,6 +140,7 @@ class ScopeObject:
 
 top_scope = ScopeObject(None)
 current_scope = top_scope
+init_scope = None
 current_statement = None
 current_func_name = None
 current_func_type = None
