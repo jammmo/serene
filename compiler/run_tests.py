@@ -9,7 +9,7 @@ for p in paths:
     serene_completed_process = subprocess.run(['python', 'serene', p, '-o', './temp/generated.cc'], stdout=subprocess.DEVNULL)
     if serene_completed_process.returncode == 0:
         print('> Success! Compiling to C++')
-        gcc_completed_process = subprocess.run(['g++', './temp/generated.cc', '-o', './temp/compiled'])
+        gcc_completed_process = subprocess.run(['g++', '-std=c++17', './temp/generated.cc', '-o', './temp/compiled'])
         if gcc_completed_process.returncode == 0:
             print('> Success again!')
         else:
