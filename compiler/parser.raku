@@ -11,7 +11,7 @@ grammar Serene {
             if $line > $original.lines.elems {
                 say "Invalid syntax at end of file.";
                 say "Did not compile.";
-                exit();
+                exit(1);
             }
 
             my $text = $original.lines[$line - 1].trim();
@@ -21,7 +21,7 @@ grammar Serene {
                 if $line > $original.lines.elems {
                     say "Invalid syntax at end of file.";
                     say "Did not compile.";
-                    exit();
+                    exit(1);
                 }
                 $text = $original.lines[$line - 1].trim();
             }
@@ -36,7 +36,7 @@ grammar Serene {
             say "";
         }
         say "Did not compile.";
-        exit();
+        exit(1);
     }
 
     # File structure and whitespace
@@ -388,7 +388,7 @@ sub print_parsed ($match, $n_indent) {
 sub MAIN($output_type, $file, $output_file) {
     if not $file.IO.e {
         say 'File "', $file, '" does not exist.';
-        exit();
+        exit(1);
     }
 
     if $output_type eq 'p' {
@@ -417,7 +417,8 @@ sub MAIN($output_type, $file, $output_file) {
             CATCH {
                 when X::Proc::Unsuccessful {
                     if $py_process.exitcode == 126 {
-                        say "Did not compile."
+                        say "Did not compile.";
+                        exit(1);
                     } else {
                         $*ERR.say: .message;
                     }
@@ -431,7 +432,7 @@ sub MAIN($output_type, $file, $output_file) {
         my $output_path = $*PROGRAM.dirname.IO.add($output_file).absolute;
         if not (($output_path.IO.extension eq 'cpp') or ($output_path.IO.extension eq 'cc')) {
             say 'Invalid output file name.';
-            exit();
+            exit(1);
         }
 
         try {
@@ -443,7 +444,8 @@ sub MAIN($output_type, $file, $output_file) {
             CATCH {
                 when X::Proc::Unsuccessful {
                     if $py_process.exitcode == 126 {
-                        say "Did not compile."
+                        say "Did not compile.";
+                        exit(1);
                     } else {
                         $*ERR.say: .message;
                     }

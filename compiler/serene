@@ -6,7 +6,7 @@ if sys.version_info < (3, 6):
     print("Needs Python 3.6 or later.")
     exit()
 
-import os
+import subprocess
 import argparse
 import shutil
 
@@ -32,7 +32,9 @@ if args.output:
         exit()
     
     output_type = 'o'
-    os.system("raku parser.raku " + output_type + " " + args.INPUT + " " + args.output)
+    completed_process = subprocess.run(['raku', 'parser.raku', output_type, args.INPUT, args.output])
+    exit(completed_process.returncode)
 else:
     output_type = 'p' if args.parse else 'c'
-    os.system("raku parser.raku " + output_type + " " + args.INPUT + " " + "''")
+    completed_process = subprocess.run(['raku', 'parser.raku', output_type, args.INPUT, ''])
+    exit(completed_process.returncode)

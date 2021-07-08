@@ -10,7 +10,7 @@ function hello2() {
 
 // New Comment
 
-function main(x: Float, y: Int) {
+function test(x: Float, y: Int) {
     // This is a comment !@#$%^&*()
     var a = 123 // This is another comment)*&(&"")''
     set a *= 2
@@ -31,4 +31,8 @@ function main(x: Float, y: Int) {
     print "Hello"   // Prints like: Hello
     print "'Hello'" // Prints like: 'Hello'
     // Independent comment!
+}
+
+function main() {
+    run test(1.25, 766)
 }

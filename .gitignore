@@ -1,5 +1,6 @@
 archived/
 compiler/outputs/
+compiler/temp/
 compiler/__pycache__/
 compiler/nodes/__pycache__/
 .mypy_cache
