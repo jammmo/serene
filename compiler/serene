@@ -2,18 +2,15 @@
 
 from __future__ import print_function
 import sys
+import shutil
 
 def printerr(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+# Check basic requirements
 if sys.version_info < (3, 6):
     printerr("Needs Python 3.6 or later.")
     exit(1)
-
-import subprocess
-import argparse
-from pathlib import Path
-import shutil
 
 if shutil.which('raku') is None:
     printerr("Raku must be installed.")
@@ -22,6 +19,11 @@ if shutil.which('raku') is None:
 if shutil.which('g++') is None:
     printerr("g++ must be installed.")
     exit(1)
+
+
+import subprocess
+import argparse
+from pathlib import Path
 
 parser = argparse.ArgumentParser('Compile a Serene program.')
 parser.add_argument('INPUT', type=str, help='path to file containing Serene code')
@@ -34,7 +36,8 @@ if args.output:
     if args.parse:
         printerr("Options -p and -o cannot be used together.")
         exit(1)
-    
+
+    printerr('Compiling', args.INPUT, 'now...')    
     output_type = 'o'
 elif args.parse:
     printerr('Parsing', args.INPUT, 'now...')
@@ -43,9 +46,17 @@ else:
     printerr('Compiling', args.INPUT, 'now...')
     output_type = 'c'
 
+# Directory of this file ( /serene/compiler/ )
+here = Path(__file__).parent.resolve()
+
 # Run Raku-based parser
-completed_process = subprocess.run(['raku', 'parser.raku', args.INPUT], capture_output=True, text=True)
-printerr(completed_process.stderr, end='')
+source_path = Path(args.INPUT).resolve()
+if source_path.is_file():
+    completed_process = subprocess.run(['raku', 'parser.raku', source_path.relative_to(here)], cwd=here, capture_output=True, text=True)
+    printerr(completed_process.stderr, end='')
+else:
+    printerr("File", args.INPUT, "does not exist.")
+    exit(1)
 
 if completed_process.returncode == 0:
     if output_type == 'p':  # Parse only
@@ -56,11 +67,11 @@ if completed_process.returncode == 0:
 
         import compile
 
-        if output_type == 'c':  # Compile and print generated code to stdout; no files modified
+        if output_type == 'c':  # Compile and print generated C++ code to stdout; no files modified
             cpp_code = compile.main(completed_process.stdout)
             print(cpp_code, end='')
-        else:                   # Compile and save generated code to a C++ file
-            output_path = Path('.') / Path(args.output)
+        else:                   # Compile and save generated code to a temporary C++ file, then use g++ to compile to binary
+            output_path = Path('.') / Path(args.output)     # Path('.') is the directory where the program is run, not the directory of the program itself
             if output_path.is_dir():
                 printerr('Invalid output file name.')
                 exit(1)
@@ -69,13 +80,26 @@ if completed_process.returncode == 0:
             except FileNotFoundError:
                 printerr('Invalid output directory.')
                 exit(1)
-            if output_path.suffix not in ('.cc', '.cpp'):
+            if output_path.suffix != '':
                 printerr('Invalid output file name.')
                 exit(1)
 
             cpp_code = compile.main(completed_process.stdout)
-            with open(output_path, 'w') as file:
+            with open(here / Path('temp/generated.cc'), 'w') as file:
                 file.write(cpp_code)
-            printerr("Saved output to file", output_path)
+
+            gcc_completed_process = subprocess.run(['g++', '-std=c++17', './temp/generated.cc', '-o', './temp/compiled'], cwd=here, stderr=subprocess.DEVNULL)
+            if gcc_completed_process.returncode == 0:
+                if (here / Path('temp/compiled')).is_file():
+                    shutil.copy2(here / Path('temp/compiled'), output_path)
+                elif (here / Path('temp/compiled.exe')).is_file():
+                    shutil.copy2(here / Path('temp/compiled.exe'), output_path)
+                else:
+                    printerr('Error compiling to temporary directory.')
+                    exit(1)
+                printerr("Saved output to file", output_path)
+            else:
+                printerr(f"g++ compiler failed with error code {gcc_completed_process.returncode}.")
+                exit(1)
 else:
     exit(1)

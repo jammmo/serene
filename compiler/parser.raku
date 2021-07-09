@@ -387,7 +387,7 @@ sub print_parsed ($match, $n_indent) {
 
 sub MAIN($file) {
     if not $file.IO.e {
-        note 'File "', $file, '" does not exist.';
+        note 'Error passing file name to parser:', $file;
         exit(1);
     }
 
