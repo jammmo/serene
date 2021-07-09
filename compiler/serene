@@ -52,7 +52,7 @@ here = Path(__file__).parent.resolve()
 # Run Raku-based parser
 source_path = Path(args.INPUT).resolve()
 if source_path.is_file():
-    completed_process = subprocess.run(['raku', 'parser.raku', source_path.relative_to(here)], cwd=here, capture_output=True, text=True)
+    completed_process = subprocess.run(['raku', 'parser.raku', source_path], cwd=here, capture_output=True, text=True)
     printerr(completed_process.stderr, end='')
 else:
     printerr("File", args.INPUT, "does not exist.")
@@ -92,12 +92,13 @@ if completed_process.returncode == 0:
             if gcc_completed_process.returncode == 0:
                 if (here / Path('temp/compiled')).is_file():
                     shutil.copy2(here / Path('temp/compiled'), output_path)
+                    printerr("Saved output to file", output_path)
                 elif (here / Path('temp/compiled.exe')).is_file():
-                    shutil.copy2(here / Path('temp/compiled.exe'), output_path)
+                    shutil.copy2(here / Path('temp/compiled.exe'), output_path.with_suffix('.exe'))
+                    printerr("Saved output to file", output_path.with_suffix('.exe'))
                 else:
                     printerr('Error compiling to temporary directory.')
                     exit(1)
-                printerr("Saved output to file", output_path)
             else:
                 printerr(f"g++ compiler failed with error code {gcc_completed_process.returncode}.")
                 exit(1)
