@@ -5,12 +5,12 @@ my $original;
 grammar Serene {
     # Error reporting
     method error($message) {
-        say "COMPILE ERROR:";
+        note "COMPILE ERROR:";
         if ($message eq "") {
             my $line = $*LAST + 1;
             if $line > $original.lines.elems {
-                say "Invalid syntax at end of file.";
-                say "Did not compile.";
+                note "Invalid syntax at end of file.";
+                note "Did not compile.";
                 exit(1);
             }
 
@@ -19,23 +19,23 @@ grammar Serene {
             until $text.contains(/\w/) {
                 $line += 1;
                 if $line > $original.lines.elems {
-                    say "Invalid syntax at end of file.";
-                    say "Did not compile.";
+                    note "Invalid syntax at end of file.";
+                    note "Did not compile.";
                     exit(1);
                 }
                 $text = $original.lines[$line - 1].trim();
             }
-            say "Invalid syntax at line number ", $line , ":";
-            say "  - Code: ``` ", $text, " ```";
-            say "";
+            note "Invalid syntax at line number ", $line , ":";
+            note "  - Code: ``` ", $text, " ```";
+            note "";
         } else {
             my $line = line_num(self.pos);
-            say "Invalid syntax at line number ", $line , ":";
-            say "  - Code: ``` ", $original.lines[$line - 1].trim(), " ```";
-            say "  - ", $message;
-            say "";
+            note "Invalid syntax at line number ", $line , ":";
+            note "  - Code: ``` ", $original.lines[$line - 1].trim(), " ```";
+            note "  - ", $message;
+            note "";
         }
-        say "Did not compile.";
+        note "Did not compile.";
         exit(1);
     }
 
@@ -385,16 +385,10 @@ sub print_parsed ($match, $n_indent) {
     return $r;
 }
 
-sub MAIN($output_type, $file, $output_file) {
+sub MAIN($file) {
     if not $file.IO.e {
-        say 'File "', $file, '" does not exist.';
+        note 'File "', $file, '" does not exist.';
         exit(1);
-    }
-
-    if $output_type eq 'p' {
-        say 'Parsing ', $file, ' now...';
-    } else {
-        say 'Compiling ', $file, ' now...';        
     }
 
     $original = slurp $file;
@@ -402,55 +396,5 @@ sub MAIN($output_type, $file, $output_file) {
 
     my $output = print_parsed($parsed, 0);
 
-    if $output_type eq 'p' {
-        say $output;
-        #spurt 'parsed.yaml', $output;
-    } elsif $output_type eq 'c' {
-        my $py = $*PROGRAM.dirname.IO.add('compile.py').absolute;
-        say 'Running ', $py, "\n";
-
-        try {
-            my $py_process = run 'python', $py, :in;
-            $py_process.in.say: $output;
-            $py_process.in.close;
-
-            CATCH {
-                when X::Proc::Unsuccessful {
-                    if $py_process.exitcode == 126 {
-                        say "Did not compile.";
-                        exit(1);
-                    } else {
-                        $*ERR.say: .message;
-                    }
-                }
-            }
-        }
-    } elsif $output_type eq 'o' {
-        my $py = $*PROGRAM.dirname.IO.add('compile.py').absolute;
-        say 'Running ', $py;
-
-        my $output_path = $*PROGRAM.dirname.IO.add($output_file).absolute;
-        if not (($output_path.IO.extension eq 'cpp') or ($output_path.IO.extension eq 'cc')) {
-            say 'Invalid output file name.';
-            exit(1);
-        }
-
-        try {
-            my $py_process = run 'python', $py, "-o", $output_path, :in;
-            $py_process.in.say: $output;
-            $py_process.in.close;
-            say 'Saved output to file ', $output_path;
-
-            CATCH {
-                when X::Proc::Unsuccessful {
-                    if $py_process.exitcode == 126 {
-                        say "Did not compile.";
-                        exit(1);
-                    } else {
-                        $*ERR.say: .message;
-                    }
-                }
-            }
-        }
-    }
+    say $output;
 }

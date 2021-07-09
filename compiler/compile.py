@@ -1,27 +1,16 @@
 import yaml
-import sys
-import argparse
 import textwrap
 
 from nodes import Node, StructDefinitionNode
 import scope
 import typecheck
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-o', '--output', type=str)
-    args = parser.parse_args()
-
-    lines = []
-    for line in sys.stdin:
-        lines.append(line)
-    my_yaml = ''.join(lines)
-    
+def main(my_yaml, output_location = None):
     try:
         tree = yaml.safe_load(my_yaml)[0]
     except yaml.YAMLError as e:
         print(e)
-        exit()
+        exit(1)
 
     scope.definitions = Node.create(tree)
     scope.functions = []
@@ -30,7 +19,7 @@ def main():
         if x.nodetype == 'function':
             if x['identifier'].data in scope.function_names:
                 print("COMPILE ERROR:", f"Function '{x['identifier'].data}' has more than one definition.", sep="\n")
-                exit(126)
+                exit(1)
             else:
                 scope.functions.append(x)
                 scope.function_names.append(x['identifier'].data)
@@ -46,7 +35,7 @@ def main():
 
     if 'main' not in scope.function_names:
         print("COMPILE ERROR:", "No 'main()' function is defined.", sep="\n")
-        exit(126)
+        exit(1)
 
     # struct_forward_declarations = []    # Not currently needed
     struct_definition_code = []
@@ -55,7 +44,7 @@ def main():
         sorted_structs = StructDefinitionNode.topological_ordering()
     except (scope.SereneTypeError) as exc:
         print("COMPILE ERROR:", exc.message, sep="\n")
-        exit(126)
+        exit(1)
     
     struct_definitions.sort(key=lambda x: sorted_structs.index(x.get_scalar('base_type')), reverse=True)
 
@@ -65,7 +54,8 @@ def main():
             struct_definition_code.append(x.to_code())
     except (scope.SereneScopeError, scope.SereneTypeError) as exc:
         print("COMPILE ERROR:", exc.message, sep="\n")
-        exit(126)
+        print("Did not compile.")
+        exit(1)
     except Exception as exc:
         print(f"At struct definition for '{x.get_scalar('base_type')}':")
         raise exc
@@ -78,7 +68,7 @@ def main():
             function_code.append(x.to_code())
     except (scope.SereneScopeError, scope.SereneTypeError) as exc:
         print("COMPILE ERROR:", exc.message, sep="\n")
-        exit(126)
+        exit(1)
     except Exception as exc:
         print(f"At source line number {scope.line_number}:")
         raise exc
@@ -98,12 +88,8 @@ def main():
     code += ('\n\n'.join(function_code)               + '\n\n') if len(function_code) > 0 else ''
     code += 'int main() {\n    sn_main();\n    return 0;\n}\n'
 
-    if args.output:
-        with open(args.output, 'w') as file:
+    if output_location is not None:
+        with open(output_location, 'w') as file:
             file.write(code)
     else:
         print(code, end='')
-
-
-if __name__ == '__main__':    
-    main()

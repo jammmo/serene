@@ -4,20 +4,21 @@ from __future__ import print_function
 import sys
 if sys.version_info < (3, 6):
     print("Needs Python 3.6 or later.")
-    exit()
+    exit(1)
 
 import subprocess
 import argparse
+from pathlib import Path
 import shutil
 
 if shutil.which('raku') is None:
     print("Raku must be installed.")
-    exit()
+    exit(1)
 
 # Not needed yet, currently just outputs a .cc file
 # if shutil.which('g++') is None:
 #     print("g++ must be installed.")
-#     exit()
+#     exit(1)
 
 parser = argparse.ArgumentParser('Compile a Serene program.')
 parser.add_argument('INPUT', type=str, help='path to file containing Serene code')
@@ -29,12 +30,46 @@ args = parser.parse_args()
 if args.output:
     if args.parse:
         print("Options -p and -o cannot be used together.")
-        exit()
+        exit(1)
     
     output_type = 'o'
-    completed_process = subprocess.run(['raku', 'parser.raku', output_type, args.INPUT, args.output])
-    exit(completed_process.returncode)
+elif args.parse:
+    print('Parsing', args.INPUT, 'now...')
+    output_type = 'p'
 else:
-    output_type = 'p' if args.parse else 'c'
-    completed_process = subprocess.run(['raku', 'parser.raku', output_type, args.INPUT, ''])
-    exit(completed_process.returncode)
+    print('Compiling', args.INPUT, 'now...')
+    output_type = 'c'
+
+# Run Raku-based parser
+completed_process = subprocess.run(['raku', 'parser.raku', args.INPUT], capture_output=True, text=True)
+print(completed_process.stderr, end='')
+
+if completed_process.returncode == 0:
+    if output_type == 'p':  # Parse only
+        print(completed_process.stdout, end='')
+    else:
+        print('Running compile.py now...')
+        print()
+
+        import compile
+
+        if output_type == 'c':  # Compile and print generated code to stdout; no files modified
+            compile.main(completed_process.stdout)
+        else:                   # Compile and save generated code to a C++ file
+            output_path = Path('.') / Path(args.output)
+            if output_path.is_dir():
+                print('Invalid output file name.')
+                exit(1)
+            try:
+                output_path = output_path.parent.resolve(strict=True) / output_path.name
+            except FileNotFoundError:
+                print('Invalid output directory.')
+                exit(1)
+            if output_path.suffix not in ('.cc', '.cpp'):
+                print('Invalid output file name.')
+                exit(1)
+
+            compile.main(completed_process.stdout, output_location=output_path)
+            print("Saved output to file", output_path)
+else:
+    exit(1)
