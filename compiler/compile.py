@@ -1,15 +1,19 @@
 import yaml
 import textwrap
+import sys
 
 from nodes import Node, StructDefinitionNode
 import scope
 import typecheck
 
-def main(my_yaml, output_location = None):
+def printerr(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+def main(my_yaml):
     try:
         tree = yaml.safe_load(my_yaml)[0]
     except yaml.YAMLError as e:
-        print(e)
+        printerr(e)
         exit(1)
 
     scope.definitions = Node.create(tree)
@@ -18,7 +22,7 @@ def main(my_yaml, output_location = None):
     for x in scope.definitions:
         if x.nodetype == 'function':
             if x['identifier'].data in scope.function_names:
-                print("COMPILE ERROR:", f"Function '{x['identifier'].data}' has more than one definition.", sep="\n")
+                printerr("COMPILE ERROR:", f"Function '{x['identifier'].data}' has more than one definition.", sep="\n")
                 exit(1)
             else:
                 scope.functions.append(x)
@@ -34,7 +38,7 @@ def main(my_yaml, output_location = None):
             raise NotImplementedError(x.nodetype)
 
     if 'main' not in scope.function_names:
-        print("COMPILE ERROR:", "No 'main()' function is defined.", sep="\n")
+        printerr("COMPILE ERROR:", "No 'main()' function is defined.", sep="\n")
         exit(1)
 
     # struct_forward_declarations = []    # Not currently needed
@@ -43,7 +47,7 @@ def main(my_yaml, output_location = None):
     try:
         sorted_structs = StructDefinitionNode.topological_ordering()
     except (scope.SereneTypeError) as exc:
-        print("COMPILE ERROR:", exc.message, sep="\n")
+        printerr("COMPILE ERROR:", exc.message, sep="\n")
         exit(1)
     
     struct_definitions.sort(key=lambda x: sorted_structs.index(x.get_scalar('base_type')), reverse=True)
@@ -53,11 +57,11 @@ def main(my_yaml, output_location = None):
             #struct_forward_declarations.append(x.to_forward_declaration())     # Not currently needed
             struct_definition_code.append(x.to_code())
     except (scope.SereneScopeError, scope.SereneTypeError) as exc:
-        print("COMPILE ERROR:", exc.message, sep="\n")
-        print("Did not compile.")
+        printerr("COMPILE ERROR:", exc.message, sep="\n")
+        printerr("Did not compile.")
         exit(1)
     except Exception as exc:
-        print(f"At struct definition for '{x.get_scalar('base_type')}':")
+        printerr(f"At struct definition for '{x.get_scalar('base_type')}':")
         raise exc
 
     function_code = []
@@ -67,10 +71,10 @@ def main(my_yaml, output_location = None):
             function_forward_declarations.append(x.to_forward_declaration())
             function_code.append(x.to_code())
     except (scope.SereneScopeError, scope.SereneTypeError) as exc:
-        print("COMPILE ERROR:", exc.message, sep="\n")
+        printerr("COMPILE ERROR:", exc.message, sep="\n")
         exit(1)
     except Exception as exc:
-        print(f"At source line number {scope.line_number}:")
+        printerr(f"At source line number {scope.line_number}:")
         raise exc
 
     code = textwrap.dedent("""\
@@ -88,8 +92,4 @@ def main(my_yaml, output_location = None):
     code += ('\n\n'.join(function_code)               + '\n\n') if len(function_code) > 0 else ''
     code += 'int main() {\n    sn_main();\n    return 0;\n}\n'
 
-    if output_location is not None:
-        with open(output_location, 'w') as file:
-            file.write(code)
-    else:
-        print(code, end='')
+    return code
