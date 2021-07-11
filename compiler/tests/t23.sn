@@ -1,0 +1,25 @@
+type Person struct {
+    age: Int,
+    name: String,
+    nickname: Option{String}
+}
+
+function printNickname(p: Person) {
+    match (p.nickname) {
+        Some(var n) -> print "Your nickname is ", n, "."
+        None -> print "No nickname is set."
+    }
+}
+
+function makeOptionNone(mutate x: Option{String}) {
+    set x = None
+}
+
+function main() {
+    var jason = Person(41, "Jason Segel", None)
+    set jason.nickname = Option("Marshall")
+
+    run printNickname(jason)
+    run makeOptionNone(mutate jason.nickname)
+    run printNickname(jason)
+}

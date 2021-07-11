@@ -1,0 +1,41 @@
+type Pair struct {
+    x: Int, 
+    y: Int,
+}
+
+function addOne(mutate x: Int) -> Int {
+    set x = x + 1
+    return 0
+}
+
+function discard(move x: Int) -> Int {
+    return 0
+}
+
+function main() {
+    var m: Int = 100
+    var n: Int = 200
+
+    var u: Int = 1
+    var v: Int = 1
+
+// Test for field access
+    var a: Pair = Pair(4, 39)
+
+    // This should compile
+    set m = addOne(mutate a.x) + addOne(mutate a.y)
+
+    // This should not
+    set m = discard(move a.x)
+
+
+// Test for index access
+    var c = Vector(1, 2, 3)
+
+    // Should this compile?
+    set n = addOne(mutate c[0]) + addOne(mutate c[1]) + addOne(mutate c[2])
+
+    // Should these compile? Probably not?
+    set n = addOne(mutate c[u]) + addOne(mutate c[u])
+    set n = addOne(mutate c[u]) + addOne(mutate c[v])  
+}
