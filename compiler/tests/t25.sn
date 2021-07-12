@@ -1,0 +1,10 @@
+function main() {
+    print "2" > "10"    // True
+
+    print 'a' < 'z'     // True
+
+    const a: String = "hello"
+    const b: String = "yo"
+
+    print a < b         // True
+}

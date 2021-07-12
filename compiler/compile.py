@@ -84,12 +84,17 @@ def main(my_yaml):
                            #include "../lib/serene_array.hh"
                            #include "../lib/serene_string.hh"
                            #include "../lib/serene_vector.hh"
+                           #include "../lib/serene_locale.hh"
                            
                            """)
     #code += ('\n'.join(struct_forward_declarations)   + '\n\n') if len(struct_forward_declarations) > 0 else ''        #Not currently needed
     code += ('\n'.join(function_forward_declarations) + '\n\n') if len(function_forward_declarations) > 0 else ''
     code += ('\n\n'.join(struct_definition_code)      + '\n\n') if len(struct_definition_code) > 0 else ''
     code += ('\n\n'.join(function_code)               + '\n\n') if len(function_code) > 0 else ''
-    code += 'int main() {\n    sn_main();\n    return 0;\n}\n'
+    code += "int main() {\n    "
+    code += "std::cout.imbue(std::locale(std::locale(), new SereneLocale));\n    "  # std::locale is implicitly reference-counted, so "new" is not an issue
+    code += "std::cout.setf(std::ios::boolalpha);\n    "
+    code += "sn_main();\n    "
+    code += "return 0;\n}\n"
 
     return code

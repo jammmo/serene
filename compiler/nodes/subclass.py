@@ -246,7 +246,7 @@ class SetStatement(nodes.Node):
 
 class PrintStatement(nodes.Node):
     def to_code(self):
-        expr_code = [x.to_code() for x in self]
+        expr_code = [f"({x.to_code()})" for x in self]
         expr_code.append('std::endl;\n')
         return 'std::cout << ' + ' << '.join(expr_code)
 
@@ -320,7 +320,7 @@ class ExpressionNode(nodes.Node):
             elif (cur.nodetype == 'infix_op'):
                 if type(cur.data) != str:
                     if cur.get_scalar(0) in ('>', '<', '>=', '<='):
-                        if self[i-1].get_type().base not in ('Int', 'Float'):
+                        if self[i-1].get_type().base not in ('Int', 'Float', 'String', 'Char'):
                             raise scope.SereneTypeError(f"Incorrect type for inequality expression at line number {scope.line_number}.")
                     code += ' ' + cur.get_scalar(0) + ' '
                 else:
