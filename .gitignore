@@ -1,6 +1,7 @@
 archived/
 compiler/outputs/
 compiler/temp/
+compiler/htmlcov/
 compiler/__pycache__/
 compiler/nodes/__pycache__/
 .mypy_cache

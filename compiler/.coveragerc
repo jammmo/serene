@@ -1,0 +1,5 @@
+[run]
+source = .
+branch = True
+data_file = temp/.coverage
+omit = run_tests.py

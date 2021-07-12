@@ -8,11 +8,17 @@ here = Path(__file__).parent.resolve()
 
 init_colorama()
 
+existing_coverage = False
+
 paths = os_sorted([Path(x) for x in here.glob("./tests/t*.sn")])
 for p in paths:
     print()
     print('Testing', p.name, 'now...')
-    serene_completed_process = subprocess.run(['python', 'serene', p, '-o', './temp/test_compiled'], cwd=here, capture_output=True, text=True)
+    if not existing_coverage:
+        serene_completed_process = subprocess.run(['coverage', 'run', 'serene', p, '-o', './temp/test_compiled'], cwd=here, capture_output=True, text=True)
+        existing_coverage = True
+    else:
+        serene_completed_process = subprocess.run(['coverage', 'run', '--append', 'serene', p, '-o', './temp/test_compiled'], cwd=here, capture_output=True, text=True)
     if serene_completed_process.returncode == 0:
         print(f"{Fore.GREEN}> Success!{Style.RESET_ALL}")
     else:
