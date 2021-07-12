@@ -196,7 +196,7 @@ grammar Serene {
     }
 
     rule function_parameter {
-        <accessor>? <identifier> ':' <type>
+        <accessor>? <identifier> [ ':' <type> || <error("Function parameter has no type specified.")> ]
     }
 
     token function_call {

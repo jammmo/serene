@@ -1,0 +1,7 @@
+function main() {
+
+}
+
+function other(move a, move b) {    // Should be a syntax error: missing type info
+    print a
+}
