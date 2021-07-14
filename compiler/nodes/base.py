@@ -72,6 +72,8 @@ class Node:
                 'function_call':           nodes.FunctionCallNode,
                 'method_call':             nodes.MethodCallNode,
                 'constructor_call':        nodes.ConstructorCallNode,
+                'index_call':              nodes.IndexCallNode,
+                'field_access':            nodes.FieldAccessNode,
                 'function_call_parameter': nodes.FunctionCallParameterNode,
                 'for_loop':                nodes.ForLoopNode,
                 'while_loop':              nodes.WhileLoopNode,

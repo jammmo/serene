@@ -353,59 +353,29 @@ class TermNode(nodes.Node):
         L = []
         base_type = self[0].get_type()
         L.append(base_type)
-        if len(self.data) > 1:
-            for i in range(1, len(self.data)):
-                cur = self[i]
-                prev = self[i-1]
-                prev_type = L[-1]
 
-                if prev_type.base in typecheck.standard_types:
-                    orig_type = typecheck.standard_types[prev_type.base]
-                elif prev_type.base in typecheck.user_defined_types:
-                    orig_type = typecheck.user_defined_types[prev_type.base]
-                else:
-                    raise scope.SereneTypeError(f"Unknown type in expression at line number {scope.line_number}.")
-                
-                if cur.nodetype == 'field_access':
-                    field_name = cur['identifier'].data
-                    if field_name in orig_type.members:
-                        member_type = orig_type.members[field_name]
-                        if member_type.params is None:
-                            L.append(member_type)
-                        else:
-                            raise NotImplementedError   # Member with generic type
-                    else:
-                        raise scope.SereneTypeError(f"Invalid field access in expression at line number {scope.line_number}.")
-                elif cur.nodetype == 'method_call':
-                    method_name = cur['identifier'].data + ('!' if 'mutate_method_symbol' in cur else '')
-                    if method_name in orig_type.methods:
-                        method_return_type = orig_type.methods[method_name][0]
-                        if type(method_return_type) == str:
-                            if method_return_type == '':
-                                if i + 1 == len(self.data):
-                                    L.append(None)
-                                else:
-                                    raise scope.SereneTypeError(f"Method '{method_name}' in expression at line number {scope.line_number} has no return value.")
-                            else:
-                                L.append(typecheck.TypeObject(method_return_type))
-                        elif isinstance(method_return_type, typecheck.TypeVar) and (prev_type.base == 'Vector') and (prev_type.params[0].params is None) and (method_name == 'pop!'):
-                            L.append(typecheck.TypeObject(prev_type.params[0].base))
-                        else:
-                            raise NotImplementedError   # Member with generic type
-                    else:
-                        raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
-                elif cur.nodetype == 'index_call':
-                    if prev_type.base in ('Vector', 'Array') and prev_type.params[0].params is None:
-                        if self['index_call']['expression'].get_type().base != 'Int':
-                            raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
-                        L.append(typecheck.TypeObject(prev_type.params[0].base))
-                    elif prev_type.base == 'String':
-                        if self['index_call']['expression'].get_type().base != 'Int':
-                            raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
-                        L.append(typecheck.TypeObject('Char'))
-                else:
-                    raise NotImplementedError
+        if len(self.data) == 1:
+            return L
+
+        for i in range(1, len(self.data)):
+            cur = self[i]
+            prev_type = L[-1]
+
+            if prev_type.base in typecheck.standard_types:
+                prev_type_spec = typecheck.standard_types[prev_type.base]
+            elif prev_type.base in typecheck.user_defined_types:
+                prev_type_spec = typecheck.user_defined_types[prev_type.base]
+            else:
+                raise scope.SereneTypeError(f"Unknown type in expression at line number {scope.line_number}.")
             
+            if cur.nodetype == 'field_access':
+                L.append(cur.get_type(prev_type_spec))
+            elif cur.nodetype == 'method_call':
+                L.append(cur.get_type(prev_type, prev_type_spec, is_last=(i + 1 == len(self.data))))
+            elif cur.nodetype == 'index_call':
+                L.append(cur.get_type(prev_type))
+            else:
+                raise NotImplementedError           
         return L
     
     def get_type(self):
@@ -438,8 +408,8 @@ class TermNode(nodes.Node):
         for i in range(1, len(self.data)):
             current_type = type_seq[i-1]
             x = self[i]
-            if x.nodetype == 'field_access':
-                code += '.sn_' + x.get_scalar('identifier')
+            if x.nodetype in ('field_access', 'index_call'):
+                code += x.to_code()
             elif x.nodetype == 'method_call':
                 if not self.is_temporary:
                     if 'mutate_method_symbol' in x:
@@ -447,23 +417,113 @@ class TermNode(nodes.Node):
                             raise scope.SereneScopeError(f"Mutating methods cannot be called on variable '{self.var_to_access}' at line number {scope.line_number}.")
                     # Method calls return temporary values, so only the first method call in a term needs to be scope-checked
                     self.is_temporary = True
-                if current_type is None:
-                    raise NotImplementedError
-                else:
-                    if current_type.base in ('Vector', 'Array') and current_type.params[0].params is None:
-                        code += x.to_code(on_type=current_type)
-                    elif current_type.base == "String" and current_type.params is None:
-                        code += x.to_code(on_type=current_type)
-                    else:
-                        raise NotImplementedError
-            elif x.nodetype == 'index_call':
-                code += '[' + x['expression'].to_code() + ']'
+
+                code += x.to_code(current_type)
+
             else:
                 raise NotImplementedError
         return code
 
 class PlaceTermNode(TermNode):  # Identical to TermNode, except with no method calls (prevented in the parsing stage). Used for 'set' statements
     pass
+
+class FieldAccessNode(nodes.Node):
+    def get_type(self, prev_type_spec):
+        field_name = self['identifier'].data
+        if field_name in prev_type_spec.members:
+            member_type = prev_type_spec.members[field_name]
+            if member_type.params is not None:
+                raise NotImplementedError   # Member with generic type
+            return member_type
+        else:
+            raise scope.SereneTypeError(f"Invalid field access in expression at line number {scope.line_number}.")
+
+    def to_code(self):
+        return '.sn_' + self.get_scalar('identifier')
+
+class MethodCallNode(nodes.Node):
+    def get_type(self, prev_type, prev_type_spec, is_last = False):
+        method_name = self['identifier'].data + ('!' if 'mutate_method_symbol' in self else '')
+        if method_name in prev_type_spec.methods:
+            method_return_type = prev_type_spec.methods[method_name][0]
+            if type(method_return_type) == str:
+                if method_return_type == '':
+                    if is_last:
+                        return None
+                    else:
+                        raise scope.SereneTypeError(f"Method '{method_name}' in expression at line number {scope.line_number} has no return value.")
+                else:
+                    return typecheck.TypeObject(method_return_type)
+            elif isinstance(method_return_type, typecheck.TypeVar) and (prev_type.base == 'Vector') and (prev_type.params[0].params is None) and (method_name == 'pop!'):
+                return typecheck.TypeObject(prev_type.params[0].base)
+            else:
+                raise NotImplementedError   # Member with generic type
+        else:
+            raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
+            
+    def to_code(self, prev_type):
+        code = ''
+        if prev_type is None:
+            raise NotImplementedError
+        
+        if not (prev_type.base in ('Vector', 'Array') and prev_type.params[0].params is None) and not (prev_type.base == "String" and prev_type.params is None):
+            raise NotImplementedError
+
+        method_name = self.get_scalar('identifier')
+        if prev_type.base in typecheck.standard_types:
+            orig_type = typecheck.standard_types[prev_type.base]
+            if 'mutate_method_symbol' in self:
+                full_method_name = method_name + '!'
+            else:
+                full_method_name = method_name
+            if full_method_name not in orig_type.methods:
+                raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
+        else:
+            raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
+        code = '.sn_' + method_name + '('
+
+        params = []
+        orig_params = orig_type.methods[full_method_name][1]
+        num_called_params = len(self['function_call_parameters'].data)
+
+        if num_called_params > len(orig_params):
+            raise scope.SereneScopeError(f"Method '{method_name}' is given too many parameters when called at line number {scope.line_number}.")
+        if num_called_params < len(orig_params):
+            raise scope.SereneScopeError(f"Function '{method_name}' is given too few parameters when called at line number {scope.line_number}.")
+
+        for i in range(num_called_params):
+            orig_param = orig_params[i]
+            orig_accessor = orig_param.accessor
+            
+            orig_type = orig_param.var_type
+            if isinstance(orig_type, typecheck.TypeVar):
+                if prev_type.base in ('Vector', 'Array') and prev_type.params[0].params is None:
+                    orig_type = typecheck.TypeObject(prev_type.params[0].base)
+                else:
+                    raise NotImplementedError
+            
+            c_param = self['function_call_parameters'][i]
+            
+            params.append(c_param.to_code(original_accessor = orig_accessor, original_type = orig_type, function_name = method_name, param_name = orig_param.name, method=True))
+
+        code += ', '.join(params) + ')'
+        return code
+
+class IndexCallNode(nodes.Node):
+    def get_type(self, prev_type):
+        if prev_type.base in ('Vector', 'Array') and prev_type.params[0].params is None:
+            if self['expression'].get_type().base != 'Int':
+                raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+            return typecheck.TypeObject(prev_type.params[0].base)
+        elif prev_type.base == 'String':
+            if self['expression'].get_type().base != 'Int':
+                raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+            return typecheck.TypeObject('Char')
+        else:
+            raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+    
+    def to_code(self):
+        return '[' + self['expression'].to_code() + ']'
 
 class BaseExpressionNode(nodes.Node):
     def get_type(self):
@@ -556,48 +616,6 @@ class FunctionCallNode(nodes.Node):
             c_param = self['function_call_parameters'][i]
             
             params.append(c_param.to_code(original_accessor = o_accessor, original_type = o_type, function_name = self.get_scalar('identifier'), param_name = o_param.get_scalar('identifier')))
-
-        code += ', '.join(params) + ')'
-        return code
-
-class MethodCallNode(nodes.Node):
-    def to_code(self, on_type):
-        method_name = self.get_scalar('identifier')
-        if on_type.base in typecheck.standard_types:
-            orig_type = typecheck.standard_types[on_type.base]
-            if 'mutate_method_symbol' in self:
-                full_method_name = method_name + '!'
-            else:
-                full_method_name = method_name
-            if full_method_name not in orig_type.methods:
-                raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
-        else:
-            raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
-        code = '.sn_' + method_name + '('
-
-        params = []
-        orig_params = orig_type.methods[full_method_name][1]
-        num_called_params = len(self['function_call_parameters'].data)
-
-        if num_called_params > len(orig_params):
-            raise scope.SereneScopeError(f"Method '{method_name}' is given too many parameters when called at line number {scope.line_number}.")
-        if num_called_params < len(orig_params):
-            raise scope.SereneScopeError(f"Function '{method_name}' is given too few parameters when called at line number {scope.line_number}.")
-
-        for i in range(num_called_params):
-            orig_param = orig_params[i]
-            orig_accessor = orig_param.accessor
-            
-            orig_type = orig_param.var_type
-            if isinstance(orig_type, typecheck.TypeVar):
-                if on_type.base in ('Vector', 'Array') and on_type.params[0].params is None:
-                    orig_type = typecheck.TypeObject(on_type.params[0].base)
-                else:
-                    raise NotImplementedError
-            
-            c_param = self['function_call_parameters'][i]
-            
-            params.append(c_param.to_code(original_accessor = orig_accessor, original_type = orig_type, function_name = method_name, param_name = orig_param.name, method=True))
 
         code += ', '.join(params) + ')'
         return code
