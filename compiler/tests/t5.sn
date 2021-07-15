@@ -1,3 +1,4 @@
+//test1() and test2() should not compile
 // function test1() {
 //     var x = "Hello"
 //     set x = 5
@@ -11,7 +12,8 @@
 function main() {
     var x = "Hello World"
     run test3(mutate x) 
-    run test3("Hello Mountains")  // Mutate isn't needed here because the expression "Hello Mountains" is temporary
+    
+    //run test3(mutate "Hello Mountains")  // Can temporary values be passed as mutate parameters? (Currently no)
 
     //run test3(x)      // Error: Needs to be called with "mutate"
     //run test3(x, x)   // Error: Wrong number of parameters
