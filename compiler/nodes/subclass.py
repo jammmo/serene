@@ -159,7 +159,9 @@ class TypeNode(nodes.Node):
 class StatementNode(nodes.Node):
     def __init__(self, D):
         super().__init__(D)
-        self.blacklist = []
+        self.read_list = []     # Any variable that will be accessed; stored as tuple of (variable as ParameterObject or VariableObject, field_name1, field_name2, ...)
+        self.write_list = []    # Any variable that will be accessed with mutate or move
+        self.delete_list = []   # Any variable that will be accessed with move
     
     @staticmethod
     def process_statements(node, indent, satisfied=False):
@@ -177,6 +179,8 @@ class StatementNode(nodes.Node):
         scope.current_statement = self
         code = self[1].to_code()
         self.satisfies_return = self[1].satisfies_return if hasattr(self[1], 'satisfies_return') else False
+        if scope.current_statement == self:     # Ignore statements that contain other statements
+            scope.current_scope.check_all_statement_accesses()
         return code
 
 class VarStatement(nodes.Node):
@@ -226,23 +230,23 @@ class SetStatement(nodes.Node):
             lhs_code = 'sn_' + var_name
             correct_type = scope.current_scope.get_type_of(var_name)
 
-        if scope.current_scope.check_set(var_name):
-            expr_code = self['expression'].to_code()
-            expr_type = self['expression'].get_type()
+        # if scope.current_scope.check_set(var_name):
+        expr_code = self['expression'].to_code()
+        expr_type = self['expression'].get_type()
 
-            if expr_type != correct_type:
-                raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{var_name}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
+        if expr_type != correct_type:
+            raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{var_name}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
 
-            assign_op = self.get_scalar('assignment_op')
-            if assign_op != '=':
-                if expr_type.base not in ('Int', 'Float'):
-                    raise scope.SereneTypeError(f"Incorrect type for '{assign_op}' assignment operator at line number {scope.line_number}.")
-            return f'{lhs_code} {assign_op} {expr_code};\n'
-        else:
-            if scope.current_scope.check_read(var_name):
-                raise scope.SereneScopeError(f"Variable '{var_name}' cannot be mutated at line number {scope.line_number}.")
-            else:
-                raise scope.SereneScopeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
+        assign_op = self.get_scalar('assignment_op')
+        if assign_op != '=':
+            if expr_type.base not in ('Int', 'Float'):
+                raise scope.SereneTypeError(f"Incorrect type for '{assign_op}' assignment operator at line number {scope.line_number}.")
+        return f'{lhs_code} {assign_op} {expr_code};\n'
+        # else:
+        #     if scope.current_scope.check_read(var_name):
+        #         raise scope.SereneScopeError(f"Variable '{var_name}' cannot be mutated at line number {scope.line_number}.")
+        #     else:
+        #         raise scope.SereneScopeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
 
 class PrintStatement(nodes.Node):
     def to_code(self):
@@ -339,10 +343,10 @@ class ExpressionNode(nodes.Node):
         
         self.is_temporary = (self.count('term') > 1) or (last_term.is_temporary)
         if not self.is_temporary:
-            self.var_to_access = last_term.var_to_access
+            # self.var_to_access = last_term.var_to_access
             if enclosing_accessor is not None:
-                if not scope.current_scope.check_pass(self.var_to_access, enclosing_accessor):
-                    raise scope.SereneScopeError(f"Variable '{self.var_to_access}' cannot be passed with accessor '{enclosing_accessor}' at line number {scope.line_number}.")
+                # if not scope.current_scope.check_pass(self.var_to_access, enclosing_accessor):
+                #     raise scope.SereneScopeError(f"Variable '{self.var_to_access}' cannot be passed with accessor '{enclosing_accessor}' at line number {scope.line_number}.")
                 if enclosing_accessor == 'move':
                     code = f"std::move({code})"
         
@@ -412,9 +416,9 @@ class TermNode(nodes.Node):
                 code += x.to_code()
             elif x.nodetype == 'method_call':
                 if not self.is_temporary:
-                    if 'mutate_method_symbol' in x:
-                        if not scope.current_scope.check_pass(self.var_to_access, 'mutate'):
-                            raise scope.SereneScopeError(f"Mutating methods cannot be called on variable '{self.var_to_access}' at line number {scope.line_number}.")
+                    # if 'mutate_method_symbol' in x:
+                        # if not scope.current_scope.check_pass(self.var_to_access, 'mutate'):
+                        #     raise scope.SereneScopeError(f"Mutating methods cannot be called on variable '{self.var_to_access}' at line number {scope.line_number}.")
                     # Method calls return temporary values, so only the first method call in a term needs to be scope-checked
                     self.is_temporary = True
 
