@@ -44,20 +44,20 @@ def get_cpp_type(my_type):
     elif base in typecheck.user_defined_types:
         return f"SN_{base}"
     else:
-        raise scope.SereneTypeError(f"Unknown type at line number {scope.line_number}.")
+        raise scope.SereneTypeError(f"Unknown type: {my_type}.")
 
 # Subclasses __________________________________________________________________
 
 class FunctionNode(nodes.Node):
     def __init__(self, D):
-        # The scope is set up before super() is initialized because Node.__init__() initializes the children nodes,
-        # including FunctionParameterNode, which needs to access the corresponding function scope.
-        self.my_scope = scope.ScopeObject(scope.top_scope)
-        scope.init_scope = self.my_scope
-
         super().__init__(D)
+        self.my_scope = scope.ScopeObject(scope.top_scope)
     
     def to_forward_declaration(self):
+        scope.scope_for_setup = self.my_scope
+        for x in self['function_parameters']:
+            x.setup()
+
         if 'type' in self:
             func_type = self['type'].to_code()  # C++ return type        
         else:
@@ -104,10 +104,9 @@ class FunctionNode(nodes.Node):
         return code
 
 class FunctionParameterNode(nodes.Node):
-    # Function parameters need to be processed before other code so that function calls can be verified regardless of the order that functions are defined
-    def __init__(self, D):
-        super().__init__(D)
-        
+    # Function parameters need to be processed before other code so that function calls can be verified regardless of the order that functions are defined.
+    # However, they need access to struct definitions, so the setup() function is called when forward declarations are created, which is before the function bodies are processed.
+    def setup(self):
         code = self['type'].to_code()
         if 'accessor' in self:
             accessor = self.get_scalar('accessor')
@@ -125,18 +124,18 @@ class FunctionParameterNode(nodes.Node):
         var_name = self.get_scalar('identifier')
         code += ' ' + 'sn_'+ var_name
 
-        if len(self['type'].data) == 1 and self['type'].get_scalar('base_type') in ('String', 'Char', 'Int', 'Float', 'Bool'):
+        base_type = self['type'].get_scalar('base_type')
+        if len(self['type'].data) == 1 and (base_type in ('String', 'Char', 'Int', 'Float', 'Bool') or base_type in typecheck.user_defined_types):
             my_type = typecheck.TypeObject(self['type'].get_scalar('base_type'))
         else:
-            if self['type'].get_scalar('base_type') in ('Vector', 'Array'):
+            if base_type in ('Vector', 'Array'):
                 if len(self['type']['type'].data) == 1 and self['type']['type'].get_scalar('base_type') in ('String', 'Char', 'Int', 'Float', 'Bool'):
                     my_type = typecheck.TypeObject(self['type'].get_scalar('base_type'), params=[typecheck.TypeObject(self['type']['type'].get_scalar('base_type'))])
             else:
                 raise NotImplementedError(self['type']['base_type'].data)
 
         # Adds to the scope INSIDE the function, not the scope where the function is defined
-        scope.init_scope.add_binding(scope.ParameterObject(var_name, accessor, my_type))
-
+        scope.scope_for_setup.add_binding(scope.ParameterObject(var_name, accessor, my_type))
         self.code = code
     
     def to_code(self):
@@ -231,7 +230,6 @@ class SetStatement(nodes.Node):
             lhs_code = 'sn_' + var_name
             correct_type = scope.current_scope.get_type_of(var_name)
 
-        # if scope.current_scope.check_set(var_name):
         expr_code = self['expression'].to_code()
         expr_type = self['expression'].get_type()
 
@@ -243,11 +241,6 @@ class SetStatement(nodes.Node):
             if expr_type.base not in ('Int', 'Float'):
                 raise scope.SereneTypeError(f"Incorrect type for '{assign_op}' assignment operator at line number {scope.line_number}.")
         return f'{lhs_code} {assign_op} {expr_code};\n'
-        # else:
-        #     if scope.current_scope.check_read(var_name):
-        #         raise scope.SereneScopeError(f"Variable '{var_name}' cannot be mutated at line number {scope.line_number}.")
-        #     else:
-        #         raise scope.SereneScopeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
 
 class PrintStatement(nodes.Node):
     def to_code(self):

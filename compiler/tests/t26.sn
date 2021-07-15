@@ -5,3 +5,7 @@ function print_from_holder(thing: Holder) {
 type Holder struct {
     x: Float
 }
+
+function main() {
+    run print_from_holder(Holder(4.75))
+}

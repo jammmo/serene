@@ -100,11 +100,11 @@ class ScopeObject:
             min_len = min(len(A), len(B))
             return A[:min_len] == B[:min_len]
 
-        printerr("Line:", line_number)
-        printerr("READ:", current_statement.read_list)
-        printerr("WRITE:", current_statement.write_list)
-        printerr("DELETE:", current_statement.delete_list)
-        printerr()
+        # printerr("Line:", line_number)
+        # printerr("READ:", current_statement.read_list)
+        # printerr("WRITE:", current_statement.write_list)
+        # printerr("DELETE:", current_statement.delete_list)
+        # printerr()
 
         for x in current_statement.write_list:
             if type(x[0]) == VariableObject:
@@ -178,7 +178,7 @@ class ScopeObject:
 
 top_scope = ScopeObject(None)
 current_scope = top_scope
-init_scope = None
+scope_for_setup = None
 current_statement = None
 current_func_name = None
 current_func_type = None
