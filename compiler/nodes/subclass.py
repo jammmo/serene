@@ -135,7 +135,7 @@ class FunctionParameterNode(nodes.Node):
                 raise NotImplementedError(self['type']['base_type'].data)
 
         # Adds to the scope INSIDE the function, not the scope where the function is defined
-        scope.scope_for_setup.add_binding(scope.ParameterObject(var_name, accessor, my_type))
+        scope.scope_for_setup.add_persistent_binding(scope.ParameterObject(var_name, accessor, my_type))
         self.code = code
     
     def to_code(self):
@@ -626,7 +626,7 @@ class FunctionCallNode(nodes.Node):
             else:
                 o_accessor = 'look'
             
-            o_type = original_function.my_scope.get_type_of(o_param.get_scalar('identifier'))
+            o_type = original_function.my_scope.get_type_of(o_param.get_scalar('identifier'), persistent=True)
             
             c_param = self['function_call_parameters'][i]
             

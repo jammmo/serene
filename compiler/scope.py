@@ -33,6 +33,11 @@ class ParameterObject:
 class ScopeObject:
     def __init__(self, parent, loop = False):
         self.bindings = dict()
+        
+        # This is used for function signatures. When a parameter goes out of scope in the function body, it is
+        # removed from bindings but not from persistent_bindings, so that other functions can still check the signature.
+        self.persistent_bindings = dict()
+
         self.subscopes = []
         self.parent = parent
         self.loop = loop or (self.parent.loop if self.parent is not None else False)
@@ -49,6 +54,12 @@ class ScopeObject:
         if binding_object.name in self:
             raise SereneScopeError(f"Variable '{binding_object.name}' defined at line {line_number} already exists in this scope.")
         self.bindings[binding_object.name] = binding_object
+
+    def add_persistent_binding(self, binding_object):
+        if binding_object.name in self:
+            raise SereneScopeError(f"Variable '{binding_object.name}' defined at line {line_number} already exists in this scope.")
+        self.persistent_bindings[binding_object.name] = binding_object
+        self.bindings[binding_object.name] = binding_object
     
     def kill_binding(self, name):
         if name in self:
@@ -58,13 +69,20 @@ class ScopeObject:
         else:
             raise ValueError
     
-    def get_type_of(self, name):
-        if (name in self):
-            return self[name].var_type
-        elif self.parent is not None:
-            return self.parent.get_type_of(name)
+    def get_type_of(self, name, persistent=False):
+        if persistent:
+            if (name in self.persistent_bindings):
+                return self.persistent_bindings[name].var_type
+            # No need to check parent, as function definitions cannot be nested
+            else:
+                raise ValueError
         else:
-            raise ValueError
+            if (name in self):
+                return self[name].var_type
+            elif self.parent is not None:
+                return self.parent.get_type_of(name)
+            else:
+                raise ValueError
 
     def check_read(self, name):
         if (name in self):

@@ -1,0 +1,13 @@
+// While this should create an infinite loop, it should still be able to compile.
+function first(move x: Int) {
+    run second(move x)
+}
+
+function second(move y: Int) {
+    run first(move y)
+}
+
+function main() {
+    var a = 29
+    run first(move a)
+}
