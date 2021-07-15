@@ -179,6 +179,8 @@ class StatementNode(nodes.Node):
         scope.current_statement = self
         code = self[1].to_code()
         self.satisfies_return = self[1].satisfies_return if hasattr(self[1], 'satisfies_return') else False
+        if type(scope.current_statement) != StatementNode:
+            raise TypeError
         if scope.current_statement == self:     # Ignore statements that contain other statements
             scope.current_scope.check_all_statement_accesses()
         return code
@@ -219,15 +221,25 @@ class ConstStatement(nodes.Node):
 
 class SetStatement(nodes.Node):
     def to_code(self):
+        assign_op = self.get_scalar('assignment_op')
+
         if 'place_term' in self:
             if self['place_term']['base_expression'][0].nodetype != 'identifier':
                 raise scope.SereneTypeError(f"Invalid expression for left-hand side of 'set' statement at line number {scope.line_number}.")
             var_name = self['place_term']['base_expression'].get_scalar('identifier')
-            lhs_code = self['place_term'].to_code()
+
+            if assign_op != '=':
+                lhs_code = self['place_term'].to_code(place_term_relative_set=True)     # adds read access for lhs
+            else:
+                lhs_code = self['place_term'].to_code()
+            
             correct_type = self['place_term'].get_type()
         else:
             var_name = self.get_scalar('identifier')
             lhs_code = 'sn_' + var_name
+
+            scope.current_scope.add_access((var_name,), 'look')                        # adds read access for lhs
+
             correct_type = scope.current_scope.get_type_of(var_name)
 
         expr_code = self['expression'].to_code()
@@ -236,10 +248,11 @@ class SetStatement(nodes.Node):
         if expr_type != correct_type:
             raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{var_name}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
 
-        assign_op = self.get_scalar('assignment_op')
         if assign_op != '=':
             if expr_type.base not in ('Int', 'Float'):
                 raise scope.SereneTypeError(f"Incorrect type for '{assign_op}' assignment operator at line number {scope.line_number}.")
+
+        scope.current_scope.check_set(var_name)
         return f'{lhs_code} {assign_op} {expr_code};\n'
 
 class PrintStatement(nodes.Node):
@@ -391,7 +404,7 @@ class TermNode(nodes.Node):
         else:
             return this_type
     
-    def to_code(self):
+    def to_code(self, place_term_relative_set=False):
         base_expr = self[0]
         inner_expr = base_expr[0]
 
@@ -437,6 +450,8 @@ class TermNode(nodes.Node):
 
                 else:
                     raise NotImplementedError
+        if place_term_relative_set:     # if this term is the left-hand side of something like 'set x[10] += 1', then 'x' must be added as a read access
+            scope.current_scope.add_access(self.var_tup, 'look')
         return code
 
 class PlaceTermNode(TermNode):  # Identical to TermNode, except with no method calls (prevented in the parsing stage). Used for 'set' statements

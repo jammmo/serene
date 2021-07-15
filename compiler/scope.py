@@ -92,6 +92,22 @@ class ScopeObject:
         else:
             return False
     
+    def check_set(self, name):
+        cur = self
+        while cur != top_scope:
+            if (name in cur):
+                if type(cur[name]) == VariableObject:
+                    if not cur[name].mutable:
+                        raise SereneScopeError(f"Cannot mutate a const identifier, at line number {line_number}.")
+                    return
+                elif type(cur[name]) == ParameterObject:
+                    if cur[name].accessor == 'look':
+                        raise SereneScopeError(f"Cannot mutate a 'look' parameter, at line number {line_number}.")
+                    return
+            else:
+                cur = cur.parent
+        raise SereneScopeError(f"Variable {name} is not defined at line number {line_number}.")
+
     def add_access(self, var_tup, accessor):    # var_tup is (var_name, field_name1, field_name2, ...)
         var_name = var_tup[0]
         cur = self

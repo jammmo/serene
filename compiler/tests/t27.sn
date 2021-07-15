@@ -1,11 +1,14 @@
 function main() {
     var x: Vector{Float} = Vector(5.0, 10.0, 15.0, 20.0)
     
-    set x[0] += x.pop!()
+    //set x[0] += x.pop!()
     // While the above line may compile in another language (and make x = [25.0, 10.0, 15.0]), it is not allowed
     // in Serene, as it expands to:
     
     // set x[0] = x[0] + x.pop!()
 
     //...which is also not allowed, because x is read and mutated in the same statement.
+
+    // But the following line is okay:
+    set x[0] = x.pop!()
 }
