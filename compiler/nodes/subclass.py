@@ -159,9 +159,10 @@ class TypeNode(nodes.Node):
 class StatementNode(nodes.Node):
     def __init__(self, D):
         super().__init__(D)
-        self.read_list = []     # Any variable that will be accessed; stored as tuple of (variable as ParameterObject or VariableObject, field_name1, field_name2, ...)
+        self.read_list = []     # Any variable that will be accessed with look or copy
         self.write_list = []    # Any variable that will be accessed with mutate or move
         self.delete_list = []   # Any variable that will be accessed with move
+        # These lists contain tuples of (variable as ParameterObject or VariableObject, field_name1, field_name2, ...)
     
     @staticmethod
     def process_statements(node, indent, satisfied=False):
@@ -342,13 +343,21 @@ class ExpressionNode(nodes.Node):
                 raise TypeError
         
         self.is_temporary = (self.count('term') > 1) or (last_term.is_temporary)
-        if not self.is_temporary:
-            # self.var_to_access = last_term.var_to_access
-            if enclosing_accessor is not None:
-                # if not scope.current_scope.check_pass(self.var_to_access, enclosing_accessor):
-                #     raise scope.SereneScopeError(f"Variable '{self.var_to_access}' cannot be passed with accessor '{enclosing_accessor}' at line number {scope.line_number}.")
-                if enclosing_accessor == 'move':
-                    code = f"std::move({code})"
+        if not self.is_temporary and enclosing_accessor == 'move':
+            code = f"std::move({code})"
+        
+        for i in range(len(self.data)):
+            cur = self[i]
+            if cur.nodetype != 'term':
+                continue
+
+            if self.is_temporary:
+                if cur.var_tup is not None:
+                    accessor = 'look' if not hasattr(cur, 'accessor') else cur.accessor
+                    scope.current_scope.add_access(cur.var_tup, accessor)
+            else:
+                if enclosing_accessor is not None:
+                    scope.current_scope.add_access(cur.var_tup, enclosing_accessor)
         
         return code
 
@@ -399,33 +408,42 @@ class TermNode(nodes.Node):
         if inner_expr.nodetype == 'identifier':
             self.is_temporary = False
             code = base_expr.to_code()      # This is a bit redundant, but it's done to check read access on the identifier
-            self.var_to_access = inner_expr.data
+            self.var_tup = (inner_expr.data,)
         elif (inner_expr.nodetype == 'expression'):
             code = '(' + inner_expr.to_code() + ')'
             self.is_temporary = inner_expr.is_temporary
-            if not self.is_temporary:
-                self.var_to_access = inner_expr.var_to_access
+            if self.is_temporary:
+                self.var_tup = None
+            else:
+                self.var_tup = inner_expr.var_tup
         else:
             code = base_expr.to_code()
             self.is_temporary = True
+            self.var_tup = None
 
+        extend_var_tup = True
         for i in range(1, len(self.data)):
             current_type = type_seq[i-1]
             x = self[i]
-            if x.nodetype in ('field_access', 'index_call'):
+            if x.nodetype == 'field_access':
                 code += x.to_code()
-            elif x.nodetype == 'method_call':
-                if not self.is_temporary:
-                    # if 'mutate_method_symbol' in x:
-                        # if not scope.current_scope.check_pass(self.var_to_access, 'mutate'):
-                        #     raise scope.SereneScopeError(f"Mutating methods cannot be called on variable '{self.var_to_access}' at line number {scope.line_number}.")
-                    # Method calls return temporary values, so only the first method call in a term needs to be scope-checked
-                    self.is_temporary = True
-
-                code += x.to_code(current_type)
-
+                if extend_var_tup:
+                    self.var_tup = self.var_tup + (x['identifier'],)
             else:
-                raise NotImplementedError
+                extend_var_tup = False
+                if x.nodetype == 'index_call':
+                    code += x.to_code()
+                elif x.nodetype == 'method_call':
+                    if not self.is_temporary:
+                        if 'mutate_method_symbol' in x:
+                            self.accessor = 'mutate'
+                        # Method calls return temporary values, so only the first method call in a term needs to be scope-checked
+                        self.is_temporary = True
+
+                    code += x.to_code(current_type)
+
+                else:
+                    raise NotImplementedError
         return code
 
 class PlaceTermNode(TermNode):  # Identical to TermNode, except with no method calls (prevented in the parsing stage). Used for 'set' statements

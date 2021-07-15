@@ -1,0 +1,7 @@
+function print_from_holder(thing: Holder) {
+    print thing.x
+}
+
+type Holder struct {
+    x: Float
+}

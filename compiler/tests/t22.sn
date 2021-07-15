@@ -14,12 +14,16 @@ function main() {
     // print y
 
     //This also shouldn't work!
-    //var y = fn_print(x) + fn_pop(mutate x)
+    // var y = fn_print(x) + fn_pop(mutate x)
 
     //These also shouldn't work!
     // var y = fn_discard(move x) + fn_print(x)
+    // var y = fn_print(x) + fn_discard(move x)
 
-    var y = fn_print(x) + fn_discard(move x)
+    //This also shouldn't work!
+    if (fn_discard(move x) == 0) {
+        run fn_print(x)
+    }
 
     //This is fine! (although pointless)
     if (x.pop!() == 3) {

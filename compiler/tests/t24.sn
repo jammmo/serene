@@ -12,6 +12,11 @@ function discard(move x: Int) -> Int {
     return 0
 }
 
+function mut_and_return(mutate x: Pair) -> Pair {
+    set x.x = 5
+    return x    // This line should not compile
+}
+
 function main() {
     var m: Int = 100
     var n: Int = 200
@@ -25,17 +30,17 @@ function main() {
     // This should compile
     set m = addOne(mutate a.x) + addOne(mutate a.y)
 
-    // This should not
-    set m = discard(move a.x)
+    // This should not compile
+    //set m = discard(move a.x)
 
 
 // Test for index access
     var c = Vector(1, 2, 3)
 
-    // Should this compile?
-    set n = addOne(mutate c[0]) + addOne(mutate c[1]) + addOne(mutate c[2])
+    // This should not compile
+    //set n = addOne(mutate c[u]) + addOne(mutate c[u])
+    //set n = addOne(mutate c[u]) + addOne(mutate c[v])
 
-    // Should these compile? Probably not?
-    set n = addOne(mutate c[u]) + addOne(mutate c[u])
-    set n = addOne(mutate c[u]) + addOne(mutate c[v])  
+    // For consistency reasons, this should not compile either, even though it doesn't cause any issues with shared mutability
+    //set n = addOne(mutate c[0]) + addOne(mutate c[1]) + addOne(mutate c[2])
 }
