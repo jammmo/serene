@@ -25,6 +25,11 @@ function main() {
         run fn_print(x)
     }
 
+    //This also shouldn't work!
+    // for (i = 0, 10) {
+    //     run fn_discard(move x)
+    // }
+
     //This is fine! (although pointless)
     if (x.pop!() == 3) {
         print "Three!"

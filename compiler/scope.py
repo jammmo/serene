@@ -22,6 +22,9 @@ class VariableObject:
         self.mutable = mutable
         self.var_type = var_type
         assert type(self.var_type) != str
+    
+    def __repr__(self):
+        return f'<VariableObject {self.name}>'
 
 class ParameterObject:
     def __init__(self, name, accessor, var_type):
@@ -29,6 +32,9 @@ class ParameterObject:
         self.accessor = accessor
         self.var_type = var_type
         assert type(self.var_type) != str
+
+    def __repr__(self):
+        return f'<VariableObject {self.name}>'
 
 class ScopeObject:
     def __init__(self, parent, loop = False):

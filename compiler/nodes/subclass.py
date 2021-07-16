@@ -344,26 +344,16 @@ class ExpressionNode(nodes.Node):
                     code += ' ' + cur.data + ' '
             elif cur.nodetype == 'term':
                 last_term = cur
-                code += cur.to_code()
+                if (self.count('term') > 1) or (enclosing_accessor is None):
+                    code += cur.to_code()
+                else:
+                    code += cur.to_code(enclosing_accessor=enclosing_accessor)
             else:
                 raise TypeError
         
         self.is_temporary = (self.count('term') > 1) or (last_term.is_temporary)
         if not self.is_temporary and enclosing_accessor == 'move':
             code = f"std::move({code})"
-        
-        for i in range(len(self.data)):
-            cur = self[i]
-            if cur.nodetype != 'term':
-                continue
-
-            if self.is_temporary:
-                if cur.var_tup is not None:
-                    accessor = 'look' if not hasattr(cur, 'accessor') else cur.accessor
-                    scope.current_scope.add_access(cur.var_tup, accessor)
-            else:
-                if enclosing_accessor is not None:
-                    scope.current_scope.add_access(cur.var_tup, enclosing_accessor)
         
         return code
 
@@ -404,7 +394,7 @@ class TermNode(nodes.Node):
         else:
             return this_type
     
-    def to_code(self, place_term_relative_set=False):
+    def to_code(self, place_term_relative_set=False, enclosing_accessor=None):
         base_expr = self[0]
         inner_expr = base_expr[0]
 
@@ -428,6 +418,7 @@ class TermNode(nodes.Node):
             self.var_tup = None
 
         extend_var_tup = True
+        does_mutate = False
         for i in range(1, len(self.data)):
             current_type = type_seq[i-1]
             x = self[i]
@@ -442,7 +433,7 @@ class TermNode(nodes.Node):
                 elif x.nodetype == 'method_call':
                     if not self.is_temporary:
                         if 'mutate_method_symbol' in x:
-                            self.accessor = 'mutate'
+                            does_mutate = True
                         # Method calls return temporary values, so only the first method call in a term needs to be scope-checked
                         self.is_temporary = True
 
@@ -452,6 +443,15 @@ class TermNode(nodes.Node):
                     raise NotImplementedError
         if place_term_relative_set:     # if this term is the left-hand side of something like 'set x[10] += 1', then 'x' must be added as a read access
             scope.current_scope.add_access(self.var_tup, 'look')
+        else:  
+            if self.is_temporary:
+                if self.var_tup is not None:
+                    accessor = 'mutate' if does_mutate else 'look'
+                    scope.current_scope.add_access(self.var_tup, accessor)
+            else:
+                if enclosing_accessor is not None:
+                    scope.current_scope.add_access(self.var_tup, enclosing_accessor)
+        
         return code
 
 class PlaceTermNode(TermNode):  # Identical to TermNode, except with no method calls (prevented in the parsing stage). Used for 'set' statements
