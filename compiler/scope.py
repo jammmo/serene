@@ -57,7 +57,7 @@ class ScopeObject:
         return self.bindings[key]
 
     def add_binding(self, binding_object):
-        if binding_object.name in self:
+        if self.check_read(binding_object.name):
             raise SereneScopeError(f"Variable '{binding_object.name}' defined at line {line_number} already exists in this scope.")
         self.bindings[binding_object.name] = binding_object
 
@@ -128,25 +128,25 @@ class ScopeObject:
         output = (binding_object,) + tuple(x for x in var_tup[1:])
         
         if accessor == 'mutate':
-            current_statement.write_list.append(output)
+            current_enclosure.write_list.append(output)
         elif accessor == 'move':
-            current_statement.write_list.append(output)
-            current_statement.delete_list.append(output)
+            current_enclosure.write_list.append(output)
+            current_enclosure.delete_list.append(output)
         else:
-            current_statement.read_list.append(output)
+            current_enclosure.read_list.append(output)
 
-    def check_all_statement_accesses(self):
+    def check_all_statement_accesses(self, bindings_to_restore=None):      # "bindings_to_restore": used for bodies of if-statements
         def conflict(A: tuple, B: tuple):
             min_len = min(len(A), len(B))
             return A[:min_len] == B[:min_len]
 
         # printerr("Line:", line_number)
-        # printerr("READ:", current_statement.read_list)
-        # printerr("WRITE:", current_statement.write_list)
-        # printerr("DELETE:", current_statement.delete_list)
+        # printerr("READ:", current_enclosure.read_list)
+        # printerr("WRITE:", current_enclosure.write_list)
+        # printerr("DELETE:", current_enclosure.delete_list)
         # printerr()
 
-        for x in current_statement.write_list:
+        for x in current_enclosure.write_list:
             if type(x[0]) == VariableObject:
                 if not x[0].mutable:
                     raise SereneScopeError(f"Cannot mutate a const identifier, at line number {line_number}.")
@@ -156,7 +156,7 @@ class ScopeObject:
             else:
                 raise ValueError
             
-            for y in current_statement.read_list:
+            for y in current_enclosure.read_list:
                 if conflict(x, y):
                     min_len = min(len(x), len(y))
                     if min_len > 1:
@@ -165,9 +165,9 @@ class ScopeObject:
                         conflicting_path = x[0].name
                     raise SereneScopeError(f"Cannot mutate '{conflicting_path}' that is also read in the same statement, at line number {line_number}.")
         
-        while len(current_statement.write_list) > 0:
-            x = current_statement.write_list.pop()
-            for y in current_statement.write_list:
+        while len(current_enclosure.write_list) > 0:
+            x = current_enclosure.write_list.pop()
+            for y in current_enclosure.write_list:
                 if conflict(x, y):
                     min_len = min(len(x), len(y))
                     if min_len > 1:
@@ -176,7 +176,7 @@ class ScopeObject:
                         conflicting_path = x[0].name
                     raise SereneScopeError(f"Cannot mutate '{conflicting_path}' multiple times in single statement, at line number {line_number}.")
         
-        for x in current_statement.delete_list:
+        for x in current_enclosure.delete_list:
             if len(x) > 1:
                 raise SereneScopeError(f"Struct fields cannot be moved, at line number {line_number}.")
             
@@ -194,6 +194,8 @@ class ScopeObject:
             cur = self
             while cur != top_scope:
                 if x[0].name in cur:
+                    if bindings_to_restore is not None:
+                        bindings_to_restore.append((cur, cur[x[0].name]))
                     cur.kill_binding(x[0].name)
                     break
                 cur = cur.parent
@@ -220,6 +222,7 @@ top_scope = ScopeObject(None)
 current_scope = top_scope
 scope_for_setup = None
 current_statement = None
+current_enclosure = None
 current_func_name = None
 current_func_type = None
 loops: list = []

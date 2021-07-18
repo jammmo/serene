@@ -3,27 +3,44 @@ function main() {
 
     // Comment out all but one section
 
-    // Should not compile
-    if (fn_discard(move a) == 0) {
-        print 0
-    } else {
-        run fn_print(a)
-    }
+    // // Should not compile (shadowing is not allowed)
+    // if (True) {
+    //     var a = "Goodbye"
+    //     print a
+    // }
 
-    // Should not compile
-    if (fn_print(a) == 0) {
-        print 0
-    } else {
-        run fn_discard(move a)
-    }
-    run fn_print(a)
+    // // Should not compile
+    // if (fn_discard(move a) == fn_discard(move a)) {
+    //     print 0
+    // }
 
-    // Should not compile
-    if (0 < 10) {
-        print 0
-    } elseif (fn_discard(move a) == 0) {
-        run fn_print(a)
-    }
+    // // Should not compile
+    // if (fn_discard(move a) == 0) {
+    //     print 0
+    // } else {
+    //     run fn_print(a)
+    // }
+
+    // // Should not compile
+    // if (fn_print(a) == 0) {
+    //     print 0
+    // } else {
+    //     run fn_discard(move a)
+    // }
+    // run fn_print(a)
+
+    // // Should not compile
+    // if (0 < 10) {
+    //     print 0
+    // } elseif (fn_discard(move a) == 0) {
+    //     run fn_print(a)
+    // }
+
+    // // Should not compile
+    // if (0 < 10) {
+    //     run fn_discard(move a)
+    //     run fn_discard(move a)
+    // }
 
     // Should compile
     if (1 == 20) {
@@ -38,22 +55,17 @@ function main() {
         print 2
     }
 
-    // Should not compile
-    while (fn_discard(move a) == 0) {
-        print 0
-    }
+    // // Should not compile
+    // while (fn_discard(move a) == 0) {
+    //     print 0
+    // }
 
-    // Should not compile
-    var i = 0
-    while (i < 100) {
-        run fn_discard(move a)
-        set i += 1
-    }
-
-    // Should not compile
-    for (x in mut_with_array(mutate a)) {
-        print x
-    }
+    // // Should not compile
+    // var i = 0
+    // while (i < 100) {
+    //     run fn_discard(move a)
+    //     set i += 1
+    // }
 }
 
 

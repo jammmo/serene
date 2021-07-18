@@ -21,9 +21,9 @@ function main() {
     // var y = fn_print(x) + fn_discard(move x)
 
     //This also shouldn't work!
-    if (fn_discard(move x) == 0) {
-        run fn_print(x)
-    }
+    // if (fn_discard(move x) == 0) {
+    //     run fn_print(x)
+    // }
 
     //This also shouldn't work!
     // for (i = 0, 10) {

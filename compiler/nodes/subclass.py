@@ -164,25 +164,40 @@ class StatementNode(nodes.Node):
         # These lists contain tuples of (variable as ParameterObject or VariableObject, field_name1, field_name2, ...)
     
     @staticmethod
-    def process_statements(node, indent, satisfied=False):
+    def process_statements(node, indent, satisfied=False, bindings_to_delete=None):
         statement_list = []
         return_is_statisfied = satisfied
+        if bindings_to_delete is not None:
+            bindings_to_restore = []
         for x in node:
+            if bindings_to_delete is not None:
+                x.bindings_to_restore = bindings_to_restore
             statement_list.append(x.to_code())
             if (not return_is_statisfied) and (x.satisfies_return):
                 return_is_statisfied = True
 
+        if bindings_to_delete is not None:
+            for s, binding in bindings_to_restore:
+                s.add_binding(binding)
+                bindings_to_delete.append((s, binding.name))
+            
+            bindings_to_restore.clear()
+            
         return indent.join(statement_list), return_is_statisfied
 
     def to_code(self):
         scope.line_number = self.get_scalar(0)
         scope.current_statement = self
+        scope.current_enclosure = self
         code = self[1].to_code()
         self.satisfies_return = self[1].satisfies_return if hasattr(self[1], 'satisfies_return') else False
         if type(scope.current_statement) != StatementNode:
             raise TypeError
         if scope.current_statement == self:     # Ignore statements that contain other statements
-            scope.current_scope.check_all_statement_accesses()
+            if hasattr(self, 'bindings_to_restore'):
+                scope.current_scope.check_all_statement_accesses(bindings_to_restore=self.bindings_to_restore)
+            else:
+                scope.current_scope.check_all_statement_accesses()
         return code
 
 class VarStatement(nodes.Node):
@@ -310,7 +325,7 @@ class ExpressionNode(nodes.Node):
                 if last_type is None:
                     last_type = x.get_type()
                     accum_type = last_type
-                if x.nodetype == "infix_op" and "comparison_op" in x:
+                if x.nodetype == "infix_op" and type(x.data) != str and "comparison_op" in x:
                     accum_type = typecheck.TypeObject('Bool')
                 elif x.nodetype != "term":
                     continue
@@ -321,7 +336,17 @@ class ExpressionNode(nodes.Node):
         else:
             return self['term'].get_type()
     
-    def to_code(self, enclosing_accessor=None):     # enclosing_accessor should only be passed to top-level expression with an applied accessor
+    def to_code(self, surrounding_accessor=None, enclosed=False):
+        # "surrounding_accessor" should only be passed to top-level expression with an applied accessor
+        # "enclosed" is used for if-statement conditions, where accesses need to be checked on an expression rather than a statement
+
+        if enclosed:
+            self.read_list = []     # Any variable that will be accessed with look or copy
+            self.write_list = []    # Any variable that will be accessed with mutate or move
+            self.delete_list = []   # Any variable that will be accessed with move
+            # These lists contain tuples of (variable as ParameterObject or VariableObject, field_name1, field_name2, ...)
+            scope.current_enclosure = self
+
         self.get_type()     # Just for error-checking
         code = ''
         last_term = None
@@ -348,17 +373,20 @@ class ExpressionNode(nodes.Node):
                     code += ' ' + cur.data + ' '
             elif cur.nodetype == 'term':
                 last_term = cur
-                if (self.count('term') > 1) or (enclosing_accessor is None):
+                if (self.count('term') > 1) or (surrounding_accessor is None):
                     code += cur.to_code()
                 else:
-                    code += cur.to_code(enclosing_accessor=enclosing_accessor)
+                    code += cur.to_code(surrounding_accessor=surrounding_accessor)
             else:
                 raise TypeError
         
         self.is_temporary = (self.count('term') > 1) or (last_term.is_temporary)
-        if not self.is_temporary and enclosing_accessor == 'move':
+        if not self.is_temporary and surrounding_accessor == 'move':
             code = f"std::move({code})"
         
+        if enclosed:
+            scope.current_scope.check_all_statement_accesses()
+
         return code
 
 class TermNode(nodes.Node):
@@ -398,7 +426,7 @@ class TermNode(nodes.Node):
         else:
             return this_type
     
-    def to_code(self, place_term_relative_set=False, enclosing_accessor=None):
+    def to_code(self, place_term_relative_set=False, surrounding_accessor=None):
         base_expr = self[0]
         inner_expr = base_expr[0]
 
@@ -453,8 +481,8 @@ class TermNode(nodes.Node):
                     accessor = 'mutate' if does_mutate else 'look'
                     scope.current_scope.add_access(self.var_tup, accessor)
             else:
-                if enclosing_accessor is not None:
-                    scope.current_scope.add_access(self.var_tup, enclosing_accessor)
+                if surrounding_accessor is not None:
+                    scope.current_scope.add_access(self.var_tup, surrounding_accessor)
         
         return code
 
@@ -761,7 +789,7 @@ class FunctionCallParameterNode(nodes.Node):
             else:
                 raise scope.SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to function '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
 
-        code = self['expression'].to_code(enclosing_accessor=my_accessor) # This will raise exceptions for incorrect accesses
+        code = self['expression'].to_code(surrounding_accessor=my_accessor) # This will raise exceptions for incorrect accesses
 
         if (not self['expression'].is_temporary) and (my_accessor != original_accessor) and (my_accessor != 'copy'):
             if method:
@@ -842,8 +870,9 @@ class WhileLoopNode(nodes.Node):
         scope.current_scope = scope.ScopeObject(scope.current_scope, loop=True)
         scope.loops.append(self)
 
+        condition = self['expression'].to_code(enclosed=True)
+
         statements, return_is_statisfied = StatementNode.process_statements(node=self['statements'], indent=newindent)
-        condition = self['expression'].to_code()
         code = f'while ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
         sub_indent()
@@ -861,16 +890,19 @@ class IfBlock(nodes.Node):
         scope.current_scope = scope.ScopeObject(scope.current_scope)
 
         return_satisfaction_list = []
+        bindings_to_delete = []
 
         code = ''
         cur = self['if_branch']
-        statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent)
+
+        condition = cur['expression'].to_code(enclosed=True)
+
+        statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent, bindings_to_delete=bindings_to_delete)
         return_satisfaction_list.append(return_is_statisfied)
 
         if (cur['expression'].get_type().base != 'Bool'):
             raise scope.SereneTypeError("Condition in if-statement must have type Bool.")
 
-        condition = cur['expression'].to_code()
         code += f'if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
         scope.current_scope = scope.current_scope.parent
@@ -884,13 +916,15 @@ class IfBlock(nodes.Node):
             scope.current_scope = scope.ScopeObject(scope.current_scope)
 
             cur = self[i]
-            statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent)
+
+            condition = cur['expression'].to_code(enclosed=True)
+
+            statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent, bindings_to_delete=bindings_to_delete)
             return_satisfaction_list.append(return_is_statisfied)
 
             if (cur['expression'].get_type().base != 'Bool'):
                 raise scope.SereneTypeError("Condition in if-statement must have type Bool.")
 
-            condition = cur['expression'].to_code()
             code += f'{oldindent}else if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
             scope.current_scope = scope.current_scope.parent
@@ -899,12 +933,18 @@ class IfBlock(nodes.Node):
             scope.current_scope = scope.ScopeObject(scope.current_scope)
 
             cur = self['else_branch']
-            statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent)
+            statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent, bindings_to_delete=bindings_to_delete)
             return_satisfaction_list.append(return_is_statisfied)
 
             code += f'{oldindent}else {{\n{newindent}{statements}{oldindent}}}\n'
 
             scope.current_scope = scope.current_scope.parent
+        
+        for s, name in bindings_to_delete:
+            if name in s:   # Avoid deleting binding multiple times
+                s.kill_binding(name)
+        
+        bindings_to_delete.clear()
         
         sub_indent()
 
