@@ -304,16 +304,20 @@ class ContinueStatement(nodes.Node):
 class ExpressionNode(nodes.Node):
     def get_type(self):
         if (self.count("term") > 1):
-            this_type = None
+            last_type = None
+            accum_type = None
             for x in self:
-                if x.nodetype != "term":
+                if last_type is None:
+                    last_type = x.get_type()
+                    accum_type = last_type
+                if x.nodetype == "infix_op" and "comparison_op" in x:
+                    accum_type = typecheck.TypeObject('Bool')
+                elif x.nodetype != "term":
                     continue
-                if this_type is None:
-                    this_type = x.get_type()
                 else:
-                    if x.get_type() != this_type:
+                    if x.get_type() != last_type:
                         raise scope.SereneTypeError(f"Mismatching types for infix operator(s) at line number {scope.line_number}.")
-            return this_type
+            return accum_type
         else:
             return self['term'].get_type()
     
@@ -863,6 +867,9 @@ class IfBlock(nodes.Node):
         statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent)
         return_satisfaction_list.append(return_is_statisfied)
 
+        if (cur['expression'].get_type().base != 'Bool'):
+            raise scope.SereneTypeError("Condition in if-statement must have type Bool.")
+
         condition = cur['expression'].to_code()
         code += f'if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
@@ -879,6 +886,9 @@ class IfBlock(nodes.Node):
             cur = self[i]
             statements, return_is_statisfied = StatementNode.process_statements(node=cur['statements'], indent=newindent)
             return_satisfaction_list.append(return_is_statisfied)
+
+            if (cur['expression'].get_type().base != 'Bool'):
+                raise scope.SereneTypeError("Condition in if-statement must have type Bool.")
 
             condition = cur['expression'].to_code()
             code += f'{oldindent}else if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
