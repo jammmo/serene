@@ -316,6 +316,11 @@ class ContinueStatement(nodes.Node):
         else:
             raise scope.SereneScopeError(f"'continue' cannot be used outside of a loop at line number {scope.line_number}.")
 
+class ExitStatement(nodes.Node):
+    def to_code(self):
+        self.satisfies_return = True
+        return f"exit({self.get_scalar('int_literal')});\n"
+
 class ExpressionNode(nodes.Node):
     def get_type(self):
         if (self.count("term") > 1):

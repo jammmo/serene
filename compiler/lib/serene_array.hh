@@ -12,8 +12,12 @@ public:
         items = data;
     }
 
-    int sn_length() {
+    int sn_length() const {
         return length;
+    }
+
+    Data const& operator[] (unsigned int index) const {
+        return items.at(index);
     }
 
     Data& operator[] (unsigned int index) {

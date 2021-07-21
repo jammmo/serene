@@ -17,7 +17,7 @@ public:
         items = data;
     }
     
-    int sn_length() {
+    int sn_length() const {
         return length;
     }
 
@@ -37,6 +37,10 @@ public:
         auto x = items.at(length - 1);
         sn_delete(length - 1);
         return x;
+    }
+
+    Data const& operator[] (unsigned int index) const {
+        return items.at(index);
     }
 
     Data& operator[] (unsigned int index) {

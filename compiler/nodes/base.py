@@ -65,6 +65,7 @@ class Node:
                 'return_statement':        nodes.ReturnStatement,
                 'break_statement':         nodes.BreakStatement,
                 'continue_statement':      nodes.ContinueStatement,
+                'exit_statement':          nodes.ExitStatement,
                 'expression':              nodes.ExpressionNode,
                 'term':                    nodes.TermNode,
                 'place_term':              nodes.PlaceTermNode,

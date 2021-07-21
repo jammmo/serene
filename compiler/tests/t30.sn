@@ -1,0 +1,45 @@
+function main() {
+    var x = Vector(1.4, 0.7, 63.0, 1.0, 1.0)
+    var y = Vector(0.7, 0.7, 21.0, 10.0, 0.0)
+
+    run divideElements(x, y)
+
+    run getFirst(x)
+
+    var z = Vector(Float)
+    run getFirst(z)
+
+    var a = justExit()
+}
+
+function getFirst(v: Vector{Float}) -> Float {
+    if (v.length() == 0) {
+        print "Vector is empty!"
+        exit 1
+    } else {
+        return v[0]
+    }
+}
+
+function divideElements(a: Vector{Float}, b: Vector{Float}) -> Vector{Float} {
+    if (a.length() != b.length()) {
+        print "Vector lengths do not match!"
+        exit 1
+    }
+
+    var c = Vector(Float)
+    for (i = 0, a.length()) {
+        if (b[i] == 0.0) {
+            print "Cannot divide by 0!"
+            exit 1
+        }
+        run c.append!(a[i] / b[i])
+    }
+    return c
+}
+
+function justExit() -> Int {        // Return type here is just to make sure compiler handles the case when a function never returns
+    while(True) {
+        exit 0
+    }
+}

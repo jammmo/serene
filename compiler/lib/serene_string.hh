@@ -23,7 +23,7 @@ public:
         }       
     }
     
-    int sn_length() {
+    int sn_length() const {
         return length;
     }
 
@@ -43,6 +43,10 @@ public:
         auto x = items.at(length - 1);
         sn_delete(length - 1);
         return x;
+    }
+
+    char const& operator[] (unsigned int index) const {
+        return items.at(index);
     }
 
     char& operator[] (unsigned int index) {

@@ -82,6 +82,7 @@ grammar Serene {
         | <return_statement>
         | <break_statement>
         | <continue_statement>
+        | <exit_statement>
         | <while_loop>
         | <for_loop>
         | <if_block>
@@ -117,9 +118,9 @@ grammar Serene {
 
     token identifier {
         [ [ 'look' || 'mutate' || 'move' || 'copy' || 'var' || 'const' || 'set' || 'function' || 'type' ||
-            'if' || 'elseif' || 'else' || 'for' || 'while' || 'break' || 'return' || 'and' || 'or' || 'not' ||
+            'if' || 'elseif' || 'else' || 'for' || 'while' || 'break' || 'continue' || 'exit' || 'return' || 'and' || 'or' || 'not' ||
             'run' || 'match' || 'struct' || 'import' || 'private' || 'in' ]
-          <|w> <error("Cannot use reserved keyword as identifier.")> ] ||
+          <|w> <error("")> ] ||         # This error should be "Cannot use reserved keyword as identifier.", however sometimes it gets mistakenly called when the error is actually something else.
         <.lower> <.alnum>*
     }
 
@@ -295,6 +296,10 @@ grammar Serene {
 
     rule continue_statement {
         'continue'
+    }
+
+    rule exit_statement {
+        'exit' <int_literal>
     }
 
     # Blocks
