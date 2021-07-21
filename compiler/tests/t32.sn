@@ -1,0 +1,6 @@
+include t31.sn
+
+function main() {
+    var a: BoxOfLightbulbs = BoxOfLightbulbs(Vector(Lightbulb(45), Lightbulb(45), Lightbulb(60)))
+    run useBulb(mutate a)
+}

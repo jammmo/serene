@@ -1,0 +1,15 @@
+// This file will be included by t32.sn
+
+type BoxOfLightbulbs struct {
+    contents: Vector{Lightbulb}
+}
+
+type Lightbulb struct {
+    watts: Int
+}
+
+function useBulb(mutate box: BoxOfLightbulbs) {
+    run box.contents.pop!()
+}
+
+// No main() is needed

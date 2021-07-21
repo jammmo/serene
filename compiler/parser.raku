@@ -68,7 +68,7 @@ grammar Serene {
 
     # Main language grammar
     token definitions {
-        [ <function> || <struct_definition> || [ <var_statement> || <const_statement>] <error("Global variables are not allowed.")> ]* %% <.separator>
+        [ <function> || <struct_definition> || <include_statement> || [ <var_statement> || <const_statement>] <error("Global variables are not allowed.")> ]* %% <.separator>
     }
     token statements {
          <statement>* %% [ <.separator> || <.ws> ';' <error("Statements are terminated with newline characters, not semicolons.")> ]
@@ -180,6 +180,14 @@ grammar Serene {
         'type' <base_type> 'struct' '{' <.separator>
         [ <struct_member> ',' <.separator> ]* [ <struct_member> <.separator> ]?
         '}'
+    }
+
+    rule include_statement {
+        'include' <file_name>
+    }
+
+    token file_name {
+        [ \w || "_" || "-" ]+ '.sn'
     }
 
     # Function definitions and calls

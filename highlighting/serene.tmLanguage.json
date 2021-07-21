@@ -25,11 +25,11 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.serene",
-				"match": "\\b(if|else|elseif|while|for|match|return|break|continue|either)\\b"
+				"match": "\\b(if|else|elseif|while|for|match|return|break|continue|exit|either)\\b"
 			},
 			{
 				"name": "keyword.other.serene",
-				"match": "\\b(let|set|var|const|run|print|import|or|and|not)\\b"
+				"match": "\\b(let|set|var|const|run|print|import|include|or|and|not)\\b"
 			},
 			{
 				"name": "storage.type.serene",
@@ -45,11 +45,7 @@
 			},
 			{
 				"name": "entity.name.type",
-				"match": "(?<=:\\s*)'?\\w+"
-			},
-			{
-				"name": "entity.name.type",
-				"match": "(?<=->\\s*)'?\\w+"
+				"match": "\\b[A-Z]\\w*\\b"
 			},
 			{
 				"name": "variable.parameter",
