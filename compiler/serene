@@ -68,7 +68,7 @@ if completed_process.returncode == 0:
         import compile
 
         if output_type == 'c':  # Compile and print generated C++ code to stdout; no files modified
-            cpp_code = compile.main(completed_process.stdout)
+            cpp_code = compile.main(completed_process.stdout, include_path=source_path.parent)
             print(cpp_code, end='')
         else:                   # Compile and save generated code to a temporary C++ file, then use g++ to compile to binary
             output_path = Path('.') / Path(args.output)     # Path('.') is the directory where the program is run, not the directory of the program itself
@@ -84,7 +84,7 @@ if completed_process.returncode == 0:
                 printerr('Invalid output file name.')
                 exit(1)
 
-            cpp_code = compile.main(completed_process.stdout)
+            cpp_code = compile.main(completed_process.stdout, include_path=source_path.parent)
             with open(here / Path('temp/generated.cc'), 'w') as file:
                 file.write(cpp_code)
 

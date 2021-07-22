@@ -1,6 +1,8 @@
 import yaml
 import textwrap
 import sys
+from pathlib import Path
+import subprocess
 
 from nodes import Node, StructDefinitionNode
 import scope
@@ -9,12 +11,47 @@ import typecheck
 def printerr(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-def main(my_yaml):
+def parse_additional(filename, include_path):
+    # Directory of this file ( /serene/compiler/ )
+    here = Path(__file__).parent.resolve()
+
+    # Run Raku-based parser
+    source_path = (include_path / Path(filename)).resolve()
+    if source_path.is_file():
+        completed_process = subprocess.run(['raku', 'parser.raku', source_path], cwd=here, capture_output=True, text=True)
+        printerr(completed_process.stderr, end='')
+    else:
+        printerr("Included file", filename, "does not exist.")
+        exit(1)
+
+    if completed_process.returncode == 0:
+        return completed_process.stdout
+    else:
+        exit(1)
+
+def main(my_yaml, include_path):
     try:
         tree = yaml.safe_load(my_yaml)[0]
     except yaml.YAMLError as e:
         printerr(e)
         exit(1)
+    
+    # Parse include statements and add to tree
+    i = 0
+    while i < len(tree['definitions']):
+        x = tree['definitions'][i]
+        if list(x.keys())[0] != 'include_statement':
+            i += 1
+            continue
+        included_yaml = parse_additional(x['include_statement'][0]['file_name'], include_path)
+        try:
+            included_tree = yaml.safe_load(included_yaml)[0]
+        except yaml.YAMLError as e:
+            printerr(e)
+            exit(1)
+        
+        tree['definitions'].pop(i)
+        tree['definitions'].extend(included_tree['definitions'])
 
     scope.definitions = Node.create(tree)
     scope.functions = []

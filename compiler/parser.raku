@@ -187,7 +187,7 @@ grammar Serene {
     }
 
     token file_name {
-        [ \w || "_" || "-" ]+ '.sn'
+        [ \w || "_" || "-" || "/" ]+ '.sn'
     }
 
     # Function definitions and calls

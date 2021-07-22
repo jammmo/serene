@@ -1,6 +1,21 @@
-include t31.sn
+function elementwise3DAdd(move a: Vector{Vector{Vector{Int}}}, move b: Vector{Vector{Vector{Int}}}) -> Vector{Vector{Vector{Int}}} {
+    for (i = 0, a.length()) {
+        for (j = 0, a[i].length()) {
+            for (k = 0, a[i][j].length()) {
+                set a[i][j][k] = a[i][j][k] + b[i][j][k]
+            }
+        }
+    }
+    return a
+}
 
 function main() {
-    var a: BoxOfLightbulbs = BoxOfLightbulbs(Vector(Lightbulb(45), Lightbulb(45), Lightbulb(60)))
-    run useBulb(mutate a)
+    var a = Vector( Vector(Vector(1, 2), Vector(-3, 6)) , Vector(Vector(9, 32), Vector(29, -1)) )
+    var b = Vector( Vector(Vector(3, 2), Vector(7, -2)) , Vector(Vector(-5, -28), Vector(-25, 5)) )
+
+    print "A  : ", a
+    print "B  : ", b
+
+    var c = elementwise3DAdd(move a, move b)
+    print "A+B: ", c
 }
