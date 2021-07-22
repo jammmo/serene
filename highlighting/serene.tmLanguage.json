@@ -9,6 +9,9 @@
 			"include": "#strings"
 		},
 		{
+			"include": "#characters"
+		},
+		{
 			"include": "#comments"
 		},
 		{
@@ -60,6 +63,15 @@
 			"name": "string.quoted.double.serene",
 			"begin": "\"",
 			"end": "\"",
+			"patterns": [{
+				"name": "constant.character.escape.serene",
+				"match": "\\\\."
+			}]
+		},
+		"characters": {
+			"name": "string.quoted.single.serene",
+			"begin": "'",
+			"end": "'",
 			"patterns": [{
 				"name": "constant.character.escape.serene",
 				"match": "\\\\."

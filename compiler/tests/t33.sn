@@ -1,0 +1,19 @@
+function main() {
+    print 'a'
+    print 'b'
+    print 'Y'
+    print 'Z'
+    print ' '
+    print '.'
+    print '/'
+    print '&'
+    print '@'
+    print '*'
+    print '\n'
+    print '\\'
+    print '\''
+
+    //print '..'      // should not compile
+    //print '\'       // should not compile
+    //print '¢'       // should not compile (no Unicode yet)
+}
