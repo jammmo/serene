@@ -10,7 +10,6 @@ grammar Serene {
             my $line = $*LAST + 1;
             if $line > $original.lines.elems {
                 note "Invalid syntax at end of file.";
-                note "Did not compile.";
                 exit(1);
             }
 
@@ -20,7 +19,6 @@ grammar Serene {
                 $line += 1;
                 if $line > $original.lines.elems {
                     note "Invalid syntax at end of file.";
-                    note "Did not compile.";
                     exit(1);
                 }
                 $text = $original.lines[$line - 1].trim();
@@ -35,7 +33,6 @@ grammar Serene {
             note "  - ", $message;
             note "";
         }
-        note "Did not compile.";
         exit(1);
     }
 

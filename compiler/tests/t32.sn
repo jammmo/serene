@@ -13,9 +13,10 @@ function main() {
     var a = Vector( Vector(Vector(1, 2), Vector(-3, 6)) , Vector(Vector(9, 32), Vector(29, -1)) )
     var b = Vector( Vector(Vector(3, 2), Vector(7, -2)) , Vector(Vector(-5, -28), Vector(-25, 5)) )
 
-    print "A  : ", a
-    print "B  : ", b
+    print "  A  : ", a
+    print "  B  : ", b
+    print ""
 
     var c = elementwise3DAdd(move a, move b)
-    print "A+B: ", c
+    print "A + B: ", c
 }

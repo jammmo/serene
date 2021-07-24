@@ -13,6 +13,8 @@ class TypeObject:
         self.base = base
         self.params = params
         assert type(self.base) == str
+        if self.base in ('Vector', 'Array'):
+            assert self.params is not None
     
     def __eq__(self, other):
         if isinstance(other, TypeObject):

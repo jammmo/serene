@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Type
+import sys
 import typecheck
 import scope
 import nodes
@@ -45,6 +46,15 @@ def get_cpp_type(my_type):
         return f"SN_{base}"
     else:
         raise scope.SereneTypeError(f"Unknown type: {my_type}.")
+
+# Utilities ___________________________________________________________________
+def printerr(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+class UnreachableError(Exception):
+    # UnreachableErrors are usually a sign of a bug (likely a change in the parser code that has not been accounted for in the compiler).
+    # Compare with NotImplementedError, which is used here for known future features that have not yet been implemented.
+    pass
 
 # Subclasses __________________________________________________________________
 
@@ -125,14 +135,25 @@ class FunctionParameterNode(nodes.Node):
         code += ' ' + 'sn_'+ var_name
 
         base_type = self['type'].get_scalar('base_type')
-        if len(self['type'].data) == 1 and (base_type in ('String', 'Char', 'Int', 'Float', 'Bool') or base_type in typecheck.user_defined_types):
-            my_type = typecheck.TypeObject(self['type'].get_scalar('base_type'))
-        else:
-            if base_type in ('Vector', 'Array'):
-                if len(self['type']['type'].data) == 1 and self['type']['type'].get_scalar('base_type') in ('String', 'Char', 'Int', 'Float', 'Bool'):
-                    my_type = typecheck.TypeObject(self['type'].get_scalar('base_type'), params=[typecheck.TypeObject(self['type']['type'].get_scalar('base_type'))])
+        L = [base_type]
+
+        cur = self['type']
+        while 'type' in cur:
+            if base_type not in ('Vector', 'Array'):
+                raise UnreachableError
+                               
+            cur = cur['type']
+            base_type = cur.get_scalar('base_type')
+
+            L.append(base_type)
+        
+        def get_my_type(i):
+            if i == len(L)-1:
+                return typecheck.TypeObject(L[i])
             else:
-                raise NotImplementedError(self['type']['base_type'].data)
+                return typecheck.TypeObject(L[i], params=[get_my_type(i+1)])
+        
+        my_type = get_my_type(0)
 
         # Adds to the scope INSIDE the function, not the scope where the function is defined
         scope.scope_for_setup.add_persistent_binding(scope.ParameterObject(var_name, accessor, my_type))
@@ -150,7 +171,7 @@ class TypeNode(nodes.Node):
         elif num_generic_params == 1:
             return typecheck.TypeObject(base, [self['type'].get_type()])
         else:
-            raise NotImplementedError
+            raise UnreachableError
 
     def to_code(self):
         return get_cpp_type(self.get_type())
@@ -421,7 +442,7 @@ class TermNode(nodes.Node):
             elif cur.nodetype == 'index_call':
                 L.append(cur.get_type(prev_type))
             else:
-                raise NotImplementedError           
+                raise UnreachableError          
         return L
     
     def get_type(self):
@@ -475,9 +496,8 @@ class TermNode(nodes.Node):
                         self.is_temporary = True
 
                     code += x.to_code(current_type)
-
                 else:
-                    raise NotImplementedError
+                    raise UnreachableError
         if place_term_relative_set:     # if this term is the left-hand side of something like 'set x[10] += 1', then 'x' must be added as a read access
             scope.current_scope.add_access(self.var_tup, 'look')
         else:  
@@ -532,9 +552,9 @@ class MethodCallNode(nodes.Node):
     def to_code(self, prev_type):
         code = ''
         if prev_type is None:
-            raise NotImplementedError
+            raise UnreachableError
         
-        if not (prev_type.base in ('Vector', 'Array') and prev_type.params[0].params is None) and not (prev_type.base == "String" and prev_type.params is None):
+        if prev_type.base not in ('Vector', 'Array', 'String'):
             raise NotImplementedError
 
         method_name = self.get_scalar('identifier')
@@ -579,10 +599,10 @@ class MethodCallNode(nodes.Node):
 
 class IndexCallNode(nodes.Node):
     def get_type(self, prev_type):
-        if prev_type.base in ('Vector', 'Array') and prev_type.params[0].params is None:
+        if prev_type.base in ('Vector', 'Array'):
             if self['expression'].get_type().base != 'Int':
                 raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
-            return typecheck.TypeObject(prev_type.params[0].base)
+            return prev_type.params[0]
         elif prev_type.base == 'String':
             if self['expression'].get_type().base != 'Int':
                 raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
@@ -607,7 +627,7 @@ class BaseExpressionNode(nodes.Node):
             elif 'char_literal' in self['literal']:
                 return typecheck.TypeObject('Char')
             else:
-                raise NotImplementedError
+                raise UnreachableError
         elif 'expression' in self:
             return self['expression'].get_type()
         elif 'identifier' in self:
@@ -627,7 +647,7 @@ class BaseExpressionNode(nodes.Node):
         elif 'constructor_call' in self:
             return self['constructor_call'].get_type()
         else:
-            raise NotImplementedError
+            raise UnreachableError
         
     def to_code(self):
         if 'function_call' in self:

@@ -95,7 +95,6 @@ def main(my_yaml, include_path):
             struct_definition_code.append(x.to_code())
     except (scope.SereneScopeError, scope.SereneTypeError) as exc:
         printerr("COMPILE ERROR:", exc.message, sep="\n")
-        printerr("Did not compile.")
         exit(1)
     except Exception as exc:
         printerr(f"At struct definition for '{x.get_scalar('base_type')}':")
