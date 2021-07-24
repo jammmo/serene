@@ -1,0 +1,54 @@
+type Pair struct {
+    x: Int,
+    y: Int,
+}
+
+type MatrixPair struct {
+    x: Vector{Vector{Int}},
+    y: Vector{Vector{Int}},
+}
+
+function discardPairArray(move a: Array{Pair}) {
+
+}
+
+function main() {
+    var a: Array{Array{Int}} = Array(Array(1, 2, 3, 4), Array(-1, -2, -3, -4))
+    print a.length()            // 2
+    print a[1].length()         // 4
+
+    var b: Vector{Vector{Int}} = Vector(Vector(1, 2, 3, 4), Vector(-1, -2, -3, -4))
+    print a[0][0] + b[0][0]     // 2
+
+    var c = b.pop!().pop!()
+    print c                     // -4
+
+    var d = Vector(Array(Pair(121, 442), Pair(914, 293)), Array(Pair(221, 452), Pair(910, 223)))
+
+    for (x in d) {
+        print x[1].x
+    }
+    // 914
+    // 910
+
+    run discardPairArray(move d.pop!())
+
+    var e = MatrixPair(Vector(Vector(0)), Vector(Vector(1)))
+    print e                                                        // { sn_x: [[0]], sn_y: [[1]] }
+
+    print MatrixPair(Vector(Vector(20)), Vector(Vector(30))).y     // [[30]]
+
+
+    //var f = Vector(Vector(Float), Vector(String))   // This should not compile
+
+    var g = Vector(Vector{Vector{Float}})   // empty vector with elements of type Vector{Vector{Float}}
+    print g                     // []
+
+    const h = Vector(Vector(4.5))
+    run g.append!(h)
+    print g                     // [[[4.5]]]
+
+    //const i = Array()       // This should not compile, as the element type is unknown
+
+    print Vector(1, 2, 3, 4, 5)
+}

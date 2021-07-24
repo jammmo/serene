@@ -140,7 +140,10 @@ class FunctionParameterNode(nodes.Node):
         cur = self['type']
         while 'type' in cur:
             if base_type not in ('Vector', 'Array'):
-                raise UnreachableError
+                if base_type in typecheck.user_defined_types:
+                    raise scope.SereneTypeError(f"Unnecessary type parameter specified for non-generic type '{base_type}'.")
+                else:
+                    raise scope.SereneTypeError(f"Unknown generic type: {base_type}.")
                                
             cur = cur['type']
             base_type = cur.get_scalar('base_type')
@@ -482,7 +485,7 @@ class TermNode(nodes.Node):
             x = self[i]
             if x.nodetype == 'field_access':
                 code += x.to_code()
-                if extend_var_tup:
+                if extend_var_tup and not self.is_temporary:
                     self.var_tup = self.var_tup + (x['identifier'],)
             else:
                 extend_var_tup = False
@@ -519,9 +522,8 @@ class FieldAccessNode(nodes.Node):
         field_name = self['identifier'].data
         if field_name in prev_type_spec.members:
             member_type = prev_type_spec.members[field_name]
-            if member_type.params is not None:
-                if member_type.base not in ('Vector', 'Array') or member_type.params[0].params is not None:
-                    raise NotImplementedError   # Nested generics
+            if member_type.params is not None and member_type.base not in ('Vector', 'Array'):
+                raise UnreachableError
             return member_type
         else:
             raise scope.SereneTypeError(f"Invalid field access in expression at line number {scope.line_number}.")
@@ -542,10 +544,10 @@ class MethodCallNode(nodes.Node):
                         raise scope.SereneTypeError(f"Method '{method_name}' in expression at line number {scope.line_number} has no return value.")
                 else:
                     return typecheck.TypeObject(method_return_type)
-            elif isinstance(method_return_type, typecheck.TypeVar) and (prev_type.base == 'Vector') and (prev_type.params[0].params is None) and (method_name == 'pop!'):
-                return typecheck.TypeObject(prev_type.params[0].base)
+            elif isinstance(method_return_type, typecheck.TypeVar) and (prev_type.base == 'Vector') and (method_name == 'pop!'):
+                return prev_type.params[0]
             else:
-                raise NotImplementedError
+                raise UnreachableError
         else:
             raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
             
@@ -555,7 +557,7 @@ class MethodCallNode(nodes.Node):
             raise UnreachableError
         
         if prev_type.base not in ('Vector', 'Array', 'String'):
-            raise NotImplementedError
+            raise UnreachableError
 
         method_name = self.get_scalar('identifier')
         if prev_type.base in typecheck.standard_types:
@@ -585,10 +587,10 @@ class MethodCallNode(nodes.Node):
             
             orig_type = orig_param.var_type
             if isinstance(orig_type, typecheck.TypeVar):
-                if prev_type.base in ('Vector', 'Array') and prev_type.params[0].params is None:
-                    orig_type = typecheck.TypeObject(prev_type.params[0].base)
+                if prev_type.base in ('Vector', 'Array'):
+                    orig_type = prev_type.params[0]
                 else:
-                    raise NotImplementedError
+                    raise UnreachableError
             
             c_param = self['function_call_parameters'][i]
             
@@ -719,9 +721,7 @@ class ConstructorCallNode(nodes.Node):
         elif type_name == 'Vector':
             if len(self['constructor_call_parameters'].data) == 1 and self['constructor_call_parameters'][0][0].nodetype == 'type':    # Vector(Int), Vector(String), etc.
                 type_node = self['constructor_call_parameters'][0][0]
-                if 'type' in type_node:
-                    raise NotImplementedError
-                return typecheck.TypeObject(base='Vector', params=[typecheck.TypeObject(base=type_node.get_scalar('base_type'))])
+                return typecheck.TypeObject(base='Vector', params=[type_node.get_type()])
             elif len(self['constructor_call_parameters'].data) >= 1 and self['constructor_call_parameters'][0][0].nodetype == 'expression':
                 return typecheck.TypeObject(base='Vector', params=[self['constructor_call_parameters'][0][0].get_type()])
             else:
@@ -754,9 +754,7 @@ class ConstructorCallNode(nodes.Node):
         elif type_name == 'Vector':
             if len(self['constructor_call_parameters'].data) == 1 and self['constructor_call_parameters'][0][0].nodetype == 'type':    # Vector(Int), Vector(String), etc.
                 type_node = self['constructor_call_parameters'][0][0]
-                if 'type' in type_node:
-                    raise NotImplementedError
-                type_param = get_cpp_type(typecheck.TypeObject(base=type_node.get_scalar('base_type')))
+                type_param = get_cpp_type(type_node.get_type())
                 return f"SN_Vector<{type_param}>()"
             elif len(self['constructor_call_parameters'].data) >= 1 and self['constructor_call_parameters'][0][0].nodetype == 'expression':
                 elems = []
@@ -852,15 +850,15 @@ class ForLoopNode(nodes.Node):
             code = f'for (int sn_{loopvar} = {startval}; sn_{loopvar} < {endval}; sn_{loopvar}++) {{\n{newindent}{statements}{oldindent}}}\n'
         else:
             expr_type = self['expression'].get_type()
-            if expr_type.base in ('Array', 'Vector') and expr_type.params[0].params is None:
-                var_type = expr_type.params[0].base
-                scope.current_scope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=typecheck.TypeObject(var_type)))
+            if expr_type.base in ('Array', 'Vector'):
+                var_type = expr_type.params[0]
+                scope.current_scope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
             else:
-                raise NotImplementedError
+                raise scope.SereneTypeError(f"Type '{expr_type.base}' is not iterable, at line number {scope.line_number}.")
             
             myrange = self['expression'].to_code()
             statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous line due to the side effects
-            cpp_type = get_cpp_type(typecheck.TypeObject(var_type))
+            cpp_type = get_cpp_type(var_type)
             code = f'for (const {cpp_type}& sn_{loopvar} : {myrange}) {{\n{newindent}{statements}{oldindent}}}\n'
         
         sub_indent()
@@ -1036,11 +1034,22 @@ class StructDefinitionNode(nodes.Node):
             for x in value.members.values():
                 if x.base in typecheck.user_defined_types:
                     L.append(x.base)
-                elif x.params is not None:
-                    if x.base in ('Vector', 'Array') and x.params[0].base in typecheck.user_defined_types:
-                        L.append(x.params[0].base)
-                    else:
-                        raise NotImplementedError
+                elif x.base in ('Vector', 'Array'):
+                    y = x.params[0]
+                    while True:
+                        if y.base in typecheck.user_defined_types:
+                            L.append(x.params[0].base)
+                            break
+                        elif y.base in ('Vector', 'Array'):
+                            y = y.params[0]
+                        elif y.params is None:
+                            break
+                        else:
+                            raise UnreachableError
+                elif x.params is None:
+                    continue
+                else:
+                    raise UnreachableError
             G[key] = L
         
         S = G.copy()    # shallow copy (adjacency lists are aliased between S and G)
