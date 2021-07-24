@@ -500,7 +500,8 @@ class FieldAccessNode(nodes.Node):
         if field_name in prev_type_spec.members:
             member_type = prev_type_spec.members[field_name]
             if member_type.params is not None:
-                raise NotImplementedError   # Member with generic type
+                if member_type.base not in ('Vector', 'Array') or member_type.params[0].params is not None:
+                    raise NotImplementedError   # Nested generics
             return member_type
         else:
             raise scope.SereneTypeError(f"Invalid field access in expression at line number {scope.line_number}.")
@@ -524,7 +525,7 @@ class MethodCallNode(nodes.Node):
             elif isinstance(method_return_type, typecheck.TypeVar) and (prev_type.base == 'Vector') and (prev_type.params[0].params is None) and (method_name == 'pop!'):
                 return typecheck.TypeObject(prev_type.params[0].base)
             else:
-                raise NotImplementedError   # Member with generic type
+                raise NotImplementedError
         else:
             raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
             
@@ -1007,11 +1008,20 @@ class StructDefinitionNode(nodes.Node):
     @staticmethod
     def topological_ordering():
         # Consider struct definitions as a directed graph
-        G: dict = typecheck.user_defined_types.copy()
+        G = dict()
 
         # We don't want the whole TypeSpecification object, just a list of adjacent nodes. (We also don't want to modify the TypeSpecification objects, which are used elsewhere.)
-        for key, value in G.items():
-            G[key] = [x.base for x in value.members.values() if x.base in typecheck.user_defined_types]
+        for key, value in typecheck.user_defined_types.items():
+            L = []
+            for x in value.members.values():
+                if x.base in typecheck.user_defined_types:
+                    L.append(x.base)
+                elif x.params is not None:
+                    if x.base in ('Vector', 'Array') and x.params[0].base in typecheck.user_defined_types:
+                        L.append(x.params[0].base)
+                    else:
+                        raise NotImplementedError
+            G[key] = L
         
         S = G.copy()    # shallow copy (adjacency lists are aliased between S and G)
 
