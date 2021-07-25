@@ -21,9 +21,9 @@ function test2() {
 }
 
 function test3() {
-    const base = 5 //the type Int is implied here
-    const height = 8
-    const area: Float = (1/2) * base * height
+    const base = 5.0 //the type Float is implied here
+    const height = 8.0
+    const area: Float = (1.0/2.0) * base * height
     print area, " inches"
 }
 

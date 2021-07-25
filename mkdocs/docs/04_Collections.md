@@ -11,7 +11,7 @@ An array is a fixed-length sequence elements, where all of the elements are the 
 // Array u must be already sorted
 function binarySearch(u: Array{Int}, x: Int) -> Int {
 	var low = 0
-    var high = u.length
+    var high = u.length()
 	while (low < high) {
 		var mid = (low + high) / 2	// integer division
 		if (u[mid] < x) {
@@ -39,7 +39,7 @@ An vector is similar to an array, except its length can be changed after creatio
 // Vector u must be already sorted
 function binarySearchAndDelete(mutate u: Vector{Int}, x: Int) {
 	var low = 0
-    var high = u.length
+    var high = u.length()
 	while (low < high) {
 		var mid = (low + high) / 2
 		if (u[mid] < x) {
@@ -55,14 +55,14 @@ function binarySearchAndDelete(mutate u: Vector{Int}, x: Int) {
 
 function main() {
 	var u = Vector(Int)					// creates an empty vector of integers
-	print "Length of u: ", u.length		// Length of u: 0
+	print "Length of u: ", u.length()   // Length of u: 0
 	for (i = 0, 5) {
 		run u.append!(i * 2)
 	}
-	print "Length of u: ", u.length		// Length of u: 5
+	print "Length of u: ", u.length()	// Length of u: 5
 	print u								// [0, 2, 4, 6, 8]
 	run binarySearchAndDelete(u, 6)
-	print "Length of u: ", u.length		// Length of u: 4
+	print "Length of u: ", u.length()	// Length of u: 4
 	print u								// [0, 2, 4, 8]
 }
 ```

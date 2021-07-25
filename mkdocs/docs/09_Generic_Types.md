@@ -28,7 +28,7 @@ type Region{T: type} with
 ~ specifics {
     method add(new_value: T) -> Handle{Region{T}} {
         run self.vector.append(NewValue)
-        const handle = Handle(Region{T}, vector.length - 1)
+        const handle = Handle(Region{T}, vector.length() - 1)
         return handle
     }
 

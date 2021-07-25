@@ -28,25 +28,28 @@ function findMax(u: Vector{Int}) -> Int {
 			set max = x
 		}
 	}
+	return max
 }
 
 function findMax2(u: Vector{Int}) -> Int {
 	var max = Int.bottom
-	for (i = 0, u.length) {	//iterates from 0 up to (but not including) the length of u
+	for (i = 0, u.length()) {	//iterates from 0 up to (but not including) the length of u
 		if (u[i] > max) {
 			set max = u[i]
 		}
 	}
+	return max
 }
 
 function findMax3(u: Vector{Int}) -> Int {
 	var max = Int.bottom
 	var i: Int = 0
-	while (i < u.length) {
+	while (i < u.length()) {
 		if (u[i] > max) {	
 			set max = u[i]
 		}
 	}
+	return max
 }
 ```
 

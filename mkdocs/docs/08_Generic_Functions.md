@@ -8,7 +8,7 @@ Generic parameters are types, so they must be start with capital letters like an
 
 ```serene
 function elementInArray{T: type} (move elem: T, arr: Array{T}) -> Some{T} {
-    for (i = 0, arr.length) {
+    for (i = 0, arr.length()) {
         if (arr[i] == elem) {
             return Some(elem)
         }
@@ -22,7 +22,7 @@ function elementInArray2{A: type, B: type} (move elem: A, arr: B) -> Option{A} w
     A: Simple,
     B: Array{A} {
 
-    for (i = 0, arr.length) {
+    for (i = 0, arr.length()) {
         if (arr[i] == elem) {
             return Some(elem)
         }

@@ -18,7 +18,7 @@ When passing a value to a function, there are four ways you can do it. You need 
 
 `look`: Look is the default behavior for function parameters, so there's no keyword required. It passes a value to a function immutably, meaning that the value cannot be altered anywhere in the function, regardless of whether the value you are passing is a literal value, a `var`, or a `const`. This also means that if function `a()` takes a value by `look`, function `a()` can't pass that value to a function `b()` that takes it by `mutate` or `move`. It can, however, pass that value to another function by `copy`, as copying a value leaves the original value unaffected.
 
-`mutate`: Mutate effectively "borrows" the value from its original scope, allowing it to be mutated within the function as if it is a local variable. Once the function returns, ownership of the (now modified) value will return to the original scope. `mutate` is one of only two places that aliasing behavior (where mutating one variable also mutates another) exists in Serene. The other is `bind`, which is introduced later in this section. This behavior can be confusing in other languages (which is part of why Serene doesn't have pointers), but Serene makes the behavior explicit to the reader by requiring the keyword `mutate` both where the function is defined *and* where it is called. Note that you can't past a constant (`const`) as a `mutate` parameter, as once a constant is created, it can never be mutated. Also if function `a()` takes a value by `mutate`, function `a()` still can't pass that value to a function `b()` that takes it by `move`, as the value must still exist when the function returns.
+`mutate`: Mutate effectively "borrows" the value from its original scope, allowing it to be mutated within the function as if it is a local variable. Once the function returns, ownership of the (now modified) value will return to the original scope. `mutate` is one of only two places that aliasing behavior (where mutating one variable also mutates another) exists in Serene. The other is `bind`, which is introduced later in this section. This behavior can be confusing in other languages (which is part of why Serene doesn't have pointers), but Serene makes the behavior explicit to the reader by requiring the keyword `mutate` both where the function is defined *and* where it is called. Note that you can't pass a constant (`const`) as a `mutate` parameter, as once a constant is created, it can never be mutated. Also if function `a()` takes a value by `mutate`, function `a()` still can't pass that value to a function `b()` that takes it by `move`, as the value must still exist when the function returns.
 
 `move`: If you've used Rust or modern C++, you've probably heard of Move semantics. `move` transfers ownership of an object from one scope to another. If you pass a variable to a function by `move`, that variable won't exist anymore when the function returns. You can move both variables and constants. If you move a variable into a function, that function will be able to mutate the variable with `set`, just as if it was declared locally.
 
@@ -27,15 +27,15 @@ When passing a value to a function, there are four ways you can do it. You need 
 ```serene
 function middleChar(s: String, mutate c: Char) {
     // Find the character at the middle index of a string
-    const length = s.length
-    const middle = Int(length / 2)
+    const length = s.length()
+    const middle: Int = length / 2
     set c = s[middle]
 }
 
 function removeChar(mutate s: String, c: Char) {
     // Remove all instances of a character in a string
     var i = 0
-    while (i < s.length) {
+    while (i < s.length()) {
         if (s[i] == c) {
         	// Exclamation marks are required for methods that mutate the object they act on
             run s.delete!(i)
@@ -66,7 +66,7 @@ function main() {
     run middleChar(name, mutate letter)
 
     var new_name = name		// copies name
-    run removeChar(mutate new_name, c)
+    run removeChar(mutate new_name, letter)
     
 	const mixed_up = "edcabfg"
 	print sortedCopy(copy mixed_up)		// mixed_up is not modified
