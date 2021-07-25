@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Type
-import sys
+
+from serene_common import *
 import typecheck
 import scope
 import nodes
@@ -45,12 +46,9 @@ def get_cpp_type(my_type):
     elif base in typecheck.user_defined_types:
         return f"SN_{base}"
     else:
-        raise scope.SereneTypeError(f"Unknown type: {my_type}.")
+        raise SereneTypeError(f"Unknown type: {my_type}.")
 
 # Utilities ___________________________________________________________________
-def printerr(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
 class UnreachableError(Exception):
     # UnreachableErrors are usually a sign of a bug (likely a change in the parser code that has not been accounted for in the compiler).
     # Compare with NotImplementedError, which is used here for known future features that have not yet been implemented.
@@ -98,7 +96,7 @@ class FunctionNode(nodes.Node):
         statements, return_is_statisfied = StatementNode.process_statements(node=self['statements'], indent=newindent, satisfied=return_is_statisfied)
         
         if not return_is_statisfied:
-            raise scope.SereneTypeError(f"Function '{self.get_scalar('identifier')}' is missing a return value in at least one execution path.")
+            raise SereneTypeError(f"Function '{self.get_scalar('identifier')}' is missing a return value in at least one execution path.")
 
         if (statements != ''):
             code = f'{func_type} sn_{func_name}({func_parameters}) {{\n{newindent}{statements}{oldindent}}}'
@@ -141,9 +139,9 @@ class FunctionParameterNode(nodes.Node):
         while 'type' in cur:
             if base_type not in ('Vector', 'Array'):
                 if base_type in typecheck.user_defined_types:
-                    raise scope.SereneTypeError(f"Unnecessary type parameter specified for non-generic type '{base_type}'.")
+                    raise SereneTypeError(f"Unnecessary type parameter specified for non-generic type '{base_type}'.")
                 else:
-                    raise scope.SereneTypeError(f"Unknown generic type: {base_type}.")
+                    raise SereneTypeError(f"Unknown generic type: {base_type}.")
                                
             cur = cur['type']
             base_type = cur.get_scalar('base_type')
@@ -234,7 +232,7 @@ class VarStatement(nodes.Node):
         if 'type' in self:
             written_type = self['type'].get_type()
             if written_type != expr_type:
-                raise scope.SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
+                raise SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
 
         scope.current_scope.add_binding(scope.VariableObject(var_name, mutable=True, var_type=expr_type))
 
@@ -251,7 +249,7 @@ class ConstStatement(nodes.Node):
         if 'type' in self:
             written_type = self['type'].get_type()
             if written_type != expr_type:
-                raise scope.SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
+                raise SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
 
         scope.current_scope.add_binding(scope.VariableObject(var_name, mutable=False, var_type=expr_type))
 
@@ -264,7 +262,7 @@ class SetStatement(nodes.Node):
 
         if 'place_term' in self:
             if self['place_term']['base_expression'][0].nodetype != 'identifier':
-                raise scope.SereneTypeError(f"Invalid expression for left-hand side of 'set' statement at line number {scope.line_number}.")
+                raise SereneTypeError(f"Invalid expression for left-hand side of 'set' statement at line number {scope.line_number}.")
             var_name = self['place_term']['base_expression'].get_scalar('identifier')
 
             if assign_op != '=':
@@ -285,11 +283,11 @@ class SetStatement(nodes.Node):
         expr_type = self['expression'].get_type()
 
         if expr_type != correct_type:
-            raise scope.SereneTypeError(f"Incorrect type for assignment to variable '{var_name}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
+            raise SereneTypeError(f"Incorrect type for assignment to variable '{var_name}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
 
         if assign_op != '=':
             if expr_type.base not in ('Int', 'Float'):
-                raise scope.SereneTypeError(f"Incorrect type for '{assign_op}' assignment operator at line number {scope.line_number}.")
+                raise SereneTypeError(f"Incorrect type for '{assign_op}' assignment operator at line number {scope.line_number}.")
 
         scope.current_scope.check_set(var_name)
         return f'{lhs_code} {assign_op} {expr_code};\n'
@@ -316,13 +314,13 @@ class ReturnStatement(nodes.Node):
         if type(self.data) == nodes.NodeMap:
             expr_code = self['expression'].to_code()
             if scope.current_func_type is None:
-                raise scope.SereneTypeError(f"Cannot return value from function with no return type at line number {scope.line_number}.")
+                raise SereneTypeError(f"Cannot return value from function with no return type at line number {scope.line_number}.")
             if self['expression'].get_type() != scope.current_func_type:
-                raise scope.SereneTypeError(f"Incorrect type for return statement at line number {scope.line_number}.")
+                raise SereneTypeError(f"Incorrect type for return statement at line number {scope.line_number}.")
             return f'return {expr_code};\n'
         else:
             if scope.current_func_type is not None:
-                raise scope.SereneTypeError(f"Return statement at line number {scope.line_number} has no value.")
+                raise SereneTypeError(f"Return statement at line number {scope.line_number} has no value.")
             return 'return;\n'
 
 class BreakStatement(nodes.Node):
@@ -330,7 +328,7 @@ class BreakStatement(nodes.Node):
         if len(scope.loops) > 0:
             return 'break;\n'
         else:
-            raise scope.SereneScopeError(f"'break' cannot be used outside of a loop at line number {scope.line_number}.")
+            raise SereneScopeError(f"'break' cannot be used outside of a loop at line number {scope.line_number}.")
 
 class ContinueStatement(nodes.Node):
     def to_code(self):
@@ -338,7 +336,7 @@ class ContinueStatement(nodes.Node):
             self.satisfies_return = scope.loops[-1].is_infinite
             return 'continue;\n'
         else:
-            raise scope.SereneScopeError(f"'continue' cannot be used outside of a loop at line number {scope.line_number}.")
+            raise SereneScopeError(f"'continue' cannot be used outside of a loop at line number {scope.line_number}.")
 
 class ExitStatement(nodes.Node):
     def to_code(self):
@@ -360,7 +358,7 @@ class ExpressionNode(nodes.Node):
                     continue
                 else:
                     if x.get_type() != last_type:
-                        raise scope.SereneTypeError(f"Mismatching types for infix operator(s) at line number {scope.line_number}.")
+                        raise SereneTypeError(f"Mismatching types for infix operator(s) at line number {scope.line_number}.")
             return accum_type
         else:
             return self['term'].get_type()
@@ -384,21 +382,21 @@ class ExpressionNode(nodes.Node):
             if (cur.nodetype == 'unary_op'):
                 if cur.data == 'not':
                     if self[i+1].get_type().base != 'Bool':
-                        raise scope.SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
+                        raise SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
                 code += cur.data + (' ' if cur.data != '-' else '')
             elif (cur.nodetype == 'infix_op'):
                 if type(cur.data) != str:
                     if cur.get_scalar(0) in ('>', '<', '>=', '<='):
                         if self[i-1].get_type().base not in ('Int', 'Float', 'String', 'Char'):
-                            raise scope.SereneTypeError(f"Incorrect type for inequality expression at line number {scope.line_number}.")
+                            raise SereneTypeError(f"Incorrect type for inequality expression at line number {scope.line_number}.")
                     code += ' ' + cur.get_scalar(0) + ' '
                 else:
                     if cur.data in ('and', 'or'):
                         if self[i-1].get_type().base != 'Bool':
-                           raise scope.SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
+                           raise SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
                     elif cur.data in ('+', '-', '*', '/', '%'):
                         if self[i-1].get_type().base not in ('Int', 'Float'):
-                           raise scope.SereneTypeError(f"Incorrect type for numeric expression at line number {scope.line_number}.")                 
+                           raise SereneTypeError(f"Incorrect type for numeric expression at line number {scope.line_number}.")                 
                     code += ' ' + cur.data + ' '
             elif cur.nodetype == 'term':
                 last_term = cur
@@ -436,7 +434,7 @@ class TermNode(nodes.Node):
             elif prev_type.base in typecheck.user_defined_types:
                 prev_type_spec = typecheck.user_defined_types[prev_type.base]
             else:
-                raise scope.SereneTypeError(f"Unknown type in expression at line number {scope.line_number}.")
+                raise SereneTypeError(f"Unknown type in expression at line number {scope.line_number}.")
             
             if cur.nodetype == 'field_access':
                 L.append(cur.get_type(prev_type_spec))
@@ -451,7 +449,7 @@ class TermNode(nodes.Node):
     def get_type(self):
         this_type = self.get_type_sequence()[-1]
         if this_type is None:
-            raise scope.SereneTypeError(f"Value of expression at line number {scope.line_number} is void.")
+            raise SereneTypeError(f"Value of expression at line number {scope.line_number} is void.")
         else:
             return this_type
     
@@ -526,7 +524,7 @@ class FieldAccessNode(nodes.Node):
                 raise UnreachableError
             return member_type
         else:
-            raise scope.SereneTypeError(f"Invalid field access in expression at line number {scope.line_number}.")
+            raise SereneTypeError(f"Invalid field access in expression at line number {scope.line_number}.")
 
     def to_code(self):
         return '.sn_' + self.get_scalar('identifier')
@@ -541,7 +539,7 @@ class MethodCallNode(nodes.Node):
                     if is_last:
                         return None
                     else:
-                        raise scope.SereneTypeError(f"Method '{method_name}' in expression at line number {scope.line_number} has no return value.")
+                        raise SereneTypeError(f"Method '{method_name}' in expression at line number {scope.line_number} has no return value.")
                 else:
                     return typecheck.TypeObject(method_return_type)
             elif isinstance(method_return_type, typecheck.TypeVar) and (prev_type.base == 'Vector') and (method_name == 'pop!'):
@@ -549,7 +547,7 @@ class MethodCallNode(nodes.Node):
             else:
                 raise UnreachableError
         else:
-            raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
+            raise SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
             
     def to_code(self, prev_type):
         code = ''
@@ -567,9 +565,9 @@ class MethodCallNode(nodes.Node):
             else:
                 full_method_name = method_name
             if full_method_name not in orig_type.methods:
-                raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
+                raise SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
         else:
-            raise scope.SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
+            raise SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
         code = '.sn_' + method_name + '('
 
         params = []
@@ -577,9 +575,9 @@ class MethodCallNode(nodes.Node):
         num_called_params = len(self['function_call_parameters'].data)
 
         if num_called_params > len(orig_params):
-            raise scope.SereneScopeError(f"Method '{method_name}' is given too many parameters when called at line number {scope.line_number}.")
+            raise SereneScopeError(f"Method '{method_name}' is given too many parameters when called at line number {scope.line_number}.")
         if num_called_params < len(orig_params):
-            raise scope.SereneScopeError(f"Function '{method_name}' is given too few parameters when called at line number {scope.line_number}.")
+            raise SereneScopeError(f"Function '{method_name}' is given too few parameters when called at line number {scope.line_number}.")
 
         for i in range(num_called_params):
             orig_param = orig_params[i]
@@ -603,14 +601,14 @@ class IndexCallNode(nodes.Node):
     def get_type(self, prev_type):
         if prev_type.base in ('Vector', 'Array'):
             if self['expression'].get_type().base != 'Int':
-                raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+                raise SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
             return prev_type.params[0]
         elif prev_type.base == 'String':
             if self['expression'].get_type().base != 'Int':
-                raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+                raise SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
             return typecheck.TypeObject('Char')
         else:
-            raise scope.SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
+            raise SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
     
     def to_code(self):
         return '[' + self['expression'].to_code() + ']'
@@ -635,7 +633,7 @@ class BaseExpressionNode(nodes.Node):
         elif 'identifier' in self:
             var_name = self.get_scalar('identifier')
             if not scope.current_scope.check_read(var_name):
-                raise scope.SereneTypeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
+                raise SereneTypeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
             return scope.current_scope.get_type_of(var_name)
         elif 'function_call' in self:
             for y in scope.functions:
@@ -643,7 +641,7 @@ class BaseExpressionNode(nodes.Node):
                     break
             original_function = y
             if 'type' not in original_function:
-                raise scope.SereneTypeError(f"Function '{self['function_call'].get_scalar('identifier')}' with no return value cannot be used as an expression at line number {scope.line_number}.")
+                raise SereneTypeError(f"Function '{self['function_call'].get_scalar('identifier')}' with no return value cannot be used as an expression at line number {scope.line_number}.")
             else:
                 return original_function['type'].get_type()
         elif 'constructor_call' in self:
@@ -661,7 +659,7 @@ class BaseExpressionNode(nodes.Node):
             if scope.current_scope.check_read(var_name):     # If the variable also needs to be mutated/moved, that will already be checked within TermNode or ExpressionNode
                 return 'sn_' + var_name
             else:
-                raise scope.SereneScopeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
+                raise SereneScopeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
         elif 'literal' in self:
             if 'bool_literal' in self['literal']:
                 return self['literal'].get_scalar(0).lower()
@@ -675,7 +673,7 @@ class BaseExpressionNode(nodes.Node):
 class FunctionCallNode(nodes.Node):
     def to_code(self):
         if self.get_scalar('identifier') not in scope.function_names:
-            raise scope.SereneScopeError(f"Function '{self.get_scalar('identifier')}' is not defined at line number {scope.line_number}.")
+            raise SereneScopeError(f"Function '{self.get_scalar('identifier')}' is not defined at line number {scope.line_number}.")
         code = 'sn_' + self.get_scalar('identifier') + '('
 
         num_called_params = len(self['function_call_parameters'].data) if type(self['function_call_parameters'].data) == nodes.NodeMap else 0
@@ -689,9 +687,9 @@ class FunctionCallNode(nodes.Node):
         else:
             num_original_params = len(original_function['function_parameters'].data)
         if num_called_params > num_original_params:
-            raise scope.SereneScopeError(f"Function '{self.get_scalar('identifier')}' is given too many parameters when called at line number {scope.line_number}.")
+            raise SereneScopeError(f"Function '{self.get_scalar('identifier')}' is given too many parameters when called at line number {scope.line_number}.")
         if num_called_params < num_original_params:
-            raise scope.SereneScopeError(f"Function '{self.get_scalar('identifier')}' is given too few parameters when called at line number {scope.line_number}.")
+            raise SereneScopeError(f"Function '{self.get_scalar('identifier')}' is given too few parameters when called at line number {scope.line_number}.")
 
         params = []
         for i in range(num_called_params):
@@ -717,7 +715,7 @@ class ConstructorCallNode(nodes.Node):
             if len(self['constructor_call_parameters'].data) >= 1 and self['constructor_call_parameters'][0][0].nodetype == 'expression':
                 return typecheck.TypeObject(base='Array', params=[self['constructor_call_parameters'][0][0].get_type()])
             else:
-                raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")        
+                raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")        
         elif type_name == 'Vector':
             if len(self['constructor_call_parameters'].data) == 1 and self['constructor_call_parameters'][0][0].nodetype == 'type':    # Vector(Int), Vector(String), etc.
                 type_node = self['constructor_call_parameters'][0][0]
@@ -725,11 +723,11 @@ class ConstructorCallNode(nodes.Node):
             elif len(self['constructor_call_parameters'].data) >= 1 and self['constructor_call_parameters'][0][0].nodetype == 'expression':
                 return typecheck.TypeObject(base='Vector', params=[self['constructor_call_parameters'][0][0].get_type()])
             else:
-                raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
         elif type_name in typecheck.user_defined_types:
             return typecheck.TypeObject(base=type_name)
         else:
-            raise scope.SereneTypeError(f"Type constructor called at line number {scope.line_number} is not defined.")
+            raise SereneTypeError(f"Type constructor called at line number {scope.line_number} is not defined.")
     
     def to_code(self):
         type_name = self.get_scalar("base_type")
@@ -740,17 +738,17 @@ class ConstructorCallNode(nodes.Node):
                 for i in range(len(self['constructor_call_parameters'].data)):
                     cur = self['constructor_call_parameters'][i][0]
                     if cur.nodetype != 'expression':
-                        raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                        raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
                     elems.append(cur.to_code())
                     if elem_type is None:
                         elem_type = cur.get_type()
                     elif elem_type != cur.get_type():
-                        raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                        raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
                 inner_code = '{' + ', '.join(elems) + '}'
                 type_param = get_cpp_type(elem_type)
                 return f"SN_Array<{type_param}>({inner_code})"
             else:
-               raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.") 
+               raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.") 
         elif type_name == 'Vector':
             if len(self['constructor_call_parameters'].data) == 1 and self['constructor_call_parameters'][0][0].nodetype == 'type':    # Vector(Int), Vector(String), etc.
                 type_node = self['constructor_call_parameters'][0][0]
@@ -762,42 +760,42 @@ class ConstructorCallNode(nodes.Node):
                 for i in range(len(self['constructor_call_parameters'].data)):
                     cur = self['constructor_call_parameters'][i][0]
                     if cur.nodetype != 'expression':
-                        raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                        raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
                     elems.append(cur.to_code())
                     if elem_type is None:
                         elem_type = cur.get_type()
                     elif elem_type != cur.get_type():
-                        raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                        raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
                 inner_code = '{' + ', '.join(elems) + '}'
                 type_param = get_cpp_type(elem_type)
                 return f"SN_Vector<{type_param}>({inner_code})"
             else:
-                raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
         elif type_name in typecheck.user_defined_types:
             type_spec = typecheck.user_defined_types[type_name]
             fields = []
             field_type = None
 
             if len(self['constructor_call_parameters'].data) > len(type_spec.constructor_params):
-                raise scope.SereneTypeError(f"Constructor for type '{type_name}' is given too many parameters when called at line number {scope.line_number}.")
+                raise SereneTypeError(f"Constructor for type '{type_name}' is given too many parameters when called at line number {scope.line_number}.")
             if len(self['constructor_call_parameters'].data) < len(type_spec.constructor_params):
-                raise scope.SereneTypeError(f"Constructor for type '{type_name}' is given too few parameters when called at line number {scope.line_number}.")
+                raise SereneTypeError(f"Constructor for type '{type_name}' is given too few parameters when called at line number {scope.line_number}.")
 
             for i in range(len(self['constructor_call_parameters'].data)):
                 cur = self['constructor_call_parameters'][i][0]
                 if cur.nodetype != 'expression':
-                    raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                    raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
                 
                 field_type = type_spec.members[type_spec.constructor_params[i]]
                 if field_type != cur.get_type():
-                    raise scope.SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+                    raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
                 
                 fields.append(cur.to_code())
             
             inner_code = '{' + ', '.join(fields) + '}'
             return f"SN_{type_name} {inner_code}"
         else:
-            raise scope.SereneTypeError(f"Type constructor called at line number {scope.line_number} is not defined.")
+            raise SereneTypeError(f"Type constructor called at line number {scope.line_number} is not defined.")
         
 
 class FunctionCallParameterNode(nodes.Node):
@@ -809,17 +807,17 @@ class FunctionCallParameterNode(nodes.Node):
 
         if original_type != self['expression'].get_type():
             if method:
-                raise scope.SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to method '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
+                raise SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to method '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
             else:
-                raise scope.SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to function '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
+                raise SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to function '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
 
         code = self['expression'].to_code(surrounding_accessor=my_accessor) # This will raise exceptions for incorrect accesses
 
         if (not self['expression'].is_temporary) and (my_accessor != original_accessor) and (my_accessor != 'copy'):
             if method:
-                raise scope.SereneScopeError(f"Method '{function_name}' is called with incorrect accessor for parameter '{param_name}' at line number {scope.line_number}.")
+                raise SereneScopeError(f"Method '{function_name}' is called with incorrect accessor for parameter '{param_name}' at line number {scope.line_number}.")
             else:
-                raise scope.SereneScopeError(f"Function '{function_name}' is called with incorrect accessor for parameter '{param_name}' at line number {scope.line_number}.")
+                raise SereneScopeError(f"Function '{function_name}' is called with incorrect accessor for parameter '{param_name}' at line number {scope.line_number}.")
 
         return code
 
@@ -840,7 +838,7 @@ class ForLoopNode(nodes.Node):
         if self.count('expression') == 2:   # start and endpoint
             var_type = self[1].get_type()
             if var_type != self[2].get_type():
-                raise scope.SereneTypeError(f"Mismatching types in for-loop at line number {scope.line_number}.")
+                raise SereneTypeError(f"Mismatching types in for-loop at line number {scope.line_number}.")
             scope.current_scope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
 
             startval = self[1].to_code()
@@ -854,7 +852,7 @@ class ForLoopNode(nodes.Node):
                 var_type = expr_type.params[0]
                 scope.current_scope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
             else:
-                raise scope.SereneTypeError(f"Type '{expr_type.base}' is not iterable, at line number {scope.line_number}.")
+                raise SereneTypeError(f"Type '{expr_type.base}' is not iterable, at line number {scope.line_number}.")
             
             myrange = self['expression'].to_code()
             statements = newindent.join([x.to_code() for x in self['statements']])  # This must be run AFTER the previous line due to the side effects
@@ -925,7 +923,7 @@ class IfBlock(nodes.Node):
         return_satisfaction_list.append(return_is_statisfied)
 
         if (cur['expression'].get_type().base != 'Bool'):
-            raise scope.SereneTypeError("Condition in if-statement must have type Bool.")
+            raise SereneTypeError("Condition in if-statement must have type Bool.")
 
         code += f'if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
@@ -947,7 +945,7 @@ class IfBlock(nodes.Node):
             return_satisfaction_list.append(return_is_statisfied)
 
             if (cur['expression'].get_type().base != 'Bool'):
-                raise scope.SereneTypeError("Condition in if-statement must have type Bool.")
+                raise SereneTypeError("Condition in if-statement must have type Bool.")
 
             code += f'{oldindent}else if ({condition}) {{\n{newindent}{statements}{oldindent}}}\n'
 
@@ -996,7 +994,7 @@ class MatchBlock(nodes.Node):
                         conditions.append('(' + x[i].to_code() + ' == ' + subject + ')')
                         expr_type = x[i].get_type()
                         if expr_type != subject_type:
-                            raise scope.SereneTypeError(f"Incorrect type in match statement at line number {scope.line_number}. Type must match subject of type '{subject_type}'.")
+                            raise SereneTypeError(f"Incorrect type in match statement at line number {scope.line_number}. Type must match subject of type '{subject_type}'.")
                     
                     conditions = ' or '.join(conditions)
                     if 'statements' in x:
@@ -1058,7 +1056,7 @@ class StructDefinitionNode(nodes.Node):
         for vertex, edges in G.items():
             for adjacent_vertex in edges:
                 if adjacent_vertex == vertex:   # Represents a recursive type, which is not currently allowed
-                    raise scope.SereneTypeError(f"Struct '{vertex}' cannot have fields of its own type.")
+                    raise SereneTypeError(f"Struct '{vertex}' cannot have fields of its own type.")
                 if adjacent_vertex in S:
                     S.pop(adjacent_vertex)
         # S should now contain nodes with no incoming edges
@@ -1090,7 +1088,7 @@ class StructDefinitionNode(nodes.Node):
         for vertex, edges in G.items():
             if len(edges) > 0:
                 # Graph has a cycle, and no topological ordering exists
-                raise scope.SereneTypeError("Cyclic struct definitions found, which cannot be constructed.")
+                raise SereneTypeError("Cyclic struct definitions found, which cannot be constructed.")
         return [x[0] for x in L]
 
     def get_type_spec(self):
@@ -1101,7 +1099,7 @@ class StructDefinitionNode(nodes.Node):
             x = self[i]
             member_name = x.get_scalar('identifier')
             if (member_name in members) or (member_name in methods):
-                raise scope.SereneTypeError(f"Found multiple definitions for member '{member_name}' of struct '{self.get_scalar('base_type')}'.")
+                raise SereneTypeError(f"Found multiple definitions for member '{member_name}' of struct '{self.get_scalar('base_type')}'.")
             members[member_name] = x['type'].get_type()
             constructor_params.append(member_name)
         return typecheck.TypeSpecification(members=members, methods=methods, constructor_params=constructor_params)

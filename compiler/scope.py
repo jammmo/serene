@@ -1,20 +1,9 @@
 from __future__ import annotations
 import sys
 
-def printerr(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+from serene_common import *
 
 line_number = 1
-
-class SereneScopeError(Exception):
-    def __init__(self, message):
-        self.message = message
-        super().__init__(self.message)
-
-class SereneTypeError(Exception):
-    def __init__(self, message):
-        self.message = message
-        super().__init__(self.message)
 
 class VariableObject:
     def __init__(self, name, mutable, var_type):

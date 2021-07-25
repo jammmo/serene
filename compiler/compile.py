@@ -4,12 +4,11 @@ import sys
 from pathlib import Path
 import subprocess
 
+from serene_common import *
 from nodes import Node, StructDefinitionNode
 import scope
 import typecheck
 
-def printerr(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
 
 def parse_additional(filename, include_path):
     # Directory of this file ( /serene/compiler/ )
@@ -67,7 +66,7 @@ def main(my_yaml, include_path):
         elif x.nodetype == 'struct_definition':
             struct_name = x.get_scalar('base_type')
             if (struct_name in typecheck.user_defined_types) or (struct_name in typecheck.standard_types):
-                raise scope.SereneTypeError(f"Found duplicate type definition for type '{struct_name}'.")
+                raise SereneTypeError(f"Found duplicate type definition for type '{struct_name}'.")
             else:
                 struct_definitions.append(x)
                 typecheck.user_defined_types[struct_name] = x.get_type_spec()
@@ -83,7 +82,7 @@ def main(my_yaml, include_path):
 
     try:
         sorted_structs = StructDefinitionNode.topological_ordering()
-    except (scope.SereneTypeError) as exc:
+    except (SereneTypeError) as exc:
         printerr("COMPILE ERROR:", exc.message, sep="\n")
         exit(1)
     
@@ -93,7 +92,7 @@ def main(my_yaml, include_path):
         for x in struct_definitions:
             #struct_forward_declarations.append(x.to_forward_declaration())     # Not currently needed
             struct_definition_code.append(x.to_code())
-    except (scope.SereneScopeError, scope.SereneTypeError) as exc:
+    except (SereneScopeError, SereneTypeError) as exc:
         printerr("COMPILE ERROR:", exc.message, sep="\n")
         exit(1)
     except Exception as exc:
@@ -107,7 +106,7 @@ def main(my_yaml, include_path):
             function_forward_declarations.append(x.to_forward_declaration())
         for x in scope.functions:
             function_code.append(x.to_code())
-    except (scope.SereneScopeError, scope.SereneTypeError) as exc:
+    except (SereneScopeError, SereneTypeError) as exc:
         printerr("COMPILE ERROR:", exc.message, sep="\n")
         exit(1)
     except Exception as exc:

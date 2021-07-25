@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from serene_common import *
 import scope
 
 class TypeSpecification:

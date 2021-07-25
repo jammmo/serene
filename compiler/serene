@@ -4,8 +4,7 @@ from __future__ import print_function
 import sys
 import shutil
 
-def printerr(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+from serene_common import *
 
 # Check basic requirements
 if sys.version_info < (3, 6):
