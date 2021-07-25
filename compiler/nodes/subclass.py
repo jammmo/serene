@@ -409,7 +409,7 @@ class ExpressionNode(nodes.Node):
             else:
                 raise TypeError
         
-        self.is_temporary = (self.count('term') > 1) or (last_term.is_temporary)
+        self.is_temporary = ('infix_op' in self) or ('unary_op' in self) or (last_term.is_temporary)
         if not self.is_temporary and surrounding_accessor == 'move':
             code = f"std::move({code})"
         
