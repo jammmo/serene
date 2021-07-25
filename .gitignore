@@ -2,8 +2,8 @@ archived/
 compiler/outputs/
 compiler/temp/
 compiler/htmlcov/
-compiler/__pycache__/
-compiler/nodes/__pycache__/
+__pycache__/
+*.pyc
 .mypy_cache
 .vscode
 mkdocs/site/
