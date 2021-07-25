@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from serene_common import *
-import scope
+from src import scope
 
 class TypeSpecification:
     def __init__(self, members: dict, methods: dict, typevar: TypeVar | None = None, constructor_params = None):

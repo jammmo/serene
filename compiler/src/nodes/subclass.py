@@ -2,9 +2,7 @@ from __future__ import annotations
 from typing import Type
 
 from serene_common import *
-import typecheck
-import scope
-import nodes
+from src import typecheck, scope, nodes
 
 indent_level = 0
 

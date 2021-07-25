@@ -51,7 +51,7 @@ here = Path(__file__).parent.resolve()
 # Run Raku-based parser
 source_path = Path(args.INPUT).resolve()
 if source_path.is_file():
-    completed_process = subprocess.run(['raku', 'parser.raku', source_path], cwd=here, capture_output=True, text=True)
+    completed_process = subprocess.run(['raku', 'src/parser.raku', source_path], cwd=here, capture_output=True, text=True)
     printerr(completed_process.stderr, end='')
 else:
     printerr("File", args.INPUT, "does not exist.")
@@ -64,7 +64,7 @@ if completed_process.returncode == 0:
         printerr('Running compile.py now...')
         printerr()
 
-        import compile
+        from src import compile
 
         if output_type == 'c':  # Compile and print generated C++ code to stdout; no files modified
             cpp_code = compile.main(completed_process.stdout, include_path=source_path.parent)

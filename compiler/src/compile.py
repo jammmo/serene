@@ -5,19 +5,18 @@ from pathlib import Path
 import subprocess
 
 from serene_common import *
-from nodes import Node, StructDefinitionNode
-import scope
-import typecheck
+from src import scope, typecheck
+from src.nodes import Node, StructDefinitionNode
 
 
 def parse_additional(filename, include_path):
-    # Directory of this file ( /serene/compiler/ )
-    here = Path(__file__).parent.resolve()
+    # Directory of /serene/compiler/
+    compiler_dir = Path(__file__).parent.resolve().parent
 
     # Run Raku-based parser
     source_path = (include_path / Path(filename)).resolve()
     if source_path.is_file():
-        completed_process = subprocess.run(['raku', 'parser.raku', source_path], cwd=here, capture_output=True, text=True)
+        completed_process = subprocess.run(['raku', 'src/parser.raku', source_path], cwd=compiler_dir, capture_output=True, text=True)
         printerr(completed_process.stderr, end='')
     else:
         printerr("Included file", filename, "does not exist.")
@@ -116,11 +115,11 @@ def main(my_yaml, include_path):
     code = textwrap.dedent("""\
                            #include <iostream>
                            #include <cstdint>
-                           #include "../lib/serene_printing.hh"
-                           #include "../lib/serene_array.hh"
-                           #include "../lib/serene_string.hh"
-                           #include "../lib/serene_vector.hh"
-                           #include "../lib/serene_locale.hh"
+                           #include "../src/lib/serene_printing.hh"
+                           #include "../src/lib/serene_array.hh"
+                           #include "../src/lib/serene_string.hh"
+                           #include "../src/lib/serene_vector.hh"
+                           #include "../src/lib/serene_locale.hh"
                            
                            """)
     #code += ('\n'.join(struct_forward_declarations)   + '\n\n') if len(struct_forward_declarations) > 0 else ''        #Not currently needed
