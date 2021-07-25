@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Type
 
-from serene_common import *
+from src.common import *
 from src import typecheck, scope, nodes
 
 indent_level = 0

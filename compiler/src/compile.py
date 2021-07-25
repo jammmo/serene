@@ -4,9 +4,9 @@ import sys
 from pathlib import Path
 import subprocess
 
-from serene_common import *
-from src import scope, typecheck
+from src.common import *
 from src.nodes import Node, StructDefinitionNode
+from src import scope, typecheck
 
 
 def parse_additional(filename, include_path):

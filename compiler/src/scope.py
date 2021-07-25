@@ -1,7 +1,7 @@
 from __future__ import annotations
 import sys
 
-from serene_common import *
+from src.common import *
 
 line_number = 1
 

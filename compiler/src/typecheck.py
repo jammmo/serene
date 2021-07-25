@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from serene_common import *
+from src.common import *
 from src import scope
 
 class TypeSpecification:

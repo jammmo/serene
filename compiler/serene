@@ -4,7 +4,7 @@ from __future__ import print_function
 import sys
 import shutil
 
-from serene_common import *
+from src.common import *
 
 # Check basic requirements
 if sys.version_info < (3, 6):
