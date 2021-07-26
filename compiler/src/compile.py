@@ -55,15 +55,15 @@ def main(my_yaml, include_path):
     scope.functions = []
     struct_definitions = []
     for x in scope.definitions:
-        if x.nodetype == 'function':
-            if x['identifier'].data in scope.function_names:
-                printerr("COMPILE ERROR:", f"Function '{x['identifier'].data}' has more than one definition.", sep="\n")
+        if x.nodetype == Symbol.function:
+            if x[Symbol.identifier].data in scope.function_names:
+                printerr("COMPILE ERROR:", f"Function '{x[Symbol.identifier].data}' has more than one definition.", sep="\n")
                 exit(1)
             else:
                 scope.functions.append(x)
-                scope.function_names.append(x['identifier'].data)
-        elif x.nodetype == 'struct_definition':
-            struct_name = x.get_scalar('base_type')
+                scope.function_names.append(x[Symbol.identifier].data)
+        elif x.nodetype == Symbol.struct_definition:
+            struct_name = x.get_scalar(Symbol.base_type)
             if (struct_name in typecheck.user_defined_types) or (struct_name in typecheck.standard_types):
                 raise SereneTypeError(f"Found duplicate type definition for type '{struct_name}'.")
             else:
@@ -85,7 +85,7 @@ def main(my_yaml, include_path):
         printerr("COMPILE ERROR:", exc.message, sep="\n")
         exit(1)
     
-    struct_definitions.sort(key=lambda x: sorted_structs.index(x.get_scalar('base_type')), reverse=True)
+    struct_definitions.sort(key=lambda x: sorted_structs.index(x.get_scalar(Symbol.base_type)), reverse=True)
 
     try:
         for x in struct_definitions:
@@ -95,7 +95,7 @@ def main(my_yaml, include_path):
         printerr("COMPILE ERROR:", exc.message, sep="\n")
         exit(1)
     except Exception as exc:
-        printerr(f"At struct definition for '{x.get_scalar('base_type')}':")
+        printerr(f"At struct definition for '{x.get_scalar(Symbol.base_type)}':")
         raise exc
 
     function_code = []
