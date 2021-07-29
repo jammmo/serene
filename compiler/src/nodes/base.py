@@ -56,6 +56,7 @@ class Node:
             assert(len(D) == 1)
             mapping = {
                 Symbol.function:                nodes.FunctionNode,
+                Symbol.method_definition:       nodes.MethodDefinitionNode,
                 Symbol.function_parameter:      nodes.FunctionParameterNode,
                 Symbol.type:                    nodes.TypeNode,
                 Symbol.statement:               nodes.StatementNode,

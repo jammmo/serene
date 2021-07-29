@@ -1,0 +1,40 @@
+type Person struct {
+    name: String
+} with
+  ~ definitions {
+        method introduce() {
+            print "Hi, I'm ", name, "!"
+        }
+
+        method reverse_name!() {
+            var a = ""
+            for (i = 0, name.length()) {
+                run a.append!(name.pop!())
+            }
+            set name = a
+        }
+
+        method has_name(other: String) -> Bool {
+            return name == other
+        }
+
+        method set_name!(move other: String) {
+            set name = other
+        }
+    }
+
+function main() {
+    var a = Person("Bill")
+    run a.introduce()
+    run a.reverse_name!()
+    run a.introduce()
+
+    print a.has_name("Bob")
+
+    var b = "Bob"
+    run a.set_name!(move b)
+
+    print a.has_name("Bob")
+
+    //print b  // should not compile
+}

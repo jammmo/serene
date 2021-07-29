@@ -177,6 +177,25 @@ grammar Serene {
         'type' <base_type> 'struct' '{' <.separator>
         [ <struct_member> ',' <.separator> ]* [ <struct_member> <.separator> ]?
         '}'
+        [ 'with' <.separator> [ <extension>+ % <.separator> ] ]?
+    }
+
+    rule extension {
+        <definitions_extension> || <policies_extension>
+    }
+
+    rule definitions_extension {
+        "~" 'definitions' '{' <.separator>
+        <method_definitions>
+        '}'
+    }
+
+    rule policies_extension {
+        "~" 'policies' '{' <error("Policies are not yet supported.")>
+    }
+
+    rule method_definitions {
+        [ <method_definition>* %% <.separator> ]
     }
 
     rule include_statement {
@@ -190,6 +209,15 @@ grammar Serene {
     # Function definitions and calls
     rule function {
         'function' <identifier>
+        '(' <function_parameters> ')'
+        [ '->' <type> ]?
+        '{' <.separator>
+        <statements>
+        '}'
+    }
+
+    rule method_definition {
+        'method' <identifier> <mutate_method_symbol>?
         '(' <function_parameters> ')'
         [ '->' <type> ]?
         '{' <.separator>

@@ -28,23 +28,23 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.serene",
-				"match": "\\b(if|else|elseif|while|for|match|return|break|continue|exit|either)\\b"
+				"match": "\\b(if|else|elseif|while|for|match|return|break|continue|exit|either|definitions|policies)\\b"
+			},
+			{
+				"name": "keyword.control.serene",
+				"match": "^\\s*~"
 			},
 			{
 				"name": "keyword.other.serene",
-				"match": "\\b(let|set|var|const|run|print|import|include|or|and|not)\\b"
+				"match": "\\b(let|set|var|const|run|print|import|include|or|and|not|with)\\b"
 			},
 			{
 				"name": "storage.type.serene",
-				"match": "\\b(function|method|interface|type|subscript)\\b"
+				"match": "\\b(function|method|interface|type|struct|subscript)\\b"
 			},
 			{
 				"name": "storage.type.modifier",
 				"match": "\\b(mut|mutate|move|copy)\\b"
-			},
-			{
-				"name": "variable.parameter",
-				"match": "(?<=^~\\s*)\\w+"
 			},
 			{
 				"name": "entity.name.type",
@@ -57,7 +57,7 @@
 		},
 		"function_names": {
 			"name": "entity.name.function",
-			"match": "((?<=function\\s)|(?<=method\\s)|(?<=subscript\\s))\\w+"
+			"match": "((?<=function\\s)|(?<=method\\s)|(?<=subscript\\s))\\w+!?"
 		},
 		"strings": {
 			"name": "string.quoted.double.serene",

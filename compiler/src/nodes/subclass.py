@@ -79,7 +79,6 @@ class FunctionNode(nodes.Node):
         newindent, oldindent = add_indent()
 
         scope.current_scope = self.my_scope
-        scope.current_func_name = self.get_scalar(Symbol.identifier)
 
         if Symbol.type in self:
             scope.current_func_type = self[Symbol.type].get_type()
@@ -97,14 +96,69 @@ class FunctionNode(nodes.Node):
             raise SereneTypeError(f"Function '{self.get_scalar(Symbol.identifier)}' is missing a return value in at least one execution path.")
 
         if (statements != ''):
-            code = f'{func_type} sn_{func_name}({func_parameters}) {{\n{newindent}{statements}{oldindent}}}'
+            code = f'{oldindent}{func_type} sn_{func_name}({func_parameters}) {{\n{newindent}{statements}{oldindent}}}'
         else:
-            code = f'{func_type} sn_{func_name}({func_parameters}) {{\n\n{oldindent}}}'
+            code = f'{oldindent}{func_type} sn_{func_name}({func_parameters}) {{\n\n{oldindent}}}'
 
         sub_indent()
         scope.current_scope = scope.current_scope.parent
+        scope.current_func_type = None
 
-        scope.current_func_name = None  # For now, function definitions cannot be nested
+        return code
+
+class MethodDefinitionNode(nodes.Node):
+    def to_tuple_description(self, parent_scope):
+        # Should be used while struct definitions are being processed and before method definitions are processed (as it calls FunctionParameterNode.setup)
+        
+        # return tuple similar to ("delete!", ("", [scope.ParameterObject('index', 'look', TypeObject('Int'))]))
+
+        parameter_list = []
+        self.my_scope = scope.ScopeObject(parent=parent_scope)
+        scope.scope_for_setup = self.my_scope
+        for x in self[Symbol.function_parameters]:
+            x.setup()
+            parameter_list.append(scope.scope_for_setup[x.get_scalar(Symbol.identifier)])
+
+        if Symbol.type in self:
+            func_type = self[Symbol.type].get_type()
+            if func_type.params is not None:
+                raise NotImplementedError
+        else:
+            func_type = None
+        
+        func_name = self.get_scalar(Symbol.identifier)
+        if Symbol.mutate_method_symbol in self:
+            func_name = func_name + '!'
+        
+        return (func_name, (func_type, parameter_list))
+
+    def to_code(self):
+        newindent, oldindent = add_indent()
+
+        scope.current_scope = self.my_scope
+
+        if Symbol.type in self:
+            scope.current_func_type = self[Symbol.type].get_type()
+            func_type = self[Symbol.type].to_code()  # C++ return type
+            return_is_statisfied = False
+        else:
+            func_type = 'void'
+            return_is_statisfied = True     # No need to return a value anywhere
+        func_name = self.get_scalar(Symbol.identifier)
+        func_parameters = ', '.join([x.to_code() for x in self[Symbol.function_parameters]])
+
+        statements, return_is_statisfied = StatementNode.process_statements(node=self[Symbol.statements], indent=newindent, satisfied=return_is_statisfied)
+
+        if not return_is_statisfied:
+            raise SereneTypeError(f"Method '{self.get_scalar(Symbol.identifier)}' is missing a return value in at least one execution path.")
+
+        if (statements != ''):
+            code = f'{oldindent}{func_type} sn_{func_name}({func_parameters}) {{\n{newindent}{statements}{oldindent}}}'
+        else:
+            code = f'{oldindent}{func_type} sn_{func_name}({func_parameters}) {{\n\n{oldindent}}}'
+
+        sub_indent()
+        scope.current_scope = scope.current_scope.parent
         scope.current_func_type = None
 
         return code
@@ -532,17 +586,17 @@ class MethodCallNode(nodes.Node):
         method_name = self[Symbol.identifier].data + ('!' if Symbol.mutate_method_symbol in self else '')
         if method_name in prev_type_spec.methods:
             method_return_type = prev_type_spec.methods[method_name][0]
-            if type(method_return_type) == str:
-                if method_return_type == '':
-                    if is_last:
-                        return None
-                    else:
-                        raise SereneTypeError(f"Method '{method_name}' in expression at line number {scope.line_number} has no return value.")
+            if method_return_type is None:
+                if is_last:
+                    return None
                 else:
-                    return typecheck.TypeObject(method_return_type)
+                    raise SereneTypeError(f"Method '{method_name}' in expression at line number {scope.line_number} has no return value.")
+            elif isinstance(method_return_type, typecheck.TypeObject):
+                return method_return_type
             elif isinstance(method_return_type, typecheck.TypeVar) and (prev_type.base == 'Vector') and (method_name == 'pop!'):
                 return prev_type.params[0]
             else:
+                printerr(type(method_return_type))
                 raise UnreachableError
         else:
             raise SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
@@ -552,20 +606,21 @@ class MethodCallNode(nodes.Node):
         if prev_type is None:
             raise UnreachableError
         
-        if prev_type.base not in ('Vector', 'Array', 'String'):
-            raise UnreachableError
-
         method_name = self.get_scalar(Symbol.identifier)
         if prev_type.base in typecheck.standard_types:
             orig_type = typecheck.standard_types[prev_type.base]
-            if Symbol.mutate_method_symbol in self:
-                full_method_name = method_name + '!'
-            else:
-                full_method_name = method_name
-            if full_method_name not in orig_type.methods:
-                raise SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
+        elif prev_type.base in typecheck.user_defined_types:
+            orig_type = typecheck.user_defined_types[prev_type.base]
         else:
+            raise UnreachableError
+    
+        if Symbol.mutate_method_symbol in self:
+            full_method_name = method_name + '!'
+        else:
+            full_method_name = method_name
+        if full_method_name not in orig_type.methods:
             raise SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
+
         code = '.sn_' + method_name + '('
 
         params = []
@@ -1090,16 +1145,35 @@ class StructDefinitionNode(nodes.Node):
         return [x[0] for x in L]
 
     def get_type_spec(self):
+        self.my_scope = scope.ScopeObject(scope.top_scope)
+
         members = {}
         methods = {}
         constructor_params = []
         for i in range(1, len(self.data)):
             x = self[i]
+            if x.nodetype == Symbol.extension:
+                continue
             member_name = x.get_scalar(Symbol.identifier)
-            if (member_name in members) or (member_name in methods):
+            if (member_name in members):
                 raise SereneTypeError(f"Found multiple definitions for member '{member_name}' of struct '{self.get_scalar(Symbol.base_type)}'.")
             members[member_name] = x[Symbol.type].get_type()
             constructor_params.append(member_name)
+
+            self.my_scope.add_persistent_binding(scope.VariableObject(name=member_name, mutable=True, var_type=members[member_name]))
+
+        if Symbol.extension in self:
+            if Symbol.definitions_extension in self[Symbol.extension]:
+                method_definitions = self[Symbol.extension][Symbol.definitions_extension][Symbol.method_definitions]
+                for x in method_definitions:
+                    tup = x.to_tuple_description(self.my_scope)
+                    bare_name = tup[0][0:-1] if tup[0][-1] == '!' else tup[0]
+                    if bare_name in methods or bare_name in members:
+                        raise SereneTypeError(f"Found multiple definitions for member '{member_name}' of struct '{self.get_scalar(Symbol.base_type)}'.")
+                    else:
+                        methods[tup[0]] = tup[1]
+            else:
+                raise UnreachableError
         return typecheck.TypeSpecification(members=members, methods=methods, constructor_params=constructor_params)
     
     def to_forward_declaration(self):
@@ -1112,6 +1186,8 @@ class StructDefinitionNode(nodes.Node):
         visiting_params = [f"SN_{struct_name}"]
         for i in range(1, len(self.data)):
             x = self[i]
+            if x.nodetype == Symbol.extension:
+                continue
             member_name = x.get_scalar(Symbol.identifier)
             member_type = x[Symbol.type].get_type()
             visiting_params.append(f"sn_{member_name}")
@@ -1120,8 +1196,13 @@ class StructDefinitionNode(nodes.Node):
 
         inner_code += f"\n    friend std::ostream& operator<<(std::ostream& os, const SN_{struct_name}& obj) {{\n        print_struct(os, obj);\n        return os;\n    }}\n"
 
+        if Symbol.extension in self and Symbol.definitions_extension in self[Symbol.extension]:
+            method_definitions = self[Symbol.extension][Symbol.definitions_extension][Symbol.method_definitions]
+            add_indent()
+            inner_code += '\n' + '\n\n'.join([x.to_code() for x in method_definitions]) + '\n'
+            sub_indent()
+
         visiting_code = ", ".join(visiting_params)
         code = f"struct SN_{struct_name} {{\n{inner_code}}};\n"
         code += f"VISITABLE_STRUCT({visiting_code});"
         return code
-

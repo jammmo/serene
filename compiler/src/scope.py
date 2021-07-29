@@ -211,7 +211,6 @@ current_scope = top_scope
 scope_for_setup = None
 current_statement = None
 current_enclosure = None
-current_func_name = None
 current_func_type = None
 loops: list = []
 functions = None
