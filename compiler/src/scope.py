@@ -5,10 +5,11 @@ from src.common import *
 line_number = 1
 
 class VariableObject:
-    def __init__(self, name, mutable, var_type):
+    def __init__(self, name, mutable, var_type, is_field = False):
         self.name = name
         self.mutable = mutable
         self.var_type = var_type
+        self.is_field = is_field
         assert type(self.var_type) != str
     
     def __repr__(self):
@@ -25,7 +26,7 @@ class ParameterObject:
         return f'<VariableObject {self.name}>'
 
 class ScopeObject:
-    def __init__(self, parent, loop = False):
+    def __init__(self, parent, loop = False, nonmut_method = False):
         self.bindings = dict()
         
         # This is used for function signatures. When a parameter goes out of scope in the function body, it is
@@ -35,6 +36,7 @@ class ScopeObject:
         self.subscopes = []
         self.parent = parent
         self.loop = loop or (self.parent.loop if self.parent is not None else False)
+        self.nonmut_method = nonmut_method or (self.parent.nonmut_method if self.parent is not None else False)
         if self.parent is not None:
             self.parent.subscopes.append(self)
 
@@ -93,6 +95,8 @@ class ScopeObject:
                 if type(cur[name]) == VariableObject:
                     if not cur[name].mutable:
                         raise SereneScopeError(f"Cannot mutate a const identifier, at line number {line_number}.")
+                    if cur[name].is_field and self.nonmut_method:
+                        raise SereneScopeError(f"Cannot mutate a field in a non-mutating method, at line number {line_number}.")
                     return
                 elif type(cur[name]) == ParameterObject:
                     if cur[name].accessor == 'look':
@@ -138,6 +142,8 @@ class ScopeObject:
             if type(x[0]) == VariableObject:
                 if not x[0].mutable:
                     raise SereneScopeError(f"Cannot mutate a const identifier, at line number {line_number}.")
+                if x[0].is_field and self.nonmut_method:
+                    raise SereneScopeError(f"Cannot mutate a field in a non-mutating method, at line number {line_number}.")
             elif type(x[0]) == ParameterObject:
                 if x[0].accessor == 'look':
                     raise SereneScopeError(f"Cannot mutate a 'look' parameter, at line number {line_number}.")
@@ -165,7 +171,7 @@ class ScopeObject:
                     raise SereneScopeError(f"Cannot mutate '{conflicting_path}' multiple times in single statement, at line number {line_number}.")
         
         for x in current_enclosure.delete_list:
-            if len(x) > 1:
+            if len(x) > 1 or ((type(x[0]) == VariableObject) and (x[0].is_field)):
                 raise SereneScopeError(f"Struct fields cannot be moved, at line number {line_number}.")
             
             if type(x[0]) == VariableObject:

@@ -1,0 +1,45 @@
+function main() {
+    var z = Holder("Hello world!")
+
+    var a = "See you later!"
+
+    run z.change_to_match_inside(mutate a)
+
+    run z.change_to_match_inside(mutate z.inside) // Is this okay?
+
+    run discard(move z.inside)   // This should not compile: cannot move a struct member
+
+    run z.print_inside()
+
+    run z.steal!(move z.inside) // Is this okay? No?
+}
+
+type Holder struct {
+    inside: String
+} with
+  ~ definitions {
+        method print_inside() {
+            run self.print_string(inside)   // is self needed here, or should print_string(inside) work?
+            // Method definition order shouldn't matter, so it is fine that print_string is defined below
+        }
+
+        method print_string(a: String) {
+            print a
+        }
+
+        method change_to_match_inside(mutate a: String) {   // Is this okay?
+            set a = inside
+        }
+
+        method steal!(move a: String) {
+            set inside = a
+        }
+
+        // method bad_steal(move a: String) {  // This should not compile: "!" on name is needed because self is mutated
+        //     set inside = a
+        // }
+    }
+
+function discard(move x: String) {
+
+}

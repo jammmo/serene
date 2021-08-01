@@ -113,7 +113,7 @@ class MethodDefinitionNode(nodes.Node):
         # return tuple similar to ("delete!", ("", [scope.ParameterObject('index', 'look', TypeObject('Int'))]))
 
         parameter_list = []
-        self.my_scope = scope.ScopeObject(parent=parent_scope)
+        self.my_scope = scope.ScopeObject(parent=parent_scope, nonmut_method=(Symbol.mutate_method_symbol not in self))
         scope.scope_for_setup = self.my_scope
         for x in self[Symbol.function_parameters]:
             x.setup()
@@ -730,10 +730,13 @@ class FunctionCallNode(nodes.Node):
         code = 'sn_' + self.get_scalar(Symbol.identifier) + '('
 
         num_called_params = len(self[Symbol.function_call_parameters].data) if type(self[Symbol.function_call_parameters].data) == nodes.NodeMap else 0
+        original_function = None
         for y in scope.functions:
             if self.get_scalar(Symbol.identifier) == y.get_scalar(Symbol.identifier):
+                original_function = y
                 break
-        original_function = y
+        if original_function is None:
+            raise UnreachableError
 
         if type(original_function[Symbol.function_parameters].data) != nodes.NodeMap:
             num_original_params = 0
@@ -1160,7 +1163,7 @@ class StructDefinitionNode(nodes.Node):
             members[member_name] = x[Symbol.type].get_type()
             constructor_params.append(member_name)
 
-            self.my_scope.add_persistent_binding(scope.VariableObject(name=member_name, mutable=True, var_type=members[member_name]))
+            self.my_scope.add_persistent_binding(scope.VariableObject(name=member_name, mutable=True, var_type=members[member_name], is_field=True))
 
         if Symbol.extension in self:
             if Symbol.definitions_extension in self[Symbol.extension]:

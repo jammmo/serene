@@ -76,9 +76,6 @@ def main(my_yaml, include_path):
         printerr("COMPILE ERROR:", "No 'main()' function is defined.", sep="\n")
         exit(1)
 
-    # struct_forward_declarations = []    # Not currently needed
-    struct_definition_code = []
-
     try:
         sorted_structs = StructDefinitionNode.topological_ordering()
     except (SereneTypeError) as exc:
@@ -86,17 +83,6 @@ def main(my_yaml, include_path):
         exit(1)
     
     struct_definitions.sort(key=lambda x: sorted_structs.index(x.get_scalar(Symbol.base_type)), reverse=True)
-
-    try:
-        for x in struct_definitions:
-            #struct_forward_declarations.append(x.to_forward_declaration())     # Not currently needed
-            struct_definition_code.append(x.to_code())
-    except (SereneScopeError, SereneTypeError) as exc:
-        printerr("COMPILE ERROR:", exc.message, sep="\n")
-        exit(1)
-    except Exception as exc:
-        printerr(f"At struct definition for '{x.get_scalar(Symbol.base_type)}':")
-        raise exc
 
     function_code = []
     function_forward_declarations = []
@@ -110,6 +96,20 @@ def main(my_yaml, include_path):
         exit(1)
     except Exception as exc:
         printerr(f"At source line number {scope.line_number}:")
+        raise exc
+
+    # struct_forward_declarations = []    # Not currently needed
+    struct_definition_code = []
+
+    try:
+        for x in struct_definitions:
+            #struct_forward_declarations.append(x.to_forward_declaration())     # Not currently needed
+            struct_definition_code.append(x.to_code())
+    except (SereneScopeError, SereneTypeError) as exc:
+        printerr("COMPILE ERROR:", exc.message, sep="\n")
+        exit(1)
+    except Exception as exc:
+        printerr(f"At struct definition for '{x.get_scalar(Symbol.base_type)}':")
         raise exc
 
     code = textwrap.dedent("""\
