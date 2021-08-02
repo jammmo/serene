@@ -325,6 +325,8 @@ class SetStatement(nodes.Node):
             correct_type = self[Symbol.place_term].get_type()
         else:
             var_name = self.get_scalar(Symbol.identifier)
+            if var_name == 'self':
+                raise SereneScopeError(f"Invalid usage of 'self', at line number {scope.line_number}.")
             lhs_code = 'sn_' + var_name
 
             scope.current_scope.add_access((var_name,), 'look')                        # adds read access for lhs
@@ -515,6 +517,12 @@ class TermNode(nodes.Node):
         if inner_expr.nodetype == Symbol.identifier:
             self.is_temporary = False
             code = base_expr.to_code()      # This is a bit redundant, but it's done to check read access on the identifier
+
+            if inner_expr.data == 'self':
+                if len(self.data) <= 1 or self[1].nodetype != Symbol.method_call:
+                    raise SereneScopeError(f"Invalid usage of 'self', at line number {scope.line_number}.")
+                code = "(*this)"
+
             self.var_tup = (inner_expr.data,)
         elif (inner_expr.nodetype == Symbol.expression):
             code = '(' + inner_expr.to_code() + ')'
@@ -1164,6 +1172,8 @@ class StructDefinitionNode(nodes.Node):
             constructor_params.append(member_name)
 
             self.my_scope.add_persistent_binding(scope.VariableObject(name=member_name, mutable=True, var_type=members[member_name], is_field=True))
+
+        self.my_scope.add_persistent_binding(scope.VariableObject(name='self', mutable=True, var_type=typecheck.TypeObject(self.get_scalar(Symbol.base_type)), is_self=True))
 
         if Symbol.extension in self:
             if Symbol.definitions_extension in self[Symbol.extension]:

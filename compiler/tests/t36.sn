@@ -5,13 +5,14 @@ function main() {
 
     run z.change_to_match_inside(mutate a)
 
-    run z.change_to_match_inside(mutate z.inside) // Is this okay?
+    //run z.change_to_match_inside(mutate z.inside) // Should not compile; this would create aliasing between 'inside' and 'a' within the method 
 
-    run discard(move z.inside)   // This should not compile: cannot move a struct member
+    //run discard_string(move z.inside)   // Should not compile; you cannot move a struct member
 
     run z.print_inside()
+    print a
 
-    run z.steal!(move z.inside) // Is this okay? No?
+    // run z.steal!(move z.inside) Should not compile; you cannot move a struct member, and also this creates aliasing between 'inside' and 'a' within the method
 }
 
 type Holder struct {
@@ -27,7 +28,7 @@ type Holder struct {
             print a
         }
 
-        method change_to_match_inside(mutate a: String) {   // Is this okay?
+        method change_to_match_inside(mutate a: String) {
             set a = inside
         }
 
@@ -35,11 +36,38 @@ type Holder struct {
             set inside = a
         }
 
-        // method bad_steal(move a: String) {  // This should not compile: "!" on name is needed because self is mutated
+        // method bad_steal1(move a: String) {  // This should not compile: "!" on name is needed because self is mutated
         //     set inside = a
+        // }
+
+        // method bad_steal2(move a: String) {     // This should not compile: "!" on name is needed because self is mutated
+        //     run self.steal!(move a)
+        // }
+
+        // method bad_discard_holder() {           // This should not compile: cannot move 'self'
+        //     run discard_holder(move self)
+        // }
+
+        // method bad_pops!() {                    // This should not compile: cannot mutate same field twice in one statement
+        //     run add_chars(inside.pop!(), self.inside.pop!())
+        // }
+
+        // method bad_replace() {                  // This should not compile: no assigning to 'self'
+        //     set self = Holder("Oh no!")
         // }
     }
 
-function discard(move x: String) {
+function discard_string(move x: String) {
 
+}
+
+function discard_holder(move x: Holder) {
+
+}
+
+function add_chars(a: Char, b: Char) -> String {
+    var z = ""
+    run z.append!(a)
+    run z.append!(b)
+    return z
 }

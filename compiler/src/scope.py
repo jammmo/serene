@@ -5,11 +5,16 @@ from src.common import *
 line_number = 1
 
 class VariableObject:
-    def __init__(self, name, mutable, var_type, is_field = False):
+    def __init__(self, name, mutable, var_type, is_field = False, is_self = False):
+        if (not is_self) and (name == 'self'):
+            raise SereneScopeError(f"Variable cannot be named 'self', at line number {line_number}.")
         self.name = name
         self.mutable = mutable
         self.var_type = var_type
         self.is_field = is_field
+        self.is_self = is_self
+
+        assert (not is_self) or (not is_field)  # a binding can't be both 'self' and a field for the same struct
         assert type(self.var_type) != str
     
     def __repr__(self):
@@ -17,6 +22,8 @@ class VariableObject:
 
 class ParameterObject:
     def __init__(self, name, accessor, var_type):
+        if (name == 'self'):
+            raise SereneScopeError(f"Parameter cannot be named 'self', at line number {line_number}.")
         self.name = name
         self.accessor = accessor
         self.var_type = var_type
@@ -95,8 +102,8 @@ class ScopeObject:
                 if type(cur[name]) == VariableObject:
                     if not cur[name].mutable:
                         raise SereneScopeError(f"Cannot mutate a const identifier, at line number {line_number}.")
-                    if cur[name].is_field and self.nonmut_method:
-                        raise SereneScopeError(f"Cannot mutate a field in a non-mutating method, at line number {line_number}.")
+                    if (cur[name].is_field or cur[name].is_self) and self.nonmut_method:
+                        raise SereneScopeError(f"Cannot mutate 'self' or its fields in a non-mutating method, at line number {line_number}.")
                     return
                 elif type(cur[name]) == ParameterObject:
                     if cur[name].accessor == 'look':
@@ -142,8 +149,8 @@ class ScopeObject:
             if type(x[0]) == VariableObject:
                 if not x[0].mutable:
                     raise SereneScopeError(f"Cannot mutate a const identifier, at line number {line_number}.")
-                if x[0].is_field and self.nonmut_method:
-                    raise SereneScopeError(f"Cannot mutate a field in a non-mutating method, at line number {line_number}.")
+                if (x[0].is_field or x[0].is_self) and self.nonmut_method:
+                    raise SereneScopeError(f"Cannot mutate 'self' or its fields in a non-mutating method, at line number {line_number}.")
             elif type(x[0]) == ParameterObject:
                 if x[0].accessor == 'look':
                     raise SereneScopeError(f"Cannot mutate a 'look' parameter, at line number {line_number}.")
