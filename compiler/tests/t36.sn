@@ -36,6 +36,10 @@ type Holder struct {
             set inside = a
         }
 
+        method is_equal(other: Holder) -> Bool {
+            return inside == other.inside
+        }
+
         // method bad_steal1(move a: String) {  // This should not compile: "!" on name is needed because self is mutated
         //     set inside = a
         // }

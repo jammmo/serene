@@ -68,13 +68,22 @@ def main(my_yaml, include_path):
                 raise SereneTypeError(f"Found duplicate type definition for type '{struct_name}'.")
             else:
                 struct_definitions.append(x)
-                typecheck.user_defined_types[struct_name] = x.get_type_spec()
         else:
             raise NotImplementedError(x.nodetype)
-
-    if 'main' not in scope.function_names:
-        printerr("COMPILE ERROR:", "No 'main()' function is defined.", sep="\n")
+    
+    try:
+        for x in struct_definitions:
+            struct_name = x.get_scalar(Symbol.base_type)
+            typecheck.user_defined_types[struct_name] = x.get_type_spec()
+        for x in struct_definitions:
+            struct_name = x.get_scalar(Symbol.base_type)
+            x.process_methods(typespec=typecheck.user_defined_types[struct_name])
+    except (SereneScopeError, SereneTypeError) as exc:
+        printerr("COMPILE ERROR:", exc.message, sep="\n")
         exit(1)
+    except Exception as exc:
+        printerr(f"At struct definition for '{x.get_scalar(Symbol.base_type)}':")
+        raise exc
 
     try:
         sorted_structs = StructDefinitionNode.topological_ordering()
@@ -83,6 +92,11 @@ def main(my_yaml, include_path):
         exit(1)
     
     struct_definitions.sort(key=lambda x: sorted_structs.index(x.get_scalar(Symbol.base_type)), reverse=True)
+
+
+    if 'main' not in scope.function_names:
+        printerr("COMPILE ERROR:", "No 'main()' function is defined.", sep="\n")
+        exit(1)
 
     function_code = []
     function_forward_declarations = []

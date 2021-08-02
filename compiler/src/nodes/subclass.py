@@ -1175,19 +1175,27 @@ class StructDefinitionNode(nodes.Node):
 
         self.my_scope.add_persistent_binding(scope.VariableObject(name='self', mutable=True, var_type=typecheck.TypeObject(self.get_scalar(Symbol.base_type)), is_self=True))
 
+        # This typespec will have an empty dict of methods, which will be populated later by self.process_methods().
+        # Basic struct definitions have to be processed before their method definitions because the methods may take
+        # objects of any type (including the type being defined) as parameters.
+        return typecheck.TypeSpecification(members=members, methods=methods, constructor_params=constructor_params)
+    
+    def process_methods(self, typespec):
         if Symbol.extension in self:
+            members = typespec.members
+            methods = typespec.methods
+
             if Symbol.definitions_extension in self[Symbol.extension]:
                 method_definitions = self[Symbol.extension][Symbol.definitions_extension][Symbol.method_definitions]
                 for x in method_definitions:
                     tup = x.to_tuple_description(self.my_scope)
                     bare_name = tup[0][0:-1] if tup[0][-1] == '!' else tup[0]
                     if bare_name in methods or bare_name in members:
-                        raise SereneTypeError(f"Found multiple definitions for member '{member_name}' of struct '{self.get_scalar(Symbol.base_type)}'.")
+                        raise SereneTypeError(f"Found multiple definitions for member '{bare_name}' of struct '{self.get_scalar(Symbol.base_type)}'.")
                     else:
                         methods[tup[0]] = tup[1]
             else:
                 raise UnreachableError
-        return typecheck.TypeSpecification(members=members, methods=methods, constructor_params=constructor_params)
     
     def to_forward_declaration(self):
         struct_name = self.get_scalar(Symbol.base_type)
