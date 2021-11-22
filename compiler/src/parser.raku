@@ -91,11 +91,15 @@ grammar Serene {
     }
 
     token literal {
+        [
         | <int_literal>
         | <float_literal>
         | <string_literal>
         | <char_literal>
         | <bool_literal>
+        | <collection_literal>
+        ]
+        [ <.ws> <type_solidifier> ]?
     }
     token int_literal {
         \d+
@@ -112,6 +116,15 @@ grammar Serene {
     token bool_literal {
         'True' | 'False'
     }
+    rule collection_literal {
+        '['
+        [ <expression>* %% ',' ]
+        ']'
+    }
+
+    rule type_solidifier {
+        'as' <type>
+    }
 
     token identifier {
         [ [ 'look' || 'mutate' || 'move' || 'copy' || 'var' || 'const' || 'set' || 'function' || 'type' ||
@@ -124,9 +137,9 @@ grammar Serene {
     token base_type {
         <.upper> <.alnum>*
     }
-    token type {
-        | <base_type> '{' <type> '}'
-        | <base_type>
+    rule type {
+        | [ <base_type> 'of' <type_parameters> ]
+        | [ <base_type> ]
     }
     token assignment_op {
         | '='
@@ -210,6 +223,7 @@ grammar Serene {
     rule function {
         'function' <identifier>
         '(' <function_parameters> ')'
+        [ 'on' <def_type_parameters> ]?
         [ '->' <type> ]?
         '{' <.separator>
         <statements>
@@ -256,6 +270,16 @@ grammar Serene {
     rule constructor_call_parameter {
         | [<accessor>? <expression>]
         | <type>
+    }
+
+    rule type_parameters {
+        | [ <base_type> ]
+        | [ '(' [[ <type> ]+ %% ',' ] ')' ]
+    }
+
+    rule def_type_parameters {
+        | [ 'type' <base_type> ]
+        | [ '(' [[ 'type' <base_type> ]+ %% ',' ] ')' ]
     }
 
     token mutate_method_symbol {
