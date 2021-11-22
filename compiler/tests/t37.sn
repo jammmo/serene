@@ -1,0 +1,26 @@
+function find(element: E, collection: C) on (type E, type C) -> Option of Uint64 {
+    var count = 0 as Uint64
+    for (x in collection) {
+        if (x == element) {
+            return Some(count)
+        }
+    }
+    return None
+}
+
+function main() {
+    var a = find(148, [9, -2, 148, 16] as Vector of Int64)
+    print a     // Some(2)
+
+    var b = find(6.1 as Float32, [0.23, 6.1, 11.0] as Array of Float32)
+    print b     // Some(1)
+
+    var c = find(0.0 as Float32, [0.23, 6.1, 11.0] as Array of Float32)
+    print c     // None   
+
+    var d = find("yam", ["potato", "yam", "cauliflower"])
+    print d     // Some(1)
+
+    // var e = find(148.2, [9, -2, 148, 16] as Vector of Int64)     // Type error: "equals" not supported for Float64 and Int64
+    // print e
+}

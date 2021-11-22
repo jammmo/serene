@@ -40,7 +40,7 @@
 			},
 			{
 				"name": "storage.type.serene",
-				"match": "\\b(function|method|interface|type|struct|subscript)\\b"
+				"match": "\\b(function|method|interface|type|struct|subscript|as|on)\\b"
 			},
 			{
 				"name": "storage.type.modifier",
@@ -49,6 +49,10 @@
 			{
 				"name": "entity.name.type",
 				"match": "\\b[A-Z]\\w*\\b"
+			},
+			{
+				"name": "storage.type.modifier.cs",
+				"match": "\\b(of)\\b"
 			},
 			{
 				"name": "variable.parameter",
