@@ -1,5 +1,5 @@
 function main() {
-    var x: Vector{Float} = Vector(5.0, 10.0, 15.0, 20.0)
+    var x: Vector of Float = Vector(5.0, 10.0, 15.0, 20.0)
     
     //set x[0] += x.pop!()
     // While the above line may compile in another language (and make x = [25.0, 10.0, 15.0]), it is not allowed

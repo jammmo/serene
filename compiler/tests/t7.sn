@@ -1,5 +1,5 @@
 // consumes a character array and returns it as a string
-function charArrayToString(move u: Array{Char}) -> String {
+function charArrayToString(move u: Array of Char) -> String {
     var s = ""
     for (x in u) {
         run s.append!(x)
@@ -13,7 +13,7 @@ function main() {
 }
 
 // These should not compile (for scoping/mutability reasons, though there may also be other reasons)
-// function charArrayToString(move u: Array{Char}) -> String {
+// function charArrayToString(move u: Array of Char) -> String {
 //     const s = ""
 //     for (x in u) {
 //         run s.append!(x)
@@ -21,7 +21,7 @@ function main() {
 //     return s
 // }
 
-// function charArrayToString(move u: Array{Char}) -> String {
+// function charArrayToString(move u: Array of Char) -> String {
 //     var s = ""
 //     for (x in u) {
 //         run s.append!(mutate x)
@@ -29,7 +29,7 @@ function main() {
 //     return s
 // }
 
-// function charArrayToString(move u: Array{Char}) -> String {
+// function charArrayToString(move u: Array of Char) -> String {
 //     var s = ""
 //     for (x in u) {
 //         run s.append!(mutate x[0].hello.world)
@@ -37,7 +37,7 @@ function main() {
 //     return s
 // }
 
-// function charArrayToString(move u: Array{Char}) -> String {
+// function charArrayToString(move u: Array of Char) -> String {
 //     const s = ""
 //     for (x in u) {
 //         run ((((s[0]).a[2])))[1].append!(x)

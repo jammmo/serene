@@ -4,20 +4,20 @@ type Pair struct {
 }
 
 type MatrixPair struct {
-    x: Vector{Vector{Int}},
-    y: Vector{Vector{Int}},
+    x: Vector of Vector of Int,
+    y: Vector of Vector of Int,
 }
 
-function discardPairArray(move a: Array{Pair}) {
+function discardPairArray(move a: Array of Pair) {
 
 }
 
 function main() {
-    var a: Array{Array{Int}} = Array(Array(1, 2, 3, 4), Array(-1, -2, -3, -4))
+    var a: Array of Array of Int = Array(Array(1, 2, 3, 4), Array(-1, -2, -3, -4))
     print a.length()            // 2
     print a[1].length()         // 4
 
-    var b: Vector{Vector{Int}} = Vector(Vector(1, 2, 3, 4), Vector(-1, -2, -3, -4))
+    var b: Vector of Vector of Int = Vector(Vector(1, 2, 3, 4), Vector(-1, -2, -3, -4))
     print a[0][0] + b[0][0]     // 2
 
     var c = b.pop!().pop!()
@@ -41,7 +41,7 @@ function main() {
 
     //var f = Vector(Vector(Float), Vector(String))   // This should not compile
 
-    var g = Vector(Vector{Vector{Float}})   // empty vector with elements of type Vector{Vector{Float}}
+    var g = Vector(Vector of Vector of Float)   // empty vector with elements of type Vector of Vector of Float
     print g                     // []
 
     const h = Vector(Vector(4.5))

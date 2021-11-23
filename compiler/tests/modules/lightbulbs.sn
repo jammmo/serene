@@ -1,7 +1,7 @@
 // This file will be included by t32.sn
 
 type BoxOfLightbulbs struct {
-    contents: Vector{Lightbulb}
+    contents: Vector of Lightbulb
 }
 
 type Lightbulb struct {

@@ -1,7 +1,7 @@
 type Person struct {
     age: Int,
     name: String,
-    nickname: Option{String}
+    nickname: Option of String
 }
 
 function printNickname(p: Person) {
@@ -11,7 +11,7 @@ function printNickname(p: Person) {
     }
 }
 
-function makeOptionNone(mutate x: Option{String}) {
+function makeOptionNone(mutate x: Option of String) {
     set x = None
 }
 

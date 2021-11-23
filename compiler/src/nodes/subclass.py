@@ -187,26 +187,7 @@ class FunctionParameterNode(nodes.Node):
         base_type = self[Symbol.type].get_scalar(Symbol.base_type)
         L = [base_type]
 
-        cur = self[Symbol.type]
-        while Symbol.type in cur:
-            if base_type not in ('Vector', 'Array'):
-                if base_type in typecheck.user_defined_types:
-                    raise SereneTypeError(f"Unnecessary type parameter specified for non-generic type '{base_type}'.")
-                else:
-                    raise SereneTypeError(f"Unknown generic type: {base_type}.")
-                               
-            cur = cur[Symbol.type]
-            base_type = cur.get_scalar(Symbol.base_type)
-
-            L.append(base_type)
-        
-        def get_my_type(i):
-            if i == len(L)-1:
-                return typecheck.TypeObject(L[i])
-            else:
-                return typecheck.TypeObject(L[i], params=[get_my_type(i+1)])
-        
-        my_type = get_my_type(0)
+        my_type = self[Symbol.type].get_type()
 
         # Adds to the scope INSIDE the function, not the scope where the function is defined
         scope.scope_for_setup.add_persistent_binding(scope.ParameterObject(var_name, accessor, my_type))
@@ -218,11 +199,16 @@ class FunctionParameterNode(nodes.Node):
 class TypeNode(nodes.Node):
     def get_type(self):
         base = self[Symbol.base_type].data
-        num_generic_params = self.count(Symbol.type)
+        num_generic_params = 0 if (Symbol.type_parameters not in self) else self[Symbol.type_parameters].count(Symbol.type)
         if num_generic_params == 0:
             return typecheck.TypeObject(base)
         elif num_generic_params == 1:
-            return typecheck.TypeObject(base, [self[Symbol.type].get_type()])
+            if base not in ('Vector', 'Array'):
+                if base in typecheck.user_defined_types:
+                    raise SereneTypeError(f"Unnecessary type parameter specified for non-generic type '{base}'.")
+                else:
+                    raise SereneTypeError(f"Unknown generic type: {base}.")
+            return typecheck.TypeObject(base, [self[Symbol.type_parameters][Symbol.type].get_type()])
         else:
             raise UnreachableError
 

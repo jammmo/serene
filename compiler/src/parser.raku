@@ -273,7 +273,7 @@ grammar Serene {
     }
 
     rule type_parameters {
-        | [ <base_type> ]
+        | [ <type> ]
         | [ '(' [[ <type> ]+ %% ',' ] ')' ]
     }
 

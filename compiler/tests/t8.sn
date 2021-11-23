@@ -1,6 +1,6 @@
 // deletes the leftmost occurence of x, or does nothing if x is not found
 // Vector u must be already sorted
-function binarySearchAndDelete(mutate u: Vector{Int}, x: Int) {
+function binarySearchAndDelete(mutate u: Vector of Int, x: Int) {
     var low = 0
     var high = u.length()
     while (low < high) {

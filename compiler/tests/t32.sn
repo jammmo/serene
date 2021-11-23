@@ -1,4 +1,4 @@
-function elementwise3DAdd(move a: Vector{Vector{Vector{Int}}}, move b: Vector{Vector{Vector{Int}}}) -> Vector{Vector{Vector{Int}}} {
+function elementwise3DAdd(move a: Vector of Vector of Vector of Int, move b: Vector of Vector of Vector of Int) -> Vector of Vector of Vector of Int {
     for (i = 0, a.length()) {
         for (j = 0, a[i].length()) {
             for (k = 0, a[i][j].length()) {

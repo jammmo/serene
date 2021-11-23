@@ -41,15 +41,15 @@ function main() {
     }
 }
 
-function fn_pop(mutate thing: Vector{Int}) -> Int {
+function fn_pop(mutate thing: Vector of Int) -> Int {
     return thing.pop!()
 }
 
-function fn_print(thing: Vector{Int}) -> Int {
+function fn_print(thing: Vector of Int) -> Int {
     print thing
     return 0
 }
 
-function fn_discard(move thing: Vector{Int}) -> Int {
+function fn_discard(move thing: Vector of Int) -> Int {
     return 0
 }

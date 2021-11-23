@@ -78,7 +78,7 @@ function fn_discard(move thing: String) -> Int {
     return 0
 }
 
-function mut_with_array(mutate thing: String) -> Array{Char} {
+function mut_with_array(mutate thing: String) -> Array of Char {
     set thing[0] = thing[1]
     return Array(thing[0])
 }

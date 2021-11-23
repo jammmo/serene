@@ -12,7 +12,7 @@ function main() {
     var a = justExit()
 }
 
-function getFirst(v: Vector{Float}) -> Float {
+function getFirst(v: Vector of Float) -> Float {
     if (v.length() == 0) {
         print "Vector is empty!"
         exit 1
@@ -21,7 +21,7 @@ function getFirst(v: Vector{Float}) -> Float {
     }
 }
 
-function divideElements(a: Vector{Float}, b: Vector{Float}) -> Vector{Float} {
+function divideElements(a: Vector of Float, b: Vector of Float) -> Vector of Float {
     if (a.length() != b.length()) {
         print "Vector lengths do not match!"
         exit 1

@@ -1,4 +1,4 @@
-function sorted(copy list: Array{Int}) -> Array{Int} {
+function sorted(copy list: Array of Int) -> Array of Int {
     // Implements selection sort on a copy of the original list
     if (list.length() <= 1) {
         return list
