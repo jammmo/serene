@@ -111,7 +111,7 @@ class FunctionNode(nodes.Node):
         if Symbol.type in self:
             base = self[Symbol.type].get_scalar(Symbol.base_type)
             if not check_basetype(base):
-                if base in scope.scope_for_setup.type_parameters:
+                if base in self.my_scope.type_parameters:
                     raise NotImplementedError   # Generic return types
                 else:
                     raise SereneTypeError(f"Unknown type: {base}.")
@@ -119,7 +119,14 @@ class FunctionNode(nodes.Node):
         else:
             func_type = 'void'
         func_name = self.get_scalar(Symbol.identifier)
-        func_parameters = ', '.join([x.to_code() for x in self[Symbol.function_parameters]])
+
+        if self.generic:
+            func_parameters_list = []
+            for i in range(len(self.my_scope.generic_combos_params_temp)):
+                func_parameters_list.append(self[Symbol.function_parameters][i].to_code(my_type=self.my_scope.generic_combos_params_temp[i]))
+            func_parameters = ', '.join(func_parameters_list)
+        else:
+            func_parameters = ', '.join([x.to_code() for x in self[Symbol.function_parameters]])
 
         code = f'{func_type} sn_{func_name}({func_parameters});'
 
@@ -230,6 +237,8 @@ class FunctionParameterNode(nodes.Node):
         if generic:
             self.generic = True
         else:
+            self.generic = False
+            
             code = self[Symbol.type].to_code()
 
             if accessor == 'look':
@@ -244,10 +253,30 @@ class FunctionParameterNode(nodes.Node):
 
             self.code = code
     
-    def to_code(self):
+    def to_code(self, my_type=None):
         if self.generic:
-            raise NotImplementedError
-        return self.code
+            assert my_type is not None
+
+            var_name = self.get_scalar(Symbol.identifier)
+            if Symbol.accessor in self:
+                accessor = self.get_scalar(Symbol.accessor)
+            else:
+                accessor = 'look'
+
+            code = get_cpp_type(my_type)
+
+            if accessor == 'look':
+                code += ' const&'
+            elif accessor == 'mutate':
+                code += '&'
+            elif accessor == 'move':
+                code += '&&'
+            # When accessor is 'copy', the default pass-by-value behavior in C++ is correct, so no additional modifiers are needed
+
+            code += ' ' + 'sn_'+ var_name
+            return code
+        else:
+            return self.code
 
 class TypeNode(nodes.Node):
     def get_type(self):
@@ -800,8 +829,6 @@ class FunctionCallNode(nodes.Node):
                 break
         if original_function is None:
             raise UnreachableError
-        if original_function.generic:
-            raise NotImplementedError
 
         if type(original_function[Symbol.function_parameters].data) != nodes.NodeMap:
             num_original_params = 0
@@ -812,7 +839,54 @@ class FunctionCallNode(nodes.Node):
         if num_called_params < num_original_params:
             raise SereneScopeError(f"Function '{self.get_scalar(Symbol.identifier)}' is given too few parameters when called at line number {scope.line_number}.")
 
-        params = []
+        params_code = []
+        reset_type_temp = False
+        if original_function.generic:
+            call_param_types = []
+            for x in self[Symbol.function_call_parameters]:
+                call_param_types.append(x[Symbol.expression].get_type())
+            
+            already_exists = False
+            for i in range(len(original_function.my_scope.generic_combos_params)):
+                if call_param_types == original_function.my_scope.generic_combos_params[i]:
+                    already_exists = True
+                    reset_type_temp = True
+                    for name, tparam in original_function.my_scope.type_parameters.items():
+                        tparam.type_temp = original_function.my_scope.generic_combos_type_params[i][name]
+                    break
+            
+            if not already_exists:
+                orig_param_types = [p[Symbol.type].get_type() for p in original_function[Symbol.function_parameters]]
+                for i in range(len(orig_param_types)):
+                    orig_cur = orig_param_types[i]
+                    call_cur = call_param_types[i]
+                    while True:
+                        if check_basetype(orig_cur.base) and orig_cur.params is None:
+                            break
+                        elif check_basetype(orig_cur.base):
+                            if len(orig_cur.params) > 1:
+                                raise NotImplementedError
+                            orig_cur = orig_cur.params[0]
+                            call_cur = call_cur.params[0]
+                        else:
+                            if orig_cur.params is not None:
+                                raise NotImplementedError
+                            if original_function.my_scope.type_parameters[orig_cur.base].type_temp is not None:
+                                if original_function.my_scope.type_parameters[orig_cur.base].type_temp != call_cur:
+                                    raise UnreachableError
+                            reset_type_temp = True
+                            original_function.my_scope.type_parameters[orig_cur.base].type_temp = call_cur
+                            break
+                
+                original_function.my_scope.generic_combos_params.append(call_param_types)
+                original_function.my_scope.generic_combos_params_temp = call_param_types
+                original_function.my_scope.generic_combos_type_params.append({k: v.type_temp for k, v in original_function.my_scope.type_parameters.items()})
+                
+                scope.generic_function_forward_declarations.append(original_function.to_forward_declaration())
+                #print(original_function.to_code())
+
+                original_function.my_scope.generic_combos_params_temp = None
+
         for i in range(num_called_params):
             o_param = original_function[Symbol.function_parameters][i]
             if Symbol.accessor in o_param:
@@ -820,16 +894,23 @@ class FunctionCallNode(nodes.Node):
             else:
                 o_accessor = 'look'
             
-            o_type = original_function.my_scope.get_type_of(o_param.get_scalar(Symbol.identifier), persistent=True)
-            
             c_param = self[Symbol.function_call_parameters][i]
-            
-            params.append(c_param.to_code(original_accessor = o_accessor,
-                                          original_type = o_type,
-                                          function_name = self.get_scalar(Symbol.identifier),
-                                          param_name = o_param.get_scalar(Symbol.identifier)))
 
-        code += ', '.join(params) + ')'
+            if original_function.generic:
+                o_type = call_param_types[i]
+            else:
+                o_type = original_function.my_scope.get_type_of(o_param.get_scalar(Symbol.identifier), persistent=True)
+
+            params_code.append(c_param.to_code(original_accessor = o_accessor,
+                                original_type = o_type,
+                                function_name = self.get_scalar(Symbol.identifier),
+                                param_name = o_param.get_scalar(Symbol.identifier)))
+
+        if reset_type_temp:
+            for x in original_function.my_scope.type_parameters.values():
+                x.type_temp = None
+
+        code += ', '.join(params_code) + ')'
         return code
 
 class ConstructorCallNode(nodes.Node):

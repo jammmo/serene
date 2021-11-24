@@ -142,6 +142,7 @@ def main(my_yaml, include_path):
     #code += ('\n'.join(struct_forward_declarations)   + '\n\n') if len(struct_forward_declarations) > 0 else ''        #Not currently needed
     code += ('\n\n'.join(struct_definition_code)      + '\n\n') if len(struct_definition_code) > 0 else ''
     code += ('\n'.join(function_forward_declarations) + '\n\n') if len(function_forward_declarations) > 0 else ''
+    code += ('\n'.join(scope.generic_function_forward_declarations) + '\n\n') if len(scope.generic_function_forward_declarations) > 0 else ''
     code += ('\n\n'.join(function_code)               + '\n\n') if len(function_code) > 0 else ''
     code += "int main() {\n    "
     code += "std::cout.imbue(std::locale(std::locale(), new SereneLocale));\n    "  # std::locale is implicitly reference-counted, so "new" is not an issue

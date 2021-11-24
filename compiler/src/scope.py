@@ -36,7 +36,7 @@ class ParameterObject:
 class TypeParameterObject:
     def __init__(self, name):
         self.name = name
-        self.possible_types = []
+        self.type_temp = None
 
 class ScopeObject:
     def __init__(self, parent, loop = False, nonmut_method = False):
@@ -48,6 +48,9 @@ class ScopeObject:
 
         # Only used for the scopes of generic functions; stores TypeParameterObject objects
         self.type_parameters = dict()
+        self.generic_combos_params = []
+        self.generic_combos_type_params = []
+        self.generic_combos_params_temp = []
 
         self.subscopes = []
         self.parent = parent
@@ -238,3 +241,4 @@ loops: list = []
 functions = None
 function_names: list[str] = []
 definitions = None
+generic_function_forward_declarations: list[str] = []
