@@ -32,6 +32,11 @@ class ParameterObject:
     def __repr__(self):
         return f'<VariableObject {self.name}>'
 
+class TypeParameterObject:
+    def __init__(self, name):
+        self.name = name
+        self.possible_types = []
+
 class ScopeObject:
     def __init__(self, parent, loop = False, nonmut_method = False):
         self.bindings = dict()
@@ -39,6 +44,9 @@ class ScopeObject:
         # This is used for function signatures. When a parameter goes out of scope in the function body, it is
         # removed from bindings but not from persistent_bindings, so that other functions can still check the signature.
         self.persistent_bindings = dict()
+
+        # Only used for the scopes of generic functions; stores TypeParameterObject objects
+        self.type_parameters = dict()
 
         self.subscopes = []
         self.parent = parent

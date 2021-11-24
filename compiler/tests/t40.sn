@@ -1,0 +1,21 @@
+// Note that even though it's not explicitly defined here, A and B have to be the same type for the multiplication to work.
+// The compiler generates a new version of this function for each set of types that are used, and it has to do typical
+// type-checking to make sure that all the operations in the function are actually supported on those types.
+function multiply(a: A, b: B) on (type A, type B) -> A {
+    return a * b
+}
+
+function main() {
+    print multiply(23, 2)
+    print multiply(1034, 10)
+    print multiply(-5 as Int8, 6 as Int8)
+
+    print multiply(3.5 as Float64, 2.0)
+    print multiply(101.5 as Float32, 2.5 as Float32)
+
+    print multiply("jeremy", "bearimy")     // should not compile
+
+    var x = -5 as Int8
+    var y = 6
+    print multiply(x, y)           // should not compile (mismatched types)
+}

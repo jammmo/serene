@@ -4,10 +4,33 @@ from typing import Type
 from src.common import *
 from src import typecheck, scope, nodes
 
+# Constants ___________________________________________________________________
+
 int_types = ['Int64', 'Int32', 'Int16', 'Int8', 'Uint64', 'Uint32', 'Uint16', 'Uint8']
 float_types = ['Float64', 'Float32']
 
+type_mapping = {'Int64':    'int64_t',
+                'Int32':    'int32_t',
+                'Int16':    'int16_t',
+                'Int8':     'int8_t',
+                'Uint64':   'uint64_t',
+                'Uint32':   'uint32_t',
+                'Uint16':   'uint16_t',
+                'Uint8':    'uint8_t',
+                'Bool':     'bool',
+                'String':   'SN_String',
+                'Float64':  'double',
+                'Float32':  'float',
+                'Char':     'char',
+                'Vector':   'SN_Vector',
+                'Array':    'SN_Array',
+               }
+
+
+# Global Variables ____________________________________________________________
+
 indent_level = 0
+
 
 # Functions ___________________________________________________________________
 
@@ -30,24 +53,8 @@ def sub_indent():
 def get_cpp_type(my_type):
     assert type(my_type) == typecheck.TypeObject
     base = my_type.base
-    mapping = {'Int64':    'int64_t',
-               'Int32':    'int32_t',
-               'Int16':    'int16_t',
-               'Int8':     'int8_t',
-               'Uint64':   'uint64_t',
-               'Uint32':   'uint32_t',
-               'Uint16':   'uint16_t',
-               'Uint8':    'uint8_t',
-               'Bool':     'bool',
-               'String':   'SN_String',
-               'Float64':  'double',
-               'Float32':  'float',
-               'Char':     'char',
-               'Vector':   'SN_Vector',
-               'Array':    'SN_Array',
-              }
-    if base in mapping:
-        cpp_type = mapping[base]
+    if base in type_mapping:
+        cpp_type = type_mapping[base]
         if my_type.params is None:
             return cpp_type
         else:  # Generic type
@@ -56,6 +63,10 @@ def get_cpp_type(my_type):
         return f"SN_{base}"
     else:
         raise SereneTypeError(f"Unknown type: {my_type}.")
+
+def check_basetype(base):
+    assert type(base) == str
+    return (base in type_mapping) or (base in typecheck.user_defined_types)
 
 # Utilities ___________________________________________________________________
 class UnreachableError(Exception):
@@ -72,10 +83,36 @@ class FunctionNode(nodes.Node):
     
     def to_forward_declaration(self):
         scope.scope_for_setup = self.my_scope
-        for x in self[Symbol.function_parameters]:
-            x.setup()
+
+        if Symbol.def_type_parameters in self:
+            for x in self[Symbol.def_type_parameters]:
+                name = x.data
+                if check_basetype(name):
+                    raise SereneTypeError(f"Type parameter name '{name}' in function '{self.get_scalar(Symbol.identifier)} collides with existing type name.")
+                
+                if name not in scope.scope_for_setup.type_parameters:
+                    scope.scope_for_setup.type_parameters[name] = scope.TypeParameterObject(name)
+                else:
+                    # catches something like: function foo(x: T) on (type T, type T) {...}
+                    raise SereneTypeError(f"Multiple definitions for type parameter '{name}' in function '{self.get_scalar(Symbol.identifier)}'.")
+            
+            for x in self[Symbol.function_parameters]:
+                raise NotImplementedError
+                x.setup_generic()
+        else:
+            for x in self[Symbol.function_parameters]:
+                base = x[Symbol.type].get_scalar(Symbol.base_type)
+                if not check_basetype(base):
+                    raise SereneTypeError(f"Unknown type: {base}.")
+                x.setup()
 
         if Symbol.type in self:
+            base = x[Symbol.type].get_scalar(Symbol.base_type)
+            if not check_basetype(base):
+                if base in scope.scope_for_setup.type_parameters:
+                    raise NotImplementedError   # Generic return types
+                else:
+                    raise SereneTypeError(f"Unknown type: {base}.")
             func_type = self[Symbol.type].to_code()  # C++ return type        
         else:
             func_type = 'void'
@@ -194,9 +231,6 @@ class FunctionParameterNode(nodes.Node):
 
         var_name = self.get_scalar(Symbol.identifier)
         code += ' ' + 'sn_'+ var_name
-
-        base_type = self[Symbol.type].get_scalar(Symbol.base_type)
-        L = [base_type]
 
         my_type = self[Symbol.type].get_type()
 
