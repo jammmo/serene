@@ -675,7 +675,18 @@ class BaseExpressionNode(nodes.Node):
     def get_type(self):
         if Symbol.literal in self:
             if Symbol.type_solidifier in self[Symbol.literal]:
-                raise NotImplementedError
+                solidified_type = self[Symbol.literal][Symbol.type_solidifier][Symbol.type].get_type()
+
+                if Symbol.int_literal in self[Symbol.literal]:
+                    if solidified_type.base not in int_types or solidified_type.params is not None:
+                        raise SereneTypeError(f"Type solidifier is not valid for literal at line number {scope.line_number}.")
+                elif Symbol.float_literal in self[Symbol.literal]:
+                    if solidified_type.base not in float_types or solidified_type.params is not None:
+                        raise SereneTypeError(f"Type solidifier is not valid for literal at line number {scope.line_number}.")
+                else:
+                    raise NotImplementedError
+                
+                return solidified_type
             else:
                 if Symbol.int_literal in self[Symbol.literal]:
                     return typecheck.TypeObject('Int64')
@@ -687,6 +698,8 @@ class BaseExpressionNode(nodes.Node):
                     return typecheck.TypeObject('String')
                 elif Symbol.char_literal in self[Symbol.literal]:
                     return typecheck.TypeObject('Char')
+                elif Symbol.collection_literal in self[Symbol.literal]:
+                    raise NotImplementedError
                 else:
                     raise UnreachableError
         elif Symbol.expression in self:

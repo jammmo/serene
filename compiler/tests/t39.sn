@@ -1,0 +1,6 @@
+function main() {
+    var a = 29 as Int32
+    var b = 1.14 as Float32
+
+    //var b = 1.14 as Int8    // should not compile
+}
