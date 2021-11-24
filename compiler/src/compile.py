@@ -102,9 +102,12 @@ def main(my_yaml, include_path):
     function_forward_declarations = []
     try:
         for x in scope.functions:
-            function_forward_declarations.append(x.to_forward_declaration())
+            x.setup()
+            if not x.generic:
+                function_forward_declarations.append(x.to_forward_declaration())
         for x in scope.functions:
-            function_code.append(x.to_code())
+            if not x.generic:
+                function_code.append(x.to_code())
     except (SereneScopeError, SereneTypeError) as exc:
         printerr("COMPILE ERROR:", exc.message, sep="\n")
         exit(1)

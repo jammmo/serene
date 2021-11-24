@@ -81,10 +81,11 @@ class FunctionNode(nodes.Node):
         super().__init__(D)
         self.my_scope = scope.ScopeObject(scope.top_scope)
     
-    def to_forward_declaration(self):
+    def setup(self):
         scope.scope_for_setup = self.my_scope
 
         if Symbol.def_type_parameters in self:
+            self.generic = True
             for x in self[Symbol.def_type_parameters]:
                 name = x.data
                 if check_basetype(name):
@@ -97,17 +98,18 @@ class FunctionNode(nodes.Node):
                     raise SereneTypeError(f"Multiple definitions for type parameter '{name}' in function '{self.get_scalar(Symbol.identifier)}'.")
             
             for x in self[Symbol.function_parameters]:
-                raise NotImplementedError
-                x.setup_generic()
+                x.setup(generic=True)
         else:
+            self.generic = False
             for x in self[Symbol.function_parameters]:
                 base = x[Symbol.type].get_scalar(Symbol.base_type)
                 if not check_basetype(base):
                     raise SereneTypeError(f"Unknown type: {base}.")
                 x.setup()
 
+    def to_forward_declaration(self):
         if Symbol.type in self:
-            base = x[Symbol.type].get_scalar(Symbol.base_type)
+            base = self[Symbol.type].get_scalar(Symbol.base_type)
             if not check_basetype(base):
                 if base in scope.scope_for_setup.type_parameters:
                     raise NotImplementedError   # Generic return types
@@ -214,31 +216,37 @@ class MethodDefinitionNode(nodes.Node):
 class FunctionParameterNode(nodes.Node):
     # Function parameters need to be processed before other code so that function calls can be verified regardless of the order that functions are defined.
     # However, they need access to struct definitions, so the setup() function is called when forward declarations are created, which is before the function bodies are processed.
-    def setup(self):
-        code = self[Symbol.type].to_code()
+    def setup(self, generic=False):
+        var_name = self.get_scalar(Symbol.identifier)
+        my_type = self[Symbol.type].get_type()
         if Symbol.accessor in self:
             accessor = self.get_scalar(Symbol.accessor)
         else:
             accessor = 'look'
-        
-        if accessor == 'look':
-            code += ' const&'
-        elif accessor == 'mutate':
-            code += '&'
-        elif accessor == 'move':
-            code += '&&'
-        # When accessor is 'copy', the default pass-by-value behavior in C++ is correct, so no additional modifiers are needed
-
-        var_name = self.get_scalar(Symbol.identifier)
-        code += ' ' + 'sn_'+ var_name
-
-        my_type = self[Symbol.type].get_type()
 
         # Adds to the scope INSIDE the function, not the scope where the function is defined
-        scope.scope_for_setup.add_persistent_binding(scope.ParameterObject(var_name, accessor, my_type))
-        self.code = code
+        scope.scope_for_setup.add_persistent_binding(scope.ParameterObject(var_name, accessor, my_type, generic=generic))
+
+        if generic:
+            self.generic = True
+        else:
+            code = self[Symbol.type].to_code()
+
+            if accessor == 'look':
+                code += ' const&'
+            elif accessor == 'mutate':
+                code += '&'
+            elif accessor == 'move':
+                code += '&&'
+            # When accessor is 'copy', the default pass-by-value behavior in C++ is correct, so no additional modifiers are needed
+
+            code += ' ' + 'sn_'+ var_name
+
+            self.code = code
     
     def to_code(self):
+        if self.generic:
+            raise NotImplementedError
         return self.code
 
 class TypeNode(nodes.Node):
@@ -792,6 +800,8 @@ class FunctionCallNode(nodes.Node):
                 break
         if original_function is None:
             raise UnreachableError
+        if original_function.generic:
+            raise NotImplementedError
 
         if type(original_function[Symbol.function_parameters].data) != nodes.NodeMap:
             num_original_params = 0
@@ -814,7 +824,10 @@ class FunctionCallNode(nodes.Node):
             
             c_param = self[Symbol.function_call_parameters][i]
             
-            params.append(c_param.to_code(original_accessor = o_accessor, original_type = o_type, function_name = self.get_scalar(Symbol.identifier), param_name = o_param.get_scalar(Symbol.identifier)))
+            params.append(c_param.to_code(original_accessor = o_accessor,
+                                          original_type = o_type,
+                                          function_name = self.get_scalar(Symbol.identifier),
+                                          param_name = o_param.get_scalar(Symbol.identifier)))
 
         code += ', '.join(params) + ')'
         return code

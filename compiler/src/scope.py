@@ -21,12 +21,13 @@ class VariableObject:
         return f'<VariableObject {self.name}>'
 
 class ParameterObject:
-    def __init__(self, name, accessor, var_type):
+    def __init__(self, name, accessor, var_type, generic=False):
         if (name == 'self'):
             raise SereneScopeError(f"Parameter cannot be named 'self', at line number {line_number}.")
         self.name = name
         self.accessor = accessor
         self.var_type = var_type
+        self.generic = generic
         assert type(self.var_type) != str
 
     def __repr__(self):
