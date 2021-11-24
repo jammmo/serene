@@ -1,5 +1,5 @@
 type Person struct {
-    age: Int,
+    age: Int64,
     name: String,
     nickname: Option of String
 }

@@ -1,4 +1,4 @@
-function test1(mutate a: Vector of Int) {
+function test1(mutate a: Vector of Int64) {
     run a.append!(10)
 }
 

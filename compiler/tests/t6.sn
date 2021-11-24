@@ -10,16 +10,16 @@ function hello2() {
 
 // New Comment
 
-function test(x: Float, y: Int) {
+function test(x: Float64, y: Int64) {
     // This is a comment !@#$%^&*()
     var a = 123 // This is another comment)*&(&"")''
     set a *= 2
 
     
-    var b: Int = a
+    var b: Int64 = a
     const c = b
-    const d: Float = x
-    const e: Int = y
+    const d: Float64 = x
+    const e: Int64 = y
 
     print c
     print d

@@ -1,13 +1,13 @@
 type Person struct {
-    age: Int,
+    age: Int64,
     name: String,
     birthday: Date
 }
 
 type Date struct {
-    month: Int,
-    day: Int,
-    year: Int,
+    month: Int64,
+    day: Int64,
+    year: Int64,
 }
 
 function main() {

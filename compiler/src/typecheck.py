@@ -36,17 +36,17 @@ class TypeVar:
 vector_type_var = TypeVar()
 array_type_var = TypeVar()
 standard_types = {'Vector': TypeSpecification(members={},
-                                              methods={"length":  (TypeObject("Int"), []),
+                                              methods={"length":  (TypeObject("Int64"), []),
                                                        "append!": (None, [scope.ParameterObject('item', 'look', vector_type_var)]),
-                                                       "delete!": (None, [scope.ParameterObject('index', 'look', TypeObject('Int'))]),
+                                                       "delete!": (None, [scope.ParameterObject('index', 'look', TypeObject('Int64'))]),
                                                        "pop!":    (vector_type_var, [])
                                                       },
                                               typevar=vector_type_var),
-                  'Array':  TypeSpecification(members={}, methods={"length":  (TypeObject("Int"), [])}, typevar=array_type_var),
+                  'Array':  TypeSpecification(members={}, methods={"length":  (TypeObject("Int64"), [])}, typevar=array_type_var),
                   'String': TypeSpecification(members={},
-                                              methods={"length":  (TypeObject("Int"), []),
+                                              methods={"length":  (TypeObject("Int64"), []),
                                                        "append!": (None, [scope.ParameterObject('item', 'look', TypeObject('Char'))]),    #should "append!" take a Char or a string?
-                                                       "delete!": (None, [scope.ParameterObject('index', 'look', TypeObject('Int'))]),
+                                                       "delete!": (None, [scope.ParameterObject('index', 'look', TypeObject('Int64'))]),
                                                        "pop!":    (TypeObject("Char"), [])
                                                       },
                                               typevar=vector_type_var)}

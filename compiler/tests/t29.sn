@@ -69,12 +69,12 @@ function main() {
 }
 
 
-function fn_print(thing: String) -> Int {
+function fn_print(thing: String) -> Int64 {
     print thing
     return 0
 }
 
-function fn_discard(move thing: String) -> Int {
+function fn_discard(move thing: String) -> Int64 {
     return 0
 }
 

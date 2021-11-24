@@ -9,7 +9,7 @@ type A struct {
 }
 
 type B struct {
-    x: Int,
+    x: Int64,
     y: G        // without this field, this should compile
 }
 
@@ -20,8 +20,8 @@ type C struct {
 
 type D struct {
     x: A,
-    y: Vector{Int},
-    z: Vector{Float}
+    y: Vector of Int64,
+    z: Vector of Float64
 }
 
 type E struct {

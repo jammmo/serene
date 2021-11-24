@@ -3,7 +3,7 @@ function print_from_holder(thing: Holder) {
 }
 
 type Holder struct {
-    x: Float
+    x: Float64
 }
 
 function main() {

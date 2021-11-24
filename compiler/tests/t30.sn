@@ -6,13 +6,13 @@ function main() {
 
     run getFirst(x)
 
-    var z = Vector(Float)
+    var z = Vector(Float64)
     run getFirst(z)
 
     var a = justExit()
 }
 
-function getFirst(v: Vector of Float) -> Float {
+function getFirst(v: Vector of Float64) -> Float64 {
     if (v.length() == 0) {
         print "Vector is empty!"
         exit 1
@@ -21,13 +21,13 @@ function getFirst(v: Vector of Float) -> Float {
     }
 }
 
-function divideElements(a: Vector of Float, b: Vector of Float) -> Vector of Float {
+function divideElements(a: Vector of Float64, b: Vector of Float64) -> Vector of Float64 {
     if (a.length() != b.length()) {
         print "Vector lengths do not match!"
         exit 1
     }
 
-    var c = Vector(Float)
+    var c = Vector(Float64)
     for (i = 0, a.length()) {
         if (b[i] == 0.0) {
             print "Cannot divide by 0!"
@@ -38,7 +38,7 @@ function divideElements(a: Vector of Float, b: Vector of Float) -> Vector of Flo
     return c
 }
 
-function justExit() -> Int {        // Return type here is just to make sure compiler handles the case when a function never returns
+function justExit() -> Int64 {        // Return type here is just to make sure compiler handles the case when a function never returns
     while(True) {
         exit 0
     }

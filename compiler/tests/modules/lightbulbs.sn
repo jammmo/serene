@@ -5,7 +5,7 @@ type BoxOfLightbulbs struct {
 }
 
 type Lightbulb struct {
-    watts: Int
+    watts: Int64
 }
 
 function useBulb(mutate box: BoxOfLightbulbs) {

@@ -1,14 +1,14 @@
 type Pair struct {
-    x: Int, 
-    y: Int,
+    x: Int64, 
+    y: Int64,
 }
 
-function addOne(mutate x: Int) -> Int {
+function addOne(mutate x: Int64) -> Int64 {
     set x = x + 1
     return 0
 }
 
-function discard(move x: Int) -> Int {
+function discard(move x: Int64) -> Int64 {
     return 0
 }
 
@@ -18,11 +18,11 @@ function mut_and_return(mutate x: Pair) -> Pair {
 }
 
 function main() {
-    var m: Int = 100
-    var n: Int = 200
+    var m: Int64 = 100
+    var n: Int64 = 200
 
-    var u: Int = 1
-    var v: Int = 1
+    var u: Int64 = 1
+    var v: Int64 = 1
 
 // Test for field access
     var a: Pair = Pair(4, 39)

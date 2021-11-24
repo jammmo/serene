@@ -1,4 +1,4 @@
-function absoluteValue(x: Int) -> Int {
+function absoluteValue(x: Int64) -> Int64 {
     if (x < 0) {
         return -x
     } else {

@@ -1,9 +1,9 @@
 // While this should create an infinite loop, it should still be able to compile.
-function first(move x: Int) {
+function first(move x: Int64) {
     run second(move x)
 }
 
-function second(move y: Int) {
+function second(move y: Int64) {
     run first(move y)
 }
 

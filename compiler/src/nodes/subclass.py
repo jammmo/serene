@@ -4,6 +4,9 @@ from typing import Type
 from src.common import *
 from src import typecheck, scope, nodes
 
+int_types = ['Int64', 'Int32', 'Int16', 'Int8', 'Uint64', 'Uint32', 'Uint16', 'Uint8']
+float_types = ['Float64', 'Float32']
+
 indent_level = 0
 
 # Functions ___________________________________________________________________
@@ -27,13 +30,21 @@ def sub_indent():
 def get_cpp_type(my_type):
     assert type(my_type) == typecheck.TypeObject
     base = my_type.base
-    mapping = {'Int':    'int64_t',
-               'Bool':   'bool',
-               'String': 'SN_String',
-               'Float':  'double',
-               'Char':   'char',
-               'Vector': 'SN_Vector',
-               'Array':  'SN_Array',
+    mapping = {'Int64':    'int64_t',
+               'Int32':    'int32_t',
+               'Int16':    'int16_t',
+               'Int8':     'int8_t',
+               'Uint64':   'uint64_t',
+               'Uint32':   'uint32_t',
+               'Uint16':   'uint16_t',
+               'Uint8':    'uint8_t',
+               'Bool':     'bool',
+               'String':   'SN_String',
+               'Float64':  'double',
+               'Float32':  'float',
+               'Char':     'char',
+               'Vector':   'SN_Vector',
+               'Array':    'SN_Array',
               }
     if base in mapping:
         cpp_type = mapping[base]
@@ -110,7 +121,7 @@ class MethodDefinitionNode(nodes.Node):
     def to_tuple_description(self, parent_scope):
         # Should be used while struct definitions are being processed and before method definitions are processed (as it calls FunctionParameterNode.setup)
         
-        # return tuple similar to ("delete!", ("", [scope.ParameterObject('index', 'look', TypeObject('Int'))]))
+        # return tuple similar to ("delete!", ("", [scope.ParameterObject('index', 'look', TypeObject('Int64'))]))
 
         parameter_list = []
         self.my_scope = scope.ScopeObject(parent=parent_scope, nonmut_method=(Symbol.mutate_method_symbol not in self))
@@ -326,7 +337,7 @@ class SetStatement(nodes.Node):
             raise SereneTypeError(f"Incorrect type for assignment to variable '{var_name}' at line number {scope.line_number}. Correct type is '{correct_type}'.")
 
         if assign_op != '=':
-            if expr_type.base not in ('Int', 'Float'):
+            if expr_type.base not in (*int_types, *float_types):
                 raise SereneTypeError(f"Incorrect type for '{assign_op}' assignment operator at line number {scope.line_number}.")
 
         scope.current_scope.check_set(var_name)
@@ -427,7 +438,7 @@ class ExpressionNode(nodes.Node):
             elif (cur.nodetype == Symbol.infix_op):
                 if type(cur.data) != str:
                     if cur.get_scalar(0) in ('>', '<', '>=', '<='):
-                        if self[i-1].get_type().base not in ('Int', 'Float', 'String', 'Char'):
+                        if self[i-1].get_type().base not in (*int_types, *float_types, 'String', 'Char'):
                             raise SereneTypeError(f"Incorrect type for inequality expression at line number {scope.line_number}.")
                     code += ' ' + cur.get_scalar(0) + ' '
                 else:
@@ -435,7 +446,7 @@ class ExpressionNode(nodes.Node):
                         if self[i-1].get_type().base != 'Bool':
                            raise SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
                     elif cur.data in ('+', '-', '*', '/', '%'):
-                        if self[i-1].get_type().base not in ('Int', 'Float'):
+                        if self[i-1].get_type().base not in (*int_types, *float_types):
                            raise SereneTypeError(f"Incorrect type for numeric expression at line number {scope.line_number}.")                 
                     code += ' ' + cur.data + ' '
             elif cur.nodetype == Symbol.term:
@@ -647,11 +658,11 @@ class MethodCallNode(nodes.Node):
 class IndexCallNode(nodes.Node):
     def get_type(self, prev_type):
         if prev_type.base in ('Vector', 'Array'):
-            if self[Symbol.expression].get_type().base != 'Int':
+            if self[Symbol.expression].get_type().base != 'Int64':
                 raise SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
             return prev_type.params[0]
         elif prev_type.base == 'String':
-            if self[Symbol.expression].get_type().base != 'Int':
+            if self[Symbol.expression].get_type().base != 'Int64':
                 raise SereneTypeError(f"Invalid type for index at line number {scope.line_number}.")
             return typecheck.TypeObject('Char')
         else:
@@ -663,18 +674,21 @@ class IndexCallNode(nodes.Node):
 class BaseExpressionNode(nodes.Node):
     def get_type(self):
         if Symbol.literal in self:
-            if Symbol.int_literal in self[Symbol.literal]:
-                return typecheck.TypeObject('Int')
-            elif Symbol.float_literal in self[Symbol.literal]:
-                return typecheck.TypeObject('Float')
-            elif Symbol.bool_literal in self[Symbol.literal]:
-                return typecheck.TypeObject('Bool')
-            elif Symbol.string_literal in self[Symbol.literal]:
-                return typecheck.TypeObject('String')
-            elif Symbol.char_literal in self[Symbol.literal]:
-                return typecheck.TypeObject('Char')
+            if Symbol.type_solidifier in self[Symbol.literal]:
+                raise NotImplementedError
             else:
-                raise UnreachableError
+                if Symbol.int_literal in self[Symbol.literal]:
+                    return typecheck.TypeObject('Int64')
+                elif Symbol.float_literal in self[Symbol.literal]:
+                    return typecheck.TypeObject('Float64')
+                elif Symbol.bool_literal in self[Symbol.literal]:
+                    return typecheck.TypeObject('Bool')
+                elif Symbol.string_literal in self[Symbol.literal]:
+                    return typecheck.TypeObject('String')
+                elif Symbol.char_literal in self[Symbol.literal]:
+                    return typecheck.TypeObject('Char')
+                else:
+                    raise UnreachableError
         elif Symbol.expression in self:
             return self[Symbol.expression].get_type()
         elif Symbol.identifier in self:
@@ -767,7 +781,7 @@ class ConstructorCallNode(nodes.Node):
             else:
                 raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")        
         elif type_name == 'Vector':
-            if len(self[Symbol.constructor_call_parameters].data) == 1 and self[Symbol.constructor_call_parameters][0][0].nodetype == Symbol.type:    # Vector(Int), Vector(String), etc.
+            if len(self[Symbol.constructor_call_parameters].data) == 1 and self[Symbol.constructor_call_parameters][0][0].nodetype == Symbol.type:    # Vector(Int64), Vector(String), etc.
                 type_node = self[Symbol.constructor_call_parameters][0][0]
                 return typecheck.TypeObject(base='Vector', params=[type_node.get_type()])
             elif len(self[Symbol.constructor_call_parameters].data) >= 1 and self[Symbol.constructor_call_parameters][0][0].nodetype == Symbol.expression:
@@ -800,7 +814,7 @@ class ConstructorCallNode(nodes.Node):
             else:
                raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.") 
         elif type_name == 'Vector':
-            if len(self[Symbol.constructor_call_parameters].data) == 1 and self[Symbol.constructor_call_parameters][0][0].nodetype == Symbol.type:    # Vector(Int), Vector(String), etc.
+            if len(self[Symbol.constructor_call_parameters].data) == 1 and self[Symbol.constructor_call_parameters][0][0].nodetype == Symbol.type:    # Vector(Int64), Vector(String), etc.
                 type_node = self[Symbol.constructor_call_parameters][0][0]
                 type_param = get_cpp_type(type_node.get_type())
                 return f"SN_Vector<{type_param}>()"

@@ -1,22 +1,22 @@
-function test1() -> Int {
+function test1() -> Int64 {
     while (True) {
         continue
     }
 }
 
-function test2() -> Int {
+function test2() -> Int64 {
     while (True) {
         return 1
     }
 }
 
-function test3() -> Int {
+function test3() -> Int64 {
     while (((((((True))))))) {
         return 1
     }
 }
 
-function test4() -> Int {
+function test4() -> Int64 {
     while (True) {
         while (True) {
             return 1

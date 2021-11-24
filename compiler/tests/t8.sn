@@ -1,6 +1,6 @@
 // deletes the leftmost occurence of x, or does nothing if x is not found
 // Vector u must be already sorted
-function binarySearchAndDelete(mutate u: Vector of Int, x: Int) {
+function binarySearchAndDelete(mutate u: Vector of Int64, x: Int64) {
     var low = 0
     var high = u.length()
     while (low < high) {
@@ -17,7 +17,7 @@ function binarySearchAndDelete(mutate u: Vector of Int, x: Int) {
 }
 
 function main() {
-    var u = Vector(Int)                 // creates an empty vector of integers
+    var u = Vector(Int64)                 // creates an empty vector of integers
     print "Length of u: ", u.length()   // Length of u: 0
     for (i = 0, 5) {
         run u.append!(i * 2)

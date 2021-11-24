@@ -1,0 +1,18 @@
+function consume_bytes(move x: Array of Uint8) {
+
+}
+
+function main() {
+    const a: Uint8 = 255
+    const b: Uint16 = 65535
+    const c: Uint32 = 4294967295
+    const d: Uint64 = 18446744073709551615
+
+    const e: Int8 = -128
+    const f: Int16 = -32768
+    const g: Int32 = -2147483648
+    const h: Int64 = -9223372036854775808
+
+    var z: Array of Uint8 = Array(a, a, a)
+    run consume_bytes(move z)
+}
