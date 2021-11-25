@@ -17,9 +17,9 @@ function main() {
     const m = 18 as Int8
     run multiplyAndPrint(m, m)
 
-    run multiplyAndPrint("jeremy", "bearimy")     // should not compile
+    //run multiplyAndPrint("jeremy", "bearimy")     // should not compile
 
-    var x = -5 as Int8
-    var y = 6
-    run multiplyAndPrint(x, y)           // should not compile (mismatched types)
+    // var x = -5 as Int8
+    // var y = 6
+    // run multiplyAndPrint(x, y)           // should not compile (mismatched types)
 }

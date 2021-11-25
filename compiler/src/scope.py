@@ -50,7 +50,8 @@ class ScopeObject:
         self.type_parameters = dict()
         self.generic_combos_params = []
         self.generic_combos_type_params = []
-        self.generic_combos_params_temp = []
+        self.generic_combos_params_temp = None
+        self.generic_combos_type_params_temp = None
 
         self.subscopes = []
         self.parent = parent
@@ -237,8 +238,9 @@ scope_for_setup = None
 current_statement = None
 current_enclosure = None
 current_func_type = None
+current_type_params = None
 loops: list = []
 functions = None
 function_names: list[str] = []
 definitions = None
-generic_function_forward_declarations: list[str] = []
+remaining_generic_functions: list[tuple] = []

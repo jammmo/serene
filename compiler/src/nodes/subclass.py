@@ -145,10 +145,17 @@ class FunctionNode(nodes.Node):
             func_type = 'void'
             return_is_statisfied = True     # No need to return a value anywhere            
         func_name = self.get_scalar(Symbol.identifier)
-        func_parameters = ', '.join([x.to_code() for x in self[Symbol.function_parameters]])
+        
+        if self.generic:
+            func_parameters_list = []
+            for i in range(len(self.my_scope.generic_combos_params_temp)):
+                func_parameters_list.append(self[Symbol.function_parameters][i].to_code(my_type=self.my_scope.generic_combos_params_temp[i]))
+            func_parameters = ', '.join(func_parameters_list)
+        else:
+            func_parameters = ', '.join([x.to_code() for x in self[Symbol.function_parameters]])
 
         statements, return_is_statisfied = StatementNode.process_statements(node=self[Symbol.statements], indent=newindent, satisfied=return_is_statisfied)
-        
+
         if not return_is_statisfied:
             raise SereneTypeError(f"Function '{self.get_scalar(Symbol.identifier)}' is missing a return value in at least one execution path.")
 
@@ -484,7 +491,11 @@ class ExpressionNode(nodes.Node):
                     continue
                 else:
                     if x.get_type() != last_type:
-                        raise SereneTypeError(f"Mismatching types for infix operator(s) at line number {scope.line_number}.")
+                        if scope.current_type_params is not None:
+                            tp_str = '(' + ', '.join([f"type {x}: {y}" for x, y in scope.current_type_params.items()]) + ')'
+                            raise SereneTypeError(f"Mismatching types for infix operator(s) in generic function with parameters {tp_str}, at line number {scope.line_number}.")
+                        else:
+                            raise SereneTypeError(f"Mismatching types for infix operator(s) at line number {scope.line_number}.")
             return accum_type
         else:
             return self[Symbol.term].get_type(expected_type=expected_type)
@@ -508,7 +519,11 @@ class ExpressionNode(nodes.Node):
             if (cur.nodetype == Symbol.unary_op):
                 if cur.data == 'not':
                     if self[i+1].get_type().base != 'Bool':
-                        raise SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
+                        if scope.current_type_params is not None:
+                            tp_str = '(' + ', '.join([f"type {x}: {y}" for x, y in scope.current_type_params.items()]) + ')'
+                            raise SereneTypeError(f"Incorrect type for boolean expression in generic function with parameters {tp_str}, at line number {scope.line_number}.")
+                        else:
+                            raise SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
                 if cur.data == '-' and expected_type is not None and len(self.data) == 2:
                     if passthrough_negative == True:
                         raise UnreachableError
@@ -519,15 +534,27 @@ class ExpressionNode(nodes.Node):
                 if type(cur.data) != str:
                     if cur.get_scalar(0) in ('>', '<', '>=', '<='):
                         if self[i-1].get_type().base not in (*int_types, *float_types, 'String', 'Char'):
-                            raise SereneTypeError(f"Incorrect type for inequality expression at line number {scope.line_number}.")
+                            if scope.current_type_params is not None:
+                                tp_str = '(' + ', '.join([f"type {x}: {y}" for x, y in scope.current_type_params.items()]) + ')'
+                                raise SereneTypeError(f"Incorrect type for inequality expression in generic function with parameters {tp_str}, at line number {scope.line_number}.")
+                            else:
+                                raise SereneTypeError(f"Incorrect type for inequality expression at line number {scope.line_number}.")
                     code += ' ' + cur.get_scalar(0) + ' '
                 else:
                     if cur.data in ('and', 'or'):
                         if self[i-1].get_type().base != 'Bool':
-                           raise SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
+                            if scope.current_type_params is not None:
+                                tp_str = '(' + ', '.join([f"type {x}: {y}" for x, y in scope.current_type_params.items()]) + ')'
+                                raise SereneTypeError(f"Incorrect type for boolean expression in generic function with parameters {tp_str}, at line number {scope.line_number}.")
+                            else:
+                                raise SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
                     elif cur.data in ('+', '-', '*', '/', '%'):
                         if self[i-1].get_type().base not in (*int_types, *float_types):
-                           raise SereneTypeError(f"Incorrect type for numeric expression at line number {scope.line_number}.")                 
+                            if scope.current_type_params is not None:
+                                tp_str = '(' + ', '.join([f"type {x}: {y}" for x, y in scope.current_type_params.items()]) + ')'
+                                raise SereneTypeError(f"Incorrect type for numeric expression in generic function with parameters {tp_str}, at line number {scope.line_number}.")
+                            else:
+                                raise SereneTypeError(f"Incorrect type for numeric expression at line number {scope.line_number}.")
                     code += ' ' + cur.data + ' '
             elif cur.nodetype == Symbol.term:
                 last_term = cur
@@ -556,9 +583,15 @@ class ExpressionNode(nodes.Node):
         return code
 
 class TermNode(nodes.Node):
-    def get_type_sequence(self, expected_type=None):
+    def get_type_sequence(self, expected_type=None, type_params=None):
         L: list[typecheck.TypeObject] = []
         base_type = self[0].get_type(expected_type=expected_type)
+        if base_type.base not in type_mapping and base_type.base not in typecheck.user_defined_types:
+            if type_params is not None and base_type.base in type_params:
+                base_type = type_params[base_type.base]
+            else:
+                raise SereneTypeError(f"Unknown type in expression at line number {scope.line_number}.")
+        
         L.append(base_type)
 
         if len(self.data) == 1:
@@ -586,7 +619,7 @@ class TermNode(nodes.Node):
         return L
     
     def get_type(self, expected_type=None):
-        this_type = self.get_type_sequence(expected_type=expected_type)[-1]
+        this_type = self.get_type_sequence(expected_type=expected_type, type_params=scope.current_type_params)[-1]
         if this_type is None:
             raise SereneTypeError(f"Value of expression at line number {scope.line_number} is void.")
         else:
@@ -597,7 +630,7 @@ class TermNode(nodes.Node):
         inner_expr = base_expr[0]
 
         if len(self.data) > 1:
-            type_seq = self.get_type_sequence()
+            type_seq = self.get_type_sequence(scope.current_type_params)
 
         if inner_expr.nodetype == Symbol.identifier:
             self.is_temporary = False
@@ -921,14 +954,13 @@ class FunctionCallNode(nodes.Node):
                             original_function.my_scope.type_parameters[orig_cur.base].type_temp = call_cur
                             break
                 
+                generic_combos_params_temp = call_param_types
                 original_function.my_scope.generic_combos_params.append(call_param_types)
-                original_function.my_scope.generic_combos_params_temp = call_param_types
-                original_function.my_scope.generic_combos_type_params.append({k: v.type_temp for k, v in original_function.my_scope.type_parameters.items()})
-                
-                scope.generic_function_forward_declarations.append(original_function.to_forward_declaration())
-                #print(original_function.to_code())
 
-                original_function.my_scope.generic_combos_params_temp = None
+                generic_combos_type_params_temp = {k: v.type_temp for k, v in original_function.my_scope.type_parameters.items()}
+                original_function.my_scope.generic_combos_type_params.append(generic_combos_type_params_temp)
+
+                scope.remaining_generic_functions.append((original_function, generic_combos_params_temp, generic_combos_type_params_temp))
 
         for i in range(num_called_params):
             o_param = original_function[Symbol.function_parameters][i]

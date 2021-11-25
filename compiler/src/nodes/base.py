@@ -138,9 +138,9 @@ class Node:
 
     def __repr__(self):
         if type(self.data) == NodeMap:
-            return '<' + self.nodetype + '>\n  ' + '\n  '.join(repr(self.data).split('\n')) + '\n</' + self.nodetype + '>'
+            return '<' + self.nodetype.name + '>\n  ' + '\n  '.join(repr(self.data).split('\n')) + '\n</' + self.nodetype.name + '>'
         else:
-            return '<' + self.nodetype + ': ' + repr(self.data if self.data != '' else None) + '>'
+            return '<' + self.nodetype.name + ': ' + repr(self.data if self.data != '' else None) + '>'
 
     get_type: Callable[..., typecheck.TypeObject]
     to_code: Callable[..., str]

@@ -105,9 +105,37 @@ def main(my_yaml, include_path):
             x.setup()
             if not x.generic:
                 function_forward_declarations.append(x.to_forward_declaration())
+
         for x in scope.functions:
             if not x.generic:
                 function_code.append(x.to_code())
+
+        for x in scope.remaining_generic_functions:
+            original_function, generic_combos_params_temp, generic_combos_type_params_temp = x
+
+            original_function.my_scope.generic_combos_params_temp = generic_combos_params_temp
+            original_function.my_scope.generic_combos_type_params_temp = generic_combos_type_params_temp
+            scope.current_type_params = generic_combos_type_params_temp
+
+            function_forward_declarations.append(original_function.to_forward_declaration())
+
+            original_function.my_scope.generic_combos_params_temp = None
+            original_function.my_scope.generic_combos_type_params_temp = None
+            scope.current_type_params = None
+        
+        for x in scope.remaining_generic_functions:
+            original_function, generic_combos_params_temp, generic_combos_type_params_temp = x
+
+            original_function.my_scope.generic_combos_params_temp = generic_combos_params_temp
+            original_function.my_scope.generic_combos_type_params_temp = generic_combos_type_params_temp
+            scope.current_type_params = generic_combos_type_params_temp
+
+            function_code.append(original_function.to_code())
+
+            original_function.my_scope.generic_combos_params_temp = None
+            original_function.my_scope.generic_combos_type_params_temp = None
+            scope.current_type_params = None
+
     except (SereneScopeError, SereneTypeError) as exc:
         printerr("COMPILE ERROR:", exc.message, sep="\n")
         exit(1)
@@ -142,7 +170,6 @@ def main(my_yaml, include_path):
     #code += ('\n'.join(struct_forward_declarations)   + '\n\n') if len(struct_forward_declarations) > 0 else ''        #Not currently needed
     code += ('\n\n'.join(struct_definition_code)      + '\n\n') if len(struct_definition_code) > 0 else ''
     code += ('\n'.join(function_forward_declarations) + '\n\n') if len(function_forward_declarations) > 0 else ''
-    code += ('\n'.join(scope.generic_function_forward_declarations) + '\n\n') if len(scope.generic_function_forward_declarations) > 0 else ''
     code += ('\n\n'.join(function_code)               + '\n\n') if len(function_code) > 0 else ''
     code += "int main() {\n    "
     code += "std::cout.imbue(std::locale(std::locale(), new SereneLocale));\n    "  # std::locale is implicitly reference-counted, so "new" is not an issue
