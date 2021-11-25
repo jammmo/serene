@@ -8,10 +8,14 @@ function multiplyAndPrint(a: A, b: B) on (type A, type B) {
 function main() {
     run multiplyAndPrint(23, 2)
     run multiplyAndPrint(1034, 10)
+    run multiplyAndPrint(5 + 6, 9 + 3)
     run multiplyAndPrint(-5 as Int8, 6 as Int8)
 
     run multiplyAndPrint(3.5 as Float64, 2.0)
     run multiplyAndPrint(101.5 as Float32, 2.5 as Float32)
+
+    const m = 18 as Int8
+    run multiplyAndPrint(m, m)
 
     run multiplyAndPrint("jeremy", "bearimy")     // should not compile
 

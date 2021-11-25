@@ -346,13 +346,15 @@ class VarStatement(nodes.Node):
     def to_code(self):
         var_name = self.get_scalar(Symbol.identifier)
 
-        expr_code = self[Symbol.expression].to_code()
-        expr_type = self[Symbol.expression].get_type()
-
         if Symbol.type in self:
             written_type = self[Symbol.type].get_type()
+            expr_type = self[Symbol.expression].get_type(expected_type=written_type)    # expected_type is used only for disambiguating literals
             if written_type != expr_type:
                 raise SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
+            expr_code = self[Symbol.expression].to_code(expected_type=written_type)
+        else:
+            expr_type = self[Symbol.expression].get_type()
+            expr_code = self[Symbol.expression].to_code()
 
         scope.current_scope.add_binding(scope.VariableObject(var_name, mutable=True, var_type=expr_type))
 
@@ -363,13 +365,15 @@ class ConstStatement(nodes.Node):
     def to_code(self):
         var_name = self.get_scalar(Symbol.identifier)
 
-        expr_code = self[Symbol.expression].to_code()
-        expr_type = self[Symbol.expression].get_type()
-
         if Symbol.type in self:
             written_type = self[Symbol.type].get_type()
+            expr_type = self[Symbol.expression].get_type(expected_type=written_type)    # expected_type is used only for disambiguating literals
             if written_type != expr_type:
                 raise SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
+            expr_code = self[Symbol.expression].to_code(expected_type=written_type)
+        else:
+            expr_type = self[Symbol.expression].get_type()
+            expr_code = self[Symbol.expression].to_code()
 
         scope.current_scope.add_binding(scope.VariableObject(var_name, mutable=False, var_type=expr_type))
 
@@ -466,7 +470,7 @@ class ExitStatement(nodes.Node):
         return f"exit({self.get_scalar(Symbol.int_literal)});\n"
 
 class ExpressionNode(nodes.Node):
-    def get_type(self):
+    def get_type(self, expected_type=None):
         if (self.count(Symbol.term) > 1):
             last_type = None
             accum_type = None
@@ -483,9 +487,9 @@ class ExpressionNode(nodes.Node):
                         raise SereneTypeError(f"Mismatching types for infix operator(s) at line number {scope.line_number}.")
             return accum_type
         else:
-            return self[Symbol.term].get_type()
+            return self[Symbol.term].get_type(expected_type=expected_type)
     
-    def to_code(self, surrounding_accessor=None, enclosed=False):
+    def to_code(self, surrounding_accessor=None, enclosed=False, expected_type=None, passthrough_negative=False):
         # "surrounding_accessor" should only be passed to top-level expression with an applied accessor
         # "enclosed" is used for if-statement conditions, where accesses need to be checked on an expression rather than a statement
 
@@ -505,7 +509,12 @@ class ExpressionNode(nodes.Node):
                 if cur.data == 'not':
                     if self[i+1].get_type().base != 'Bool':
                         raise SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
-                code += cur.data + (' ' if cur.data != '-' else '')
+                if cur.data == '-' and expected_type is not None and len(self.data) == 2:
+                    if passthrough_negative == True:
+                        raise UnreachableError
+                    passthrough_negative = True
+                else:
+                    code += cur.data + (' ' if cur.data != '-' else '')
             elif (cur.nodetype == Symbol.infix_op):
                 if type(cur.data) != str:
                     if cur.get_scalar(0) in ('>', '<', '>=', '<='):
@@ -523,9 +532,17 @@ class ExpressionNode(nodes.Node):
             elif cur.nodetype == Symbol.term:
                 last_term = cur
                 if (self.count(Symbol.term) > 1) or (surrounding_accessor is None):
-                    code += cur.to_code()
+                    if passthrough_negative:
+                        code += cur.to_code(expected_type=expected_type, passthrough_negative=True)
+                        passthrough_negative = False
+                    else:
+                        code += cur.to_code(expected_type=expected_type)
                 else:
-                    code += cur.to_code(surrounding_accessor=surrounding_accessor)
+                    if passthrough_negative:
+                        code += cur.to_code(surrounding_accessor=surrounding_accessor, expected_type=expected_type, passthrough_negative=True)
+                        passthrough_negative = False
+                    else:
+                        code += cur.to_code(surrounding_accessor=surrounding_accessor, expected_type=expected_type)
             else:
                 raise TypeError
         
@@ -539,9 +556,9 @@ class ExpressionNode(nodes.Node):
         return code
 
 class TermNode(nodes.Node):
-    def get_type_sequence(self):
+    def get_type_sequence(self, expected_type=None):
         L: list[typecheck.TypeObject] = []
-        base_type = self[0].get_type()
+        base_type = self[0].get_type(expected_type=expected_type)
         L.append(base_type)
 
         if len(self.data) == 1:
@@ -568,14 +585,14 @@ class TermNode(nodes.Node):
                 raise UnreachableError          
         return L
     
-    def get_type(self):
-        this_type = self.get_type_sequence()[-1]
+    def get_type(self, expected_type=None):
+        this_type = self.get_type_sequence(expected_type=expected_type)[-1]
         if this_type is None:
             raise SereneTypeError(f"Value of expression at line number {scope.line_number} is void.")
         else:
             return this_type
     
-    def to_code(self, place_term_relative_set=False, surrounding_accessor=None):
+    def to_code(self, place_term_relative_set=False, surrounding_accessor=None, expected_type=None, passthrough_negative=False):
         base_expr = self[0]
         inner_expr = base_expr[0]
 
@@ -593,16 +610,19 @@ class TermNode(nodes.Node):
 
             self.var_tup = (inner_expr.data,)
         elif (inner_expr.nodetype == Symbol.expression):
-            code = '(' + inner_expr.to_code() + ')'
+            code = '(' + inner_expr.to_code(passthrough_negative=(passthrough_negative and len(self.data) == 1)) + ')'
             self.is_temporary = inner_expr.is_temporary
             if self.is_temporary:
                 self.var_tup = None
             else:
                 self.var_tup = inner_expr.var_tup
         else:
-            code = base_expr.to_code()
+            code = base_expr.to_code(expected_type=expected_type, passthrough_negative=(passthrough_negative and len(self.data) == 1))
             self.is_temporary = True
             self.var_tup = None
+        
+        if (passthrough_negative and len(self.data) > 1):
+            code = '-' + code
 
         extend_var_tup = True
         does_mutate = False
@@ -743,36 +763,46 @@ class IndexCallNode(nodes.Node):
         return '[' + self[Symbol.expression].to_code() + ']'
 
 class BaseExpressionNode(nodes.Node):
-    def get_type(self):
+    def get_type(self, expected_type=None):
         if Symbol.literal in self:
-            if Symbol.type_solidifier in self[Symbol.literal]:
-                solidified_type = self[Symbol.literal][Symbol.type_solidifier][Symbol.type].get_type()
+            if Symbol.type_solidifier in self[Symbol.literal] or expected_type is not None:
+                if expected_type is not None:
+                    solidified_type = expected_type
+                else:
+                    solidified_type = self[Symbol.literal][Symbol.type_solidifier][Symbol.type].get_type()
 
                 if Symbol.int_literal in self[Symbol.literal]:
                     if solidified_type.base not in int_types or solidified_type.params is not None:
                         raise SereneTypeError(f"Type solidifier is not valid for literal at line number {scope.line_number}.")
+                    return solidified_type
                 elif Symbol.float_literal in self[Symbol.literal]:
                     if solidified_type.base not in float_types or solidified_type.params is not None:
                         raise SereneTypeError(f"Type solidifier is not valid for literal at line number {scope.line_number}.")
-                else:
-                    raise NotImplementedError
-                
-                return solidified_type
-            else:
-                if Symbol.int_literal in self[Symbol.literal]:
-                    return typecheck.TypeObject('Int64')
-                elif Symbol.float_literal in self[Symbol.literal]:
-                    return typecheck.TypeObject('Float64')
-                elif Symbol.bool_literal in self[Symbol.literal]:
+                    return solidified_type
+                elif Symbol.bool_literal in self[Symbol.literal] and solidified_type.base == 'Bool':
                     return typecheck.TypeObject('Bool')
-                elif Symbol.string_literal in self[Symbol.literal]:
+                elif Symbol.string_literal in self[Symbol.literal] and solidified_type.base == 'String':
                     return typecheck.TypeObject('String')
-                elif Symbol.char_literal in self[Symbol.literal]:
+                elif Symbol.char_literal in self[Symbol.literal] and solidified_type.base == 'Char':
                     return typecheck.TypeObject('Char')
-                elif Symbol.collection_literal in self[Symbol.literal]:
-                    raise NotImplementedError
-                else:
-                    raise UnreachableError
+            # If an expected type or type solidifier is passed but is incompatible with the literal, the logic above should
+            # "fall through" to the general cases below. The type returned will be based on just the literal, but the incompatibility
+            # should throw an error elsewhere.
+            
+            if Symbol.int_literal in self[Symbol.literal]:
+                return typecheck.TypeObject('Int64')
+            elif Symbol.float_literal in self[Symbol.literal]:
+                return typecheck.TypeObject('Float64')
+            elif Symbol.bool_literal in self[Symbol.literal]:
+                return typecheck.TypeObject('Bool')
+            elif Symbol.string_literal in self[Symbol.literal]:
+                return typecheck.TypeObject('String')
+            elif Symbol.char_literal in self[Symbol.literal]:
+                return typecheck.TypeObject('Char')
+            elif Symbol.collection_literal in self[Symbol.literal]:
+                raise NotImplementedError
+            else:
+                raise UnreachableError
         elif Symbol.expression in self:
             return self[Symbol.expression].get_type()
         elif Symbol.identifier in self:
@@ -794,26 +824,39 @@ class BaseExpressionNode(nodes.Node):
         else:
             raise UnreachableError
         
-    def to_code(self):
+    def to_code(self, expected_type=None, passthrough_negative=False):
         if Symbol.function_call in self:
-            return self[Symbol.function_call].to_code()
+            return ('-' if passthrough_negative else '') + self[Symbol.function_call].to_code()
         elif Symbol.constructor_call in self:
-            return self[Symbol.constructor_call].to_code()
+            return ('-' if passthrough_negative else '') + self[Symbol.constructor_call].to_code()
         elif Symbol.identifier in self:
             var_name = self.get_scalar(Symbol.identifier)
             if scope.current_scope.check_read(var_name):     # If the variable also needs to be mutated/moved, that will already be checked within TermNode or ExpressionNode
-                return 'sn_' + var_name
+                return ('-' if passthrough_negative else '') + 'sn_' + var_name
             else:
                 raise SereneScopeError(f"Variable '{var_name}' is not defined at line number {scope.line_number}.")
         elif Symbol.literal in self:
             if Symbol.bool_literal in self[Symbol.literal]:
+                if passthrough_negative:
+                    raise UnreachableError
                 return self[Symbol.literal].get_scalar(0).lower()
             elif Symbol.string_literal in self[Symbol.literal]:
+                if passthrough_negative:
+                    raise UnreachableError
                 return f"SN_String({self[Symbol.literal].get_scalar(0)})"
+            elif Symbol.int_literal in self[Symbol.literal] or Symbol.float_literal in self[Symbol.literal]:
+                if expected_type is not None:
+                    return get_cpp_type(expected_type) + '{' + ('-' if passthrough_negative else '') + self[Symbol.literal].get_scalar(0) + '}'
+                else:
+                    return ('-' if passthrough_negative else '') + self[Symbol.literal].get_scalar(0)
             else:
+                if passthrough_negative:
+                    raise UnreachableError
                 return self[Symbol.literal].get_scalar(0)
         elif Symbol.expression in self:
-            return '(' + self[Symbol.expression].to_code() + ')'
+            return '(' + self[Symbol.expression].to_code(passthrough_negative=passthrough_negative) + ')'
+        else:
+            raise UnreachableError
 
 class FunctionCallNode(nodes.Node):
     def to_code(self):
@@ -1016,7 +1059,7 @@ class FunctionCallParameterNode(nodes.Node):
             else:
                 raise SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to function '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
 
-        code = self[Symbol.expression].to_code(surrounding_accessor=my_accessor) # This will raise exceptions for incorrect accesses
+        code = self[Symbol.expression].to_code(surrounding_accessor=my_accessor, expected_type=original_type) # This will raise exceptions for incorrect accesses
 
         if (not self[Symbol.expression].is_temporary) and (my_accessor != original_accessor) and (my_accessor != 'copy'):
             if method:
