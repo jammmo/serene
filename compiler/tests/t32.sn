@@ -1,4 +1,6 @@
-function elementwise3DAdd(move a: Vector of Vector of Vector of Int64, move b: Vector of Vector of Vector of Int64) -> Vector of Vector of Vector of Int64 {
+function elementwise3DAdd(move a: Vector of Vector of Vector of Int64,
+                          move b: Vector of Vector of Vector of Int64)
+                          -> Vector of Vector of Vector of Int64 {
     for (i = 0, a.length()) {
         for (j = 0, a[i].length()) {
             for (k = 0, a[i][j].length()) {
@@ -9,9 +11,12 @@ function elementwise3DAdd(move a: Vector of Vector of Vector of Int64, move b: V
     return a
 }
 
-function main() {
-    var a = Vector( Vector(Vector(1, 2), Vector(-3, 6)) , Vector(Vector(9, 32), Vector(29, -1)) )
-    var b = Vector( Vector(Vector(3, 2), Vector(7, -2)) , Vector(Vector(-5, -28), Vector(-25, 5)) )
+function main()
+{
+    var a = Vector(Vector(Vector(1, 2), Vector(-3, 6)),
+                   Vector(Vector(9, 32), Vector(29, -1)))
+    var b = Vector(Vector(Vector(3, 2), Vector(7, -2)),
+                   Vector(Vector(-5, -28), Vector(-25, 5)))
 
     print "  A  : ", a
     print "  B  : ", b

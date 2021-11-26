@@ -53,6 +53,9 @@ grammar Serene {
     token end_separator {
         [ \h* <.comment>? \v ]* [ \h* <.comment>? $ ]
     }
+    token comma_sp {
+        ',' <separator>?
+    }
     token comment {
         [ <line_comment> | <multiline_comment> ] { $*LAST = max(line_num(self.pos), $*LAST) }
     }
@@ -118,7 +121,7 @@ grammar Serene {
     }
     rule collection_literal {
         '['
-        [ <expression>* %% ',' ]
+        [ <expression>* %% <.comma_sp> ]
         ']'
     }
 
@@ -187,7 +190,7 @@ grammar Serene {
     }
 
     rule struct_definition {
-        'type' <base_type> 'struct' '{' <.separator>
+        'type' <base_type> 'struct' <.separator>? '{' <.separator>
         [ <struct_member> ',' <.separator> ]* [ <struct_member> <.separator> ]?
         '}'
         [ 'with' <.separator> [ <extension>+ % <.separator> ] ]?
@@ -223,8 +226,9 @@ grammar Serene {
     rule function {
         'function' <identifier>
         '(' <function_parameters> ')'
-        [ 'on' <def_type_parameters> ]?
-        [ '->' <type> ]?
+        [ <.separator>? 'on' <def_type_parameters> ]?
+        [ <.separator>? '->' <type> ]?
+        <.separator>?
         '{' <.separator>
         <statements>
         '}'
@@ -233,14 +237,15 @@ grammar Serene {
     rule method_definition {
         'method' <identifier> <mutate_method_symbol>?
         '(' <function_parameters> ')'
-        [ '->' <type> ]?
+        [ <.separator>? '->' <type> ]?
+        <.separator>?
         '{' <.separator>
         <statements>
         '}'
     }
 
     rule function_parameters {
-        <function_parameter>* %% ','
+        <function_parameter>* %% <.comma_sp>
     }
 
     rule function_parameter {
@@ -252,7 +257,7 @@ grammar Serene {
     }
 
     rule function_call_parameters {
-        <function_call_parameter>* %% ','
+        <function_call_parameter>* %% <.comma_sp>
     }
 
     rule function_call_parameter {
@@ -264,7 +269,7 @@ grammar Serene {
     }
 
     rule constructor_call_parameters {
-        <constructor_call_parameter>* %% ','
+        <constructor_call_parameter>* %% <.comma_sp>
     }
 
     rule constructor_call_parameter {
@@ -274,12 +279,12 @@ grammar Serene {
 
     rule type_parameters {
         | [ <type> ]
-        | [ '(' [[ <type> ]+ %% ',' ] ')' ]
+        | [ '(' [[ <type> ]+ %% <.comma_sp> ] ')' ]
     }
 
     rule def_type_parameters {
         | [ 'type' <base_type> ]
-        | [ '(' [[ 'type' <base_type> ]+ %% ',' ] ')' ]
+        | [ '(' [[ 'type' <base_type> ]+ %% <.comma_sp> ] ')' ]
     }
 
     token mutate_method_symbol {
