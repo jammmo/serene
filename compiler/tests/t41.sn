@@ -1,0 +1,13 @@
+// This test converts the contents of this Serene file into a string and prints the result.
+
+function main() {
+    print "Reading original source code..."
+
+    const this_file = File("tests/t41.sn")   // path is relative to where the file is run from (in the case of run_tests.py, /compiler)
+
+    const code_string = this_file.to_string()
+    print "Length of file is ", code_string.length(), " characters."
+    print "File contents:"
+    print ""
+    print code_string
+}

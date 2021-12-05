@@ -48,7 +48,9 @@ standard_types = {'Vector': TypeSpecification(members={},
                                                        "append!": (None, [scope.ParameterObject('item', 'look', TypeObject('Char'))]),    #should "append!" take a Char or a string?
                                                        "delete!": (None, [scope.ParameterObject('index', 'look', TypeObject('Int64'))]),
                                                        "pop!":    (TypeObject("Char"), [])
-                                                      },
-                                              typevar=vector_type_var)}
+                                                      }),
+                  'File': TypeSpecification(members={},
+                                            methods={"to_string": (TypeObject("String"), [])})
+                 }
 
 user_defined_types: dict[str, TypeSpecification] = {}

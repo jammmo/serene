@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../lib/visit_struct.hpp"
 
 template<typename T>

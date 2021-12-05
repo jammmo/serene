@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 
 class SereneLocale : public std::numpunct<char> {

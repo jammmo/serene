@@ -24,6 +24,7 @@ type_mapping = {'Int64':    'int64_t',
                 'Char':     'char',
                 'Vector':   'SN_Vector',
                 'Array':    'SN_Array',
+                'File':     'SN_File',
                }
 
 
@@ -1004,6 +1005,12 @@ class ConstructorCallNode(nodes.Node):
                 return typecheck.TypeObject(base='Vector', params=[self[Symbol.constructor_call_parameters][0][0].get_type()])
             else:
                 raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+        elif type_name == 'File':
+            if len(self[Symbol.constructor_call_parameters].data) == 1:
+                param = self[Symbol.constructor_call_parameters][0][0]
+                if param.nodetype == Symbol.expression and param.get_type().base == 'String':
+                    return typecheck.TypeObject(base='File')
+            raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
         elif type_name in typecheck.user_defined_types:
             return typecheck.TypeObject(base=type_name)
         else:
@@ -1051,6 +1058,13 @@ class ConstructorCallNode(nodes.Node):
                 return f"SN_Vector<{type_param}>({inner_code})"
             else:
                 raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
+        elif type_name == 'File':
+            if len(self[Symbol.constructor_call_parameters].data) == 1:
+                param = self[Symbol.constructor_call_parameters][0][0]
+                if param.nodetype == Symbol.expression and param.get_type().base == 'String':
+                    inner_code = param.to_code()
+                    return f"SN_File({inner_code})"
+            raise SereneTypeError(f"Invalid parameters for type constructor called at line number {scope.line_number}.")
         elif type_name in typecheck.user_defined_types:
             type_spec = typecheck.user_defined_types[type_name]
             fields = []

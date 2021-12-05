@@ -164,6 +164,7 @@ def main(my_yaml, include_path):
                            #include "../src/lib/serene_array.hh"
                            #include "../src/lib/serene_string.hh"
                            #include "../src/lib/serene_vector.hh"
+                           #include "../src/lib/serene_file.hh"
                            #include "../src/lib/serene_locale.hh"
                            
                            """)
