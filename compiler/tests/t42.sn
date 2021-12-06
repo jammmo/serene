@@ -1,0 +1,23 @@
+function gimmeThat(move element: X) on (type X) -> X {
+    return element
+}
+
+// function repeat(element: X, times: Int64) on (type X) -> Vector of X {
+//     var result = Vector(X)
+//     for (i = 0, times) {
+//         run result.append!(element)
+//     }
+//     return result
+// }
+
+function main() {
+    var a = "Hello world!"
+    print gimmeThat(move a)
+
+    var b = 24.1
+    print gimmeThat(move b)
+
+    // print repeat("milkshake", 10)
+    // print repeat(17 as Uint8, 12)
+    // print repeat(Array(14.5, 23.1), 5)
+}
