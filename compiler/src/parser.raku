@@ -114,7 +114,7 @@ grammar Serene {
         '"' [ '\\"' | '\\\\' | <-[ " \\ ]> ]* '"'
     }
     token char_literal {
-        "'" [ <.graph> | ' ' | '\n' | '\\\\' | "\\'" ] "'"
+        "'" [ <.graph> | '<' | '>' | ' ' | '\n' | '\\\\' | "\\'" ] "'"
     }
     token bool_literal {
         'True' | 'False'

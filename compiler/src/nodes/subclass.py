@@ -1145,6 +1145,9 @@ class ForLoopNode(nodes.Node):
             if expr_type.base in ('Array', 'Vector'):
                 var_type = expr_type.params[0]
                 scope.current_scope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
+            elif expr_type.base == 'String':
+                var_type = typecheck.TypeObject('Char')
+                scope.current_scope.add_binding(scope.VariableObject(loopvar, mutable=False, var_type=var_type))
             else:
                 raise SereneTypeError(f"Type '{expr_type.base}' is not iterable, at line number {scope.line_number}.")
             
