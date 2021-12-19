@@ -988,7 +988,7 @@ class FunctionCallNode(nodes.Node):
                 if Symbol.type in original_function:
                     base = original_function[Symbol.type].get_scalar(Symbol.base_type)
                     if check_basetype(base):
-                        self.return_type = self[Symbol.type].get_type()
+                        self.return_type = original_function[Symbol.type].get_type()
                     else:
                         if base in original_function.my_scope.type_parameters:
                             if Symbol.type not in original_function[Symbol.type]:
