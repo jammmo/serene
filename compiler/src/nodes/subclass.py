@@ -111,12 +111,16 @@ class FunctionNode(nodes.Node):
     def to_forward_declaration(self):
         if Symbol.type in self:
             base = self[Symbol.type].get_scalar(Symbol.base_type)
-            if not check_basetype(base):
+            if check_basetype(base):
+                func_type = self[Symbol.type].to_code()  # C++ return type
+            else:
                 if base in self.my_scope.type_parameters:
-                    raise NotImplementedError   # Generic return types
+                    if Symbol.type not in self[Symbol.type]:
+                        func_type = get_cpp_type(self.my_scope.generic_combos_type_params_temp[base])
+                    else:
+                        raise NotImplementedError   # Generic of a type parameter in return type?
                 else:
                     raise SereneTypeError(f"Unknown type: {base}.")
-            func_type = self[Symbol.type].to_code()  # C++ return type        
         else:
             func_type = 'void'
         func_name = self.get_scalar(Symbol.identifier)
@@ -139,8 +143,20 @@ class FunctionNode(nodes.Node):
         scope.current_scope = self.my_scope
 
         if Symbol.type in self:
-            scope.current_func_type = self[Symbol.type].get_type()
-            func_type = self[Symbol.type].to_code()  # C++ return type
+            base = self[Symbol.type].get_scalar(Symbol.base_type)
+            if check_basetype(base):
+                scope.current_func_type = self[Symbol.type].get_type()
+                func_type = self[Symbol.type].to_code()  # C++ return type
+            else:
+                if base in self.my_scope.type_parameters:
+                    if Symbol.type not in self[Symbol.type]:
+                        scope.current_func_type = self.my_scope.generic_combos_type_params_temp[base]
+                        func_type = get_cpp_type(scope.current_func_type)
+                    else:
+                        raise NotImplementedError   # Generic of a type parameter in return type?
+                else:
+                    raise SereneTypeError(f"Unknown type: {base}.")
+
             return_is_statisfied = False            
         else:
             func_type = 'void'
@@ -852,6 +868,11 @@ class BaseExpressionNode(nodes.Node):
             if Symbol.type not in original_function:
                 raise SereneTypeError(f"Function '{self[Symbol.function_call].get_scalar(Symbol.identifier)}' with no return value cannot be used as an expression at line number {scope.line_number}.")
             else:
+                original_func_type = original_function[Symbol.type].get_type()
+
+                if original_function.generic and original_func_type.base in original_function.my_scope.type_parameters:
+                    self[Symbol.function_call].to_code()    # Caches return type if it hasn't been computed yet
+                    return self[Symbol.function_call].return_type
                 return original_function[Symbol.type].get_type()
         elif Symbol.constructor_call in self:
             return self[Symbol.constructor_call].get_type()
@@ -894,6 +915,9 @@ class BaseExpressionNode(nodes.Node):
 
 class FunctionCallNode(nodes.Node):
     def to_code(self):
+        if hasattr(self, 'code'):
+            return self.code
+
         if self.get_scalar(Symbol.identifier) not in scope.function_names:
             raise SereneScopeError(f"Function '{self.get_scalar(Symbol.identifier)}' is not defined at line number {scope.line_number}.")
         code = 'sn_' + self.get_scalar(Symbol.identifier) + '('
@@ -961,6 +985,19 @@ class FunctionCallNode(nodes.Node):
                 generic_combos_type_params_temp = {k: v.type_temp for k, v in original_function.my_scope.type_parameters.items()}
                 original_function.my_scope.generic_combos_type_params.append(generic_combos_type_params_temp)
 
+                if Symbol.type in original_function:
+                    base = original_function[Symbol.type].get_scalar(Symbol.base_type)
+                    if check_basetype(base):
+                        self.return_type = self[Symbol.type].get_type()
+                    else:
+                        if base in original_function.my_scope.type_parameters:
+                            if Symbol.type not in original_function[Symbol.type]:
+                                self.return_type = generic_combos_type_params_temp[base]
+                            else:
+                                raise NotImplementedError   # Generic of a type parameter in return type?
+                        else:
+                            raise SereneTypeError(f"Unknown type: {base}.")
+
                 scope.remaining_generic_functions.append((original_function, generic_combos_params_temp, generic_combos_type_params_temp))
 
         for i in range(num_called_params):
@@ -987,6 +1024,7 @@ class FunctionCallNode(nodes.Node):
                 x.type_temp = None
 
         code += ', '.join(params_code) + ')'
+        self.code = code
         return code
 
 class ConstructorCallNode(nodes.Node):
