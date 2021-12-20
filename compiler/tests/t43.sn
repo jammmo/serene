@@ -1,0 +1,22 @@
+function main() {
+    var a = [1.5, 2.5, 3.5]
+    print a
+
+    var b = [10, 20, 30, 40] as Array of Uint16
+    print b
+
+    var c = ["Hello"]
+    print c
+
+    var d: Array of Int16 = [-2, 2]
+    print d
+
+    var e = ['b', 'a', 'n', 'a', 'n', 'a'] as Vector of Char
+    run e.append!('s')
+    print e
+
+    var f: Vector of String = []
+    run f.append!("strawberry")
+    run f.append!("blueberry")
+    print f
+}

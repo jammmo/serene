@@ -541,7 +541,7 @@ class ExpressionNode(nodes.Node):
             # These lists contain tuples of (variable as ParameterObject or VariableObject, field_name1, field_name2, ...)
             scope.current_enclosure = self
 
-        self.get_type()     # Just for error-checking
+        self.get_type(expected_type=expected_type)     # Just for error-checking
         code = ''
         last_term = None
         for i in range(len(self.data)):
@@ -848,6 +848,19 @@ class BaseExpressionNode(nodes.Node):
                     return typecheck.TypeObject('String')
                 elif Symbol.char_literal in self[Symbol.literal] and solidified_type.base == 'Char':
                     return typecheck.TypeObject('Char')
+                elif Symbol.collection_literal in self[Symbol.literal]:
+                    if solidified_type.base in ('Array', 'Vector'):
+                        L = []
+                        for x in self[Symbol.literal][Symbol.collection_literal]:
+                            new_type = x.get_type(expected_type=solidified_type.params[0])
+                            L.append(new_type)
+                            if new_type != L[0]:
+                                raise SereneTypeError(f"Mismatching types in collection literal at line number {scope.line_number}.")
+                        if len(L) == 0 and solidified_type.base == 'Array':
+                            raise NotImplementedError
+                        return solidified_type
+                    else:
+                        raise NotImplementedError
             # If an expected type or type solidifier is passed but is incompatible with the literal, the logic above should
             # "fall through" to the general cases below. The type returned will be based on just the literal, but the incompatibility
             # should throw an error elsewhere.
@@ -863,7 +876,15 @@ class BaseExpressionNode(nodes.Node):
             elif Symbol.char_literal in self[Symbol.literal]:
                 return typecheck.TypeObject('Char')
             elif Symbol.collection_literal in self[Symbol.literal]:
-                raise NotImplementedError
+                L = []
+                for x in self[Symbol.literal][Symbol.collection_literal]:
+                    new_type = x.get_type()
+                    L.append(new_type)
+                    if new_type != L[0]:
+                        raise SereneTypeError(f"Mismatching types in collection literal at line number {scope.line_number}.")
+                if len(L) == 0:
+                    raise SereneTypeError(f"Unspeficied type for zero-length collection literal at line number {scope.line_number}.")
+                return typecheck.TypeObject('Array', params=[L[0]])
             else:
                 raise UnreachableError
         elif Symbol.expression in self:
@@ -917,6 +938,18 @@ class BaseExpressionNode(nodes.Node):
                     return get_cpp_type(expected_type) + '{' + ('-' if passthrough_negative else '') + self[Symbol.literal].get_scalar(0) + '}'
                 else:
                     return ('-' if passthrough_negative else '') + self[Symbol.literal].get_scalar(0)
+            elif Symbol.collection_literal in self[Symbol.literal]:
+                if expected_type is not None:
+                    my_type = self.get_type(expected_type=expected_type)
+                    code = get_cpp_type(my_type)
+                    
+                else:
+                    code = get_cpp_type(self.get_type())
+                    return get_cpp_type(self.get_type()) + '({' + ', '.join([x.to_code() for x in self[Symbol.literal][Symbol.collection_literal]]) + '})'
+                if type(self[Symbol.literal][Symbol.collection_literal].data) == nodes.NodeMap:
+                    return code + '({' + ', '.join([x.to_code(expected_type=my_type.params[0]) for x in self[Symbol.literal][Symbol.collection_literal]]) + '})'
+                else:
+                    return code + '()'
             else:
                 if passthrough_negative:
                     raise UnreachableError
