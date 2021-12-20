@@ -69,6 +69,32 @@ def check_basetype(base):
     assert type(base) == str
     return (base in type_mapping) or (base in typecheck.user_defined_types)
 
+def check_solidified(my_type):
+    if check_basetype(my_type.get_scalar(Symbol.base_type)):
+        if Symbol.type_parameters in my_type:
+            return all([check_solidified(x) for x in my_type[Symbol.type_parameters]])
+        else:
+            return True
+    else:
+        return False
+
+def solidify_with_type_params(type_object):
+    base = type_object.base
+    if check_basetype(base):
+        if type_object.params is not None:
+            return typecheck.TypeObject(type_object.base, params=[solidify_with_type_params(x) for x in type_object.params])
+        else:
+            return typecheck.TypeObject(type_object.base)
+    else:
+        if base in scope.current_type_params:
+            solidified_base = scope.current_type_params[base].base
+            if type_object.params is not None:
+                return typecheck.TypeObject(solidified_base, params=[solidify_with_type_params(x) for x in type_object.params])
+            else:
+                return typecheck.TypeObject(solidified_base)
+        else:
+            raise SereneTypeError(f"Unknown type: {base}.")
+
 # Utilities ___________________________________________________________________
 class UnreachableError(Exception):
     # UnreachableErrors are usually a sign of a bug (likely a change in the parser code that has not been accounted for in the compiler).
@@ -110,17 +136,10 @@ class FunctionNode(nodes.Node):
 
     def to_forward_declaration(self):
         if Symbol.type in self:
-            base = self[Symbol.type].get_scalar(Symbol.base_type)
-            if check_basetype(base):
+            if check_solidified(self[Symbol.type]):
                 func_type = self[Symbol.type].to_code()  # C++ return type
             else:
-                if base in self.my_scope.type_parameters:
-                    if Symbol.type not in self[Symbol.type]:
-                        func_type = get_cpp_type(self.my_scope.generic_combos_type_params_temp[base])
-                    else:
-                        raise NotImplementedError   # Generic of a type parameter in return type?
-                else:
-                    raise SereneTypeError(f"Unknown type: {base}.")
+                func_type = get_cpp_type(solidify_with_type_params(self[Symbol.type].get_type()))
         else:
             func_type = 'void'
         func_name = self.get_scalar(Symbol.identifier)
@@ -143,20 +162,12 @@ class FunctionNode(nodes.Node):
         scope.current_scope = self.my_scope
 
         if Symbol.type in self:
-            base = self[Symbol.type].get_scalar(Symbol.base_type)
-            if check_basetype(base):
+            if check_solidified(self[Symbol.type]):
                 scope.current_func_type = self[Symbol.type].get_type()
-                func_type = self[Symbol.type].to_code()  # C++ return type
             else:
-                if base in self.my_scope.type_parameters:
-                    if Symbol.type not in self[Symbol.type]:
-                        scope.current_func_type = self.my_scope.generic_combos_type_params_temp[base]
-                        func_type = get_cpp_type(scope.current_func_type)
-                    else:
-                        raise NotImplementedError   # Generic of a type parameter in return type?
-                else:
-                    raise SereneTypeError(f"Unknown type: {base}.")
+                scope.current_func_type = solidify_with_type_params(self[Symbol.type].get_type())
 
+            func_type = get_cpp_type(scope.current_func_type)  # C++ return type
             return_is_statisfied = False            
         else:
             func_type = 'void'
@@ -382,7 +393,8 @@ class VarStatement(nodes.Node):
 
         scope.current_scope.add_binding(scope.VariableObject(var_name, mutable=True, var_type=expr_type))
 
-        cpp_type = get_cpp_type(expr_type)
+        cpp_type = get_cpp_type(solidify_with_type_params(expr_type))
+
         return f'{cpp_type} sn_{var_name} = {expr_code};\n'
 
 class ConstStatement(nodes.Node):
@@ -401,7 +413,8 @@ class ConstStatement(nodes.Node):
 
         scope.current_scope.add_binding(scope.VariableObject(var_name, mutable=False, var_type=expr_type))
 
-        cpp_type = get_cpp_type(expr_type)
+        cpp_type = get_cpp_type(solidify_with_type_params(expr_type))
+
         return f'const {cpp_type} sn_{var_name} = {expr_code};\n'
 
 class SetStatement(nodes.Node):
@@ -465,7 +478,7 @@ class ReturnStatement(nodes.Node):
             expr_code = self[Symbol.expression].to_code()
             if scope.current_func_type is None:
                 raise SereneTypeError(f"Cannot return value from function with no return type at line number {scope.line_number}.")
-            if self[Symbol.expression].get_type() != scope.current_func_type:
+            if solidify_with_type_params(self[Symbol.expression].get_type()) != scope.current_func_type:
                 raise SereneTypeError(f"Incorrect type for return statement at line number {scope.line_number}.")
             return f'return {expr_code};\n'
         else:
@@ -785,7 +798,7 @@ class MethodCallNode(nodes.Node):
             orig_type = orig_param.var_type
             if isinstance(orig_type, typecheck.TypeVar):
                 if prev_type.params is not None and prev_type.base in ('Vector', 'Array'):
-                    orig_type = prev_type.params[0]
+                    orig_type = solidify_with_type_params(prev_type).params[0]
                 else:
                     raise UnreachableError
             
@@ -1077,7 +1090,10 @@ class ConstructorCallNode(nodes.Node):
         elif type_name == 'Vector':
             if len(self[Symbol.constructor_call_parameters].data) == 1 and self[Symbol.constructor_call_parameters][0][0].nodetype == Symbol.type:    # Vector(Int64), Vector(String), etc.
                 type_node = self[Symbol.constructor_call_parameters][0][0]
-                type_param = get_cpp_type(type_node.get_type())
+                if check_solidified(type_node):
+                    type_param = get_cpp_type(type_node.get_type())
+                else:
+                    type_param = get_cpp_type(solidify_with_type_params(type_node.get_type()))
                 return f"SN_Vector<{type_param}>()"
             elif len(self[Symbol.constructor_call_parameters].data) >= 1 and self[Symbol.constructor_call_parameters][0][0].nodetype == Symbol.expression:
                 elems = []

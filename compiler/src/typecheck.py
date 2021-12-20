@@ -28,7 +28,7 @@ class TypeObject:
         if self.params is None:
             return self.base
         else:
-            return self.base + '{' + ', '.join([str(x) for x in self.params]) + '}'
+            return self.base + ' of ' + str(self.params[0]) if (len(self.params) == 1) else ('(' + ', '.join([str(x) for x in self.params]) + ')')
 
 class TypeVar:
     pass
