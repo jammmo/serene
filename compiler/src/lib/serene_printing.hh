@@ -4,7 +4,8 @@
 
 template<typename T>
 std::ostream& print_struct(std::ostream& os, const T& obj) {
-    os << "{ ";
+    os << visit_struct::get_name(obj) + 3;  // the "+ 3" removes the "SN_" prefix
+    os << "(";
     bool first = true;
     visit_struct::for_each(obj, [&](const char* name, const auto& value) {
         if(first) {
@@ -12,8 +13,8 @@ std::ostream& print_struct(std::ostream& os, const T& obj) {
         } else {
             os << ", ";
         }
-        os << name << ": " << value;
+        os << name + 3 << ": " << value;    // the "+ 3" removes the "sn_" prefix
     });
-    os << " }";
+    os << ")";
     return os;
 }
