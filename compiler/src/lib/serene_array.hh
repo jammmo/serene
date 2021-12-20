@@ -50,3 +50,29 @@ std::ostream& operator<<(std::ostream& os, const SN_Array<Data>& obj) {
     os << "]";
     return os;
 }
+
+template<>
+std::ostream& operator<<(std::ostream& os, const SN_Array<int8_t>& obj) {
+    os << "[";
+    if (obj.length >= 1) {
+        for (int i = 0; i < obj.length - 1; i++) {
+            os << +obj.items[i] << ", ";
+        }
+        os << +obj.items[obj.length - 1];
+    }
+    os << "]";
+    return os;
+}
+
+template<>
+std::ostream& operator<<(std::ostream& os, const SN_Array<uint8_t>& obj) {
+    os << "[";
+    if (obj.length >= 1) {
+        for (int i = 0; i < obj.length - 1; i++) {
+            os << +obj.items[i] << ", ";
+        }
+        os << +obj.items[obj.length - 1];
+    }
+    os << "]";
+    return os;
+}

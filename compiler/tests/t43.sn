@@ -2,13 +2,13 @@ function main() {
     var a = [1.5, 2.5, 3.5]
     print a
 
-    var b = [10, 20, 30, 40] as Array of Uint16
+    var b = [10, 20, 30, 40] as Array of Uint8
     print b
 
     var c = ["Hello"]
     print c
 
-    var d: Array of Int16 = [-2, 2]
+    var d: Array of Int8 = [-2, 2]
     print d
 
     var e = ['b', 'a', 'n', 'a', 'n', 'a'] as Vector of Char
