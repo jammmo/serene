@@ -19,4 +19,11 @@ function main() {
     run f.append!("strawberry")
     run f.append!("blueberry")
     print f
+
+    const x = "turtle"
+    const y = "frog"
+    const z = "crocodile"
+
+    const w = [x, y, z, "lizard"]
+    print w
 }
