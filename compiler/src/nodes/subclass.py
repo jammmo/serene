@@ -512,6 +512,8 @@ class ExpressionNode(nodes.Node):
             last_type = None
             accum_type = None
             for x in self:
+                if x.nodetype == Symbol.unary_op:
+                    continue
                 if last_type is None:
                     last_type = x.get_type()
                     accum_type = last_type
@@ -520,11 +522,12 @@ class ExpressionNode(nodes.Node):
                 elif x.nodetype != Symbol.term:
                     continue
                 else:
-                    if x.get_type() != last_type:
-                        if scope.current_type_params is not None:
+                    if scope.current_type_params is not None:
+                        if solidify_with_type_params(x.get_type()) != last_type:
                             tp_str = '(' + ', '.join([f"type {x}: {y}" for x, y in scope.current_type_params.items()]) + ')'
                             raise SereneTypeError(f"Mismatching types for infix operator(s) in generic function with parameters {tp_str}, at line number {scope.line_number}.")
-                        else:
+                    else:
+                        if x.get_type() != last_type:
                             raise SereneTypeError(f"Mismatching types for infix operator(s) at line number {scope.line_number}.")
             return accum_type
         else:
@@ -857,7 +860,7 @@ class BaseExpressionNode(nodes.Node):
                             if new_type != L[0]:
                                 raise SereneTypeError(f"Mismatching types in collection literal at line number {scope.line_number}.")
                         if len(L) == 0 and solidified_type.base == 'Array':
-                            raise NotImplementedError
+                            raise SereneTypeError(f"Zero-length arrays are not currently allowed, at line number {scope.line_number}.")
                         return solidified_type
                     else:
                         raise NotImplementedError

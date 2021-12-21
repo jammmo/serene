@@ -27,6 +27,14 @@ public:
         items.push_back(item);
         length = items.size();
     }
+    auto sn_insert(unsigned int index, Data item) {
+        if (index > length) {
+            std::cout << "< Exception: Invalid index. Exiting with error code 1 >" << std::endl;
+            exit(1);
+        }
+        items.insert(items.begin() + index, item);
+        length = items.size();
+    }
     auto sn_delete(unsigned int index) {
         if (index >= length) {
             std::cout << "< Exception: Invalid index. Exiting with error code 1 >" << std::endl;

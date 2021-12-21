@@ -38,6 +38,7 @@ array_type_var = TypeVar()
 standard_types = {'Vector': TypeSpecification(members={},
                                               methods={"length":  (TypeObject("Int64"), []),
                                                        "append!": (None, [scope.ParameterObject('item', 'look', vector_type_var)]),
+                                                       "insert!": (None, [scope.ParameterObject('index', 'look', TypeObject('Int64')), scope.ParameterObject('item', 'look', vector_type_var)]),
                                                        "delete!": (None, [scope.ParameterObject('index', 'look', TypeObject('Int64'))]),
                                                        "pop!":    (vector_type_var, [])
                                                       },

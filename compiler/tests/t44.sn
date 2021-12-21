@@ -1,0 +1,47 @@
+function insert_into_sorted(element: X, mutate array: Vector of X) on (type X) {
+    if (array.length() == 0) {
+        run array.append!(element)
+    } else {
+        for (i = 0, array.length()) {
+            if (element < array[i]) {
+                run array.insert!(i, element)
+                return
+            }
+        }
+        const len = array.length()
+        run array.insert!(len, element)  // should be equivalent to append!
+    }
+}
+
+function test1() {
+    var arr = [3, 4, 6, 7, 12, 22] as Vector of Int64
+
+    run insert_into_sorted(5, mutate arr)
+    run insert_into_sorted(6, mutate arr)
+    run insert_into_sorted(35, mutate arr)
+    run insert_into_sorted(-4, mutate arr)
+
+    print arr   // [-4, 3, 4, 5, 6, 6, 7, 12, 22, 35]
+}
+
+function test2() {
+    var arr: Vector of Float64 = []
+
+    run insert_into_sorted(23.25, mutate arr)
+    run insert_into_sorted(-4.2 + 2.1, mutate arr)
+    run insert_into_sorted(10000.0, mutate arr)
+
+    var last = arr[arr.length() - 1]
+    run insert_into_sorted(last * 2.0, mutate arr)
+    var len = arr.length()
+    run arr.delete!(len - 2)
+
+    run insert_into_sorted(77.5, mutate arr)
+
+    print arr   // [-2.1, 23.25, 77.5, 20000.0]
+}
+
+function main() {
+    run test1()
+    run test2()
+}
