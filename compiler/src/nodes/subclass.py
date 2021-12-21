@@ -945,10 +945,9 @@ class BaseExpressionNode(nodes.Node):
                 if expected_type is not None:
                     my_type = self.get_type(expected_type=expected_type)
                     code = get_cpp_type(my_type)
-                    
                 else:
                     code = get_cpp_type(self.get_type())
-                    return get_cpp_type(self.get_type()) + '({' + ', '.join([x.to_code() for x in self[Symbol.literal][Symbol.collection_literal]]) + '})'
+
                 if type(self[Symbol.literal][Symbol.collection_literal].data) == nodes.NodeMap:
                     return code + '({' + ', '.join([x.to_code(expected_type=my_type.params[0]) for x in self[Symbol.literal][Symbol.collection_literal]]) + '})'
                 else:
