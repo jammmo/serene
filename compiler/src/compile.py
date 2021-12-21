@@ -136,9 +136,9 @@ def main(my_yaml, include_path):
             original_function.my_scope.generic_combos_type_params_temp = None
             scope.current_type_params = None
 
-    except (SereneScopeError, SereneTypeError) as exc:
-        printerr("COMPILE ERROR:", exc.message, sep="\n")
-        exit(1)
+    # except (SereneScopeError, SereneTypeError) as exc:
+    #     printerr("COMPILE ERROR:", exc.message, sep="\n")
+    #     exit(1)
     except Exception as exc:
         printerr(f"At source line number {scope.line_number}:")
         raise exc

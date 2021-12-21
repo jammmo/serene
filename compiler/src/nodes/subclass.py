@@ -95,6 +95,23 @@ def solidify_with_type_params(type_object):
         else:
             raise SereneTypeError(f"Unknown type: {base}.")
 
+def cosolidify(type1, type2):
+    base1 = type1.base
+    base2 = type2.base
+    if check_basetype(base1) and check_basetype(base2):
+        if base1 != base2:
+            return None
+
+        if type1.params is None and type2.params is None:
+            return typecheck.TypeObject(base1)
+        elif type1.params is None or type2.params is None:
+            return typecheck.TypeObject(base1, params=type1.params if type1.params is not None else type2.params)
+        else:
+            assert len(type1.params) == len(type2.params)
+            return typecheck.TypeObject(base1, params=[cosolidify(x, y) for x, y in zip(type1.params, type2.params)])
+    else:
+        return None
+
 # Utilities ___________________________________________________________________
 class UnreachableError(Exception):
     # UnreachableErrors are usually a sign of a bug (likely a change in the parser code that has not been accounted for in the compiler).
@@ -314,18 +331,18 @@ class FunctionParameterNode(nodes.Node):
             return self.code
 
 class TypeNode(nodes.Node):
-    def get_type(self):
+    def get_type(self, allow_partial=False):
         base = self[Symbol.base_type].data
         num_generic_params = 0 if (Symbol.type_parameters not in self) else self[Symbol.type_parameters].count(Symbol.type)
         if num_generic_params == 0:
-            return typecheck.TypeObject(base)
+            return typecheck.TypeObject(base, allow_partial=allow_partial)
         elif num_generic_params == 1:
             if base not in ('Vector', 'Array'):
                 if base in typecheck.user_defined_types:
                     raise SereneTypeError(f"Unnecessary type parameter specified for non-generic type '{base}'.")
                 else:
                     raise SereneTypeError(f"Unknown generic type: {base}.")
-            return typecheck.TypeObject(base, [self[Symbol.type_parameters][Symbol.type].get_type()])
+            return typecheck.TypeObject(base, [self[Symbol.type_parameters][Symbol.type].get_type(allow_partial=allow_partial)])
         else:
             raise UnreachableError
 
@@ -382,11 +399,13 @@ class VarStatement(nodes.Node):
         var_name = self.get_scalar(Symbol.identifier)
 
         if Symbol.type in self:
-            written_type = self[Symbol.type].get_type()
+            written_type = self[Symbol.type].get_type(allow_partial=True)
             expr_type = self[Symbol.expression].get_type(expected_type=written_type)    # expected_type is used only for disambiguating literals
-            if written_type != expr_type:
+            
+            new_type = cosolidify(written_type, expr_type)
+            if new_type is None:
                 raise SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
-            expr_code = self[Symbol.expression].to_code(expected_type=written_type)
+            expr_code = self[Symbol.expression].to_code(expected_type=new_type)
         else:
             expr_type = self[Symbol.expression].get_type()
             expr_code = self[Symbol.expression].to_code()
@@ -835,7 +854,7 @@ class BaseExpressionNode(nodes.Node):
                 if expected_type is not None:
                     solidified_type = expected_type
                 else:
-                    solidified_type = self[Symbol.literal][Symbol.type_solidifier][Symbol.type].get_type()
+                    solidified_type = self[Symbol.literal][Symbol.type_solidifier][Symbol.type].get_type(allow_partial=True)
 
                 if Symbol.int_literal in self[Symbol.literal]:
                     if solidified_type.base not in int_types or solidified_type.params is not None:
@@ -855,13 +874,19 @@ class BaseExpressionNode(nodes.Node):
                     if solidified_type.base in ('Array', 'Vector'):
                         L = []
                         for x in self[Symbol.literal][Symbol.collection_literal]:
-                            new_type = x.get_type(expected_type=solidified_type.params[0])
+                            if solidified_type.params is None:
+                                new_type = x.get_type()
+                            else:
+                                new_type = x.get_type(expected_type=solidified_type.params[0])
                             L.append(new_type)
                             if new_type != L[0]:
                                 raise SereneTypeError(f"Mismatching types in collection literal at line number {scope.line_number}.")
                         if len(L) == 0 and solidified_type.base == 'Array':
                             raise SereneTypeError(f"Zero-length arrays are not currently allowed, at line number {scope.line_number}.")
-                        return solidified_type
+                        if solidified_type.params is None:
+                            return typecheck.TypeObject(solidified_type.base, params=[L[0]])
+                        else:
+                            return solidified_type
                     else:
                         raise NotImplementedError
             # If an expected type or type solidifier is passed but is incompatible with the literal, the logic above should
@@ -946,6 +971,7 @@ class BaseExpressionNode(nodes.Node):
                     my_type = self.get_type(expected_type=expected_type)
                     code = get_cpp_type(my_type)
                 else:
+                    my_type = self.get_type()
                     code = get_cpp_type(self.get_type())
 
                 if type(self[Symbol.literal][Symbol.collection_literal].data) == nodes.NodeMap:

@@ -11,11 +11,11 @@ class TypeSpecification:
         self.constructor_params = constructor_params
 
 class TypeObject:
-    def __init__(self, base: str, params: list[TypeObject] | None = None):
+    def __init__(self, base: str, params: list[TypeObject] | None = None, allow_partial=False):
         self.base = base
         self.params = params
         assert type(self.base) == str
-        if self.base in ('Vector', 'Array'):
+        if self.base in ('Vector', 'Array') and not allow_partial:
             assert self.params is not None
     
     def __eq__(self, other):
