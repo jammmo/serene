@@ -1214,7 +1214,7 @@ class FunctionCallParameterNode(nodes.Node):
         else:
             my_accessor = 'look'
 
-        if original_type != self[Symbol.expression].get_type():
+        if original_type != self[Symbol.expression].get_type(expected_type=original_type):
             if method:
                 raise SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to method '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
             else:

@@ -1,0 +1,15 @@
+function takesInt16(x: Int16) {
+    print x
+}
+
+function takesFloat32(x: Float32) {
+    print x
+}
+
+function main() {
+    run takesInt16(105)
+
+    run takesFloat32(-35.2301)
+
+    //run takesInt16(0.0) // should not compile
+}
