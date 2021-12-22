@@ -4,25 +4,25 @@ function main() {
     // Comment out all but one section
 
     // // Should not compile (shadowing is not allowed)
-    // if (True) {
+    // if True {
     //     var a = "Goodbye"
     //     print a
     // }
 
     // // Should not compile
-    // if (fn_discard(move a) == fn_discard(move a)) {
+    // if fn_discard(move a) == fn_discard(move a) {
     //     print 0
     // }
 
     // // Should not compile
-    // if (fn_discard(move a) == 0) {
+    // if fn_discard(move a) == 0 {
     //     print 0
     // } else {
     //     run fn_print(a)
     // }
 
     // // Should not compile
-    // if (fn_print(a) == 0) {
+    // if fn_print(a) == 0 {
     //     print 0
     // } else {
     //     run fn_discard(move a)
@@ -30,39 +30,39 @@ function main() {
     // run fn_print(a)
 
     // // Should not compile
-    // if (0 < 10) {
+    // if 0 < 10 {
     //     print 0
-    // } elseif (fn_discard(move a) == 0) {
+    // } elseif fn_discard(move a) == 0 {
     //     run fn_print(a)
     // }
 
     // // Should not compile
-    // if (0 < 10) {
+    // if 0 < 10 {
     //     run fn_discard(move a)
     //     run fn_discard(move a)
     // }
 
     // Should compile
-    if (1 == 20) {
+    if 1 == 20 {
         run fn_discard(move a)
-    } elseif (1 == 30) {
+    } elseif 1 == 30 {
         print 0
-    } elseif (fn_print(a) == 0) {
+    } elseif fn_print(a) == 0 {
         run fn_discard(move a)
-    } elseif (fn_discard(move a) == 0) {
+    } elseif fn_discard(move a) == 0 {
         print 1
     } else {
         print 2
     }
 
     // // Should not compile
-    // while (fn_discard(move a) == 0) {
+    // while fn_discard(move a) == 0 {
     //     print 0
     // }
 
     // // Should not compile
     // var i = 0
-    // while (i < 100) {
+    // while i < 100 {
     //     run fn_discard(move a)
     //     set i += 1
     // }

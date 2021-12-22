@@ -1,9 +1,9 @@
 function elementwise3DAdd(move a: Vector of Vector of Vector of Int64,
                           move b: Vector of Vector of Vector of Int64)
                           -> Vector of Vector of Vector of Int64 {
-    for (i = 0, a.length()) {
-        for (j = 0, a[i].length()) {
-            for (k = 0, a[i][j].length()) {
+    for i = 0; a.length() {
+        for j = 0; a[i].length() {
+            for k = 0; a[i][j].length() {
                 set a[i][j][k] = a[i][j][k] + b[i][j][k]
             }
         }

@@ -13,7 +13,7 @@ function main() {
 }
 
 function getFirst(v: Vector of Float64) -> Float64 {
-    if (v.length() == 0) {
+    if v.length() == 0 {
         print "Vector is empty!"
         exit 1
     } else {
@@ -22,14 +22,14 @@ function getFirst(v: Vector of Float64) -> Float64 {
 }
 
 function divideElements(a: Vector of Float64, b: Vector of Float64) -> Vector of Float64 {
-    if (a.length() != b.length()) {
+    if a.length() != b.length() {
         print "Vector lengths do not match!"
         exit 1
     }
 
     var c = Vector(Float64)
-    for (i = 0, a.length()) {
-        if (b[i] == 0.0) {
+    for i = 0; a.length() {
+        if b[i] == 0.0 {
             print "Cannot divide by 0!"
             exit 1
         }

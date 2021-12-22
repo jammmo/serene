@@ -1,5 +1,5 @@
 function test1() -> Int64 {
-    while (True) {
+    while True {
         continue
     }
 }
@@ -17,8 +17,8 @@ function test3() -> Int64 {
 }
 
 function test4() -> Int64 {
-    while (True) {
-        while (True) {
+    while True {
+        while True {
             return 1
         }
     }

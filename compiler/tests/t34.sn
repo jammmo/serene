@@ -25,7 +25,7 @@ function main() {
 
     var d = Vector(Array(Pair(121, 442), Pair(914, 293)), Array(Pair(221, 452), Pair(910, 223)))
 
-    for (x in d) {
+    for x in d {
         print x[1].x
     }
     // 914

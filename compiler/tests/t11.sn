@@ -1,11 +1,11 @@
 function test1() -> Int64 {
     const a = 5
     const b = 11
-    if (a == 2) {
+    if a == 2 {
         return a
-    } elseif (a == 3) {
+    } elseif a == 3 {
         return b
-    } elseif (a == 4) {
+    } elseif a == 4 {
         return a
     }
     return a
@@ -14,11 +14,11 @@ function test1() -> Int64 {
 function test2() -> Int64 {
     const a = 5
     const b = 11
-    if (a == 2) {
+    if a == 2 {
         return a
-    } elseif (a == 3) {
+    } elseif a == 3 {
         return b
-    } elseif (a == 4) {
+    } elseif a == 4 {
         return a
     } else {
         return a

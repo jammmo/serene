@@ -21,19 +21,19 @@ function main() {
     // var y = fn_print(x) + fn_discard(move x)
 
     //This also shouldn't work!
-    // if (fn_discard(move x) == 0) {
+    // if fn_discard(move x) == 0 {
     //     run fn_print(x)
     // }
 
     //This also shouldn't work!
-    // for (i = 0, 10) {
+    // for i = 0; 10 {
     //     run fn_discard(move x)
     // }
 
     //This is fine! (although pointless)
-    if (x.pop!() == 3) {
+    if x.pop!() == 3 {
         print "Three!"
-    } elseif (x.pop!() == 3) {
+    } elseif x.pop!() == 3 {
         print "Okay, now it's three!"
     } else {
         run x.pop!()

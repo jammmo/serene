@@ -366,7 +366,7 @@ grammar Serene {
 
     # Blocks
     rule while_loop {
-        'while' '(' <expression> ')' <.separator>? '{' <.separator>
+        'while' <expression> <.separator>? '{' <.separator>
         <statements>
         '}'
     }
@@ -375,9 +375,15 @@ grammar Serene {
         | [ 'for' '(' <identifier> 'in' <expression> ')' <.separator>? '{' <.separator>
             <statements>
             '}' ]
-        | [ 'for' '(' <identifier> '=' <expression> ',' <expression> ')' <.separator>? '{' <.separator>
+        | [ 'for' <identifier> 'in' <expression> <.separator>? '{' <.separator>
             <statements>
-            '}' ] 
+            '}' ]
+        | [ 'for' '(' <identifier> '=' <expression> ';' <expression> ')' <.separator>? '{' <.separator>
+            <statements>
+            '}' ]
+        | [ 'for' <identifier> '=' <expression> ';' <expression> <.separator>? '{' <.separator>
+            <statements>
+            '}' ]
     }
 
     rule if_block {
@@ -387,13 +393,13 @@ grammar Serene {
     }
 
     rule if_branch {
-        'if' '(' <expression> ')' <.separator>? '{' <.separator>
+        'if' <expression> <.separator>? '{' <.separator>
         <statements>
         '}'        
     }
 
     rule elseif_branch {
-        'elseif' '(' <expression> ')' <.separator>? '{' <.separator>
+        'elseif' <expression> <.separator>? '{' <.separator>
         <statements>
         '}'
     }

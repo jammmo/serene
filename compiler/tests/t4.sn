@@ -1,5 +1,5 @@
 function makeChoice() -> Bool {
-    while (True) {
+    while True {
         var input = readLine()
         match (input) {
             "" -> continue

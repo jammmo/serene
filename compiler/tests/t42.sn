@@ -4,7 +4,7 @@ function gimmeThat(move element: X) on (type X) -> X {
 
 function repeat(element: X, times: Int64) on (type X) -> Vector of X {
     var result = Vector(X)
-    for (i = 0, times) {
+    for i = 0; times {
         run result.append!(element)
     }
     return result

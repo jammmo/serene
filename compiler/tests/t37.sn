@@ -1,7 +1,7 @@
 function find(element: E, collection: C) on (type E, type C) -> Option of Uint64 {
     var count = 0 as Uint64
-    for (x in collection) {
-        if (x == element) {
+    for x in collection {
+        if x == element {
             return Some(count)
         }
     }

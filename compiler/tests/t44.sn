@@ -1,9 +1,9 @@
 function insert_into_sorted(element: X, mutate array: Vector of X) on (type X) {
-    if (array.length() == 0) {
+    if array.length() == 0 {
         run array.append!(element)
     } else {
-        for (i = 0, array.length()) {
-            if (element < array[i]) {
+        for i = 0; array.length() {
+            if element < array[i] {
                 run array.insert!(i, element)
                 return
             }

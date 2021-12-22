@@ -1,20 +1,20 @@
 function sorted(copy list: Array of Int64) -> Array of Int64 {
     // Implements selection sort on a copy of the original list
-    if (list.length() <= 1) {
+    if list.length() <= 1 {
         return list
     }
 
-    for (i = 0, list.length() - 1) {
+    for (i = 0; list.length() - 1) {
         var min_value = list[i]
         var min_index = i
-        for (j = i + 1, list.length()) {
-            if (list[j] < min_value) {
+        for (j = i + 1; list.length()) {
+            if list[j] < min_value {
                 set min_index = j
                 set min_value = list[j]
             }
         }
 
-        if (i != min_index) {
+        if i != min_index {
             set list[min_index] = list[i]
             set list[i] = min_value
         }

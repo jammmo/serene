@@ -1,5 +1,5 @@
 function test1(vec: Vector of Int16) {
-    for (x in vec) {
+    for x in vec {
         print x
     }
 }

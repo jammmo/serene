@@ -8,7 +8,7 @@ type Person struct {
 
         method reverse_name!() {
             var a = ""
-            for (i = 0, name.length()) {
+            for i = 0; name.length() {
                 run a.append!(name.pop!())
             }
             set name = a
