@@ -23,6 +23,8 @@ function test(x: Float64, y: Int64) {
 
     print c
     print d
+    print (d)
+    print ((((d))))
 
 
     run hello1()

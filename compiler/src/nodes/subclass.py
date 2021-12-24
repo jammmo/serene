@@ -700,7 +700,10 @@ class TermNode(nodes.Node):
             if self.is_temporary:
                 self.var_tup = None
             else:
-                self.var_tup = inner_expr.var_tup
+                # If an expression is not temporary, it should consist of exactly one term and no other operators
+                if (inner_expr.count(Symbol.term) != 1) or (Symbol.unary_op in inner_expr):
+                    raise UnreachableError
+                self.var_tup = inner_expr[Symbol.term].var_tup
         else:
             code = base_expr.to_code(expected_type=expected_type, passthrough_negative=(passthrough_negative and len(self.data) == 1))
             self.is_temporary = True
