@@ -544,7 +544,7 @@ class ExpressionNode(nodes.Node):
                     continue
                 else:
                     if scope.current_type_params is not None:
-                        if solidify_with_type_params(x.get_type()) != last_type:
+                        if solidify_with_type_params(x.get_type()) != solidify_with_type_params(last_type):
                             tp_str = '(' + ', '.join([f"type {x}: {y}" for x, y in scope.current_type_params.items()]) + ')'
                             raise SereneTypeError(f"Mismatching types for infix operator(s) in generic function with parameters {tp_str}, at line number {scope.line_number}.")
                     else:
@@ -572,7 +572,7 @@ class ExpressionNode(nodes.Node):
             cur = self[i]
             if (cur.nodetype == Symbol.unary_op):
                 if cur.data == 'not':
-                    if self[i+1].get_type().base != 'Bool':
+                    if solidify_with_type_params(self[i+1].get_type()).base != 'Bool':
                         if scope.current_type_params is not None:
                             tp_str = '(' + ', '.join([f"type {x}: {y}" for x, y in scope.current_type_params.items()]) + ')'
                             raise SereneTypeError(f"Incorrect type for boolean expression in generic function with parameters {tp_str}, at line number {scope.line_number}.")
@@ -587,7 +587,7 @@ class ExpressionNode(nodes.Node):
             elif (cur.nodetype == Symbol.infix_op):
                 if type(cur.data) != str:
                     if cur.get_scalar(0) in ('>', '<', '>=', '<='):
-                        if self[i-1].get_type().base not in (*int_types, *float_types, 'String', 'Char'):
+                        if solidify_with_type_params(self[i-1].get_type()).base not in (*int_types, *float_types, 'String', 'Char'):
                             if scope.current_type_params is not None:
                                 tp_str = '(' + ', '.join([f"type {x}: {y}" for x, y in scope.current_type_params.items()]) + ')'
                                 raise SereneTypeError(f"Incorrect type for inequality expression in generic function with parameters {tp_str}, at line number {scope.line_number}.")
@@ -596,14 +596,14 @@ class ExpressionNode(nodes.Node):
                     code += ' ' + cur.get_scalar(0) + ' '
                 else:
                     if cur.data in ('and', 'or'):
-                        if self[i-1].get_type().base != 'Bool':
+                        if solidify_with_type_params(self[i-1].get_type()).base != 'Bool':
                             if scope.current_type_params is not None:
                                 tp_str = '(' + ', '.join([f"type {x}: {y}" for x, y in scope.current_type_params.items()]) + ')'
                                 raise SereneTypeError(f"Incorrect type for boolean expression in generic function with parameters {tp_str}, at line number {scope.line_number}.")
                             else:
                                 raise SereneTypeError(f"Incorrect type for boolean expression at line number {scope.line_number}.")
                     elif cur.data in ('+', '-', '*', '/', '%'):
-                        if self[i-1].get_type().base not in (*int_types, *float_types):
+                        if solidify_with_type_params(self[i-1].get_type()).base not in (*int_types, *float_types):
                             if scope.current_type_params is not None:
                                 tp_str = '(' + ', '.join([f"type {x}: {y}" for x, y in scope.current_type_params.items()]) + ')'
                                 raise SereneTypeError(f"Incorrect type for numeric expression in generic function with parameters {tp_str}, at line number {scope.line_number}.")
