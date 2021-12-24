@@ -110,11 +110,16 @@ grammar Serene {
     token float_literal {
         \d+ "." \d*
     }
+    token literal_punctuation {     # Does not include backslash or either type of quotes
+        | ' ' | '!' | '#' | '$' | '%' | '&' | '(' | ')' | '*' | '+' | ',' | '-'
+        | '.' | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '[' | '~' | ']'
+        | '^' | '_' | '`' | '{' | '|' | '}' 
+    }
     token string_literal {
-        '"' [ '\\"' | '\\\\' | <-[ " \\ ]> ]* '"'
+        '"' [ <.alnum> | <.literal_punctuation> | '\n' | '\\\\' | "'" | '\\"' ]* '"'
     }
     token char_literal {
-        "'" [ <.graph> | '<' | '>' | ' ' | '\n' | '\\\\' | "\\'" ] "'"
+        "'" [ <.alnum> | <.literal_punctuation> | '\n' | '\\\\' | '"' | "\\'" ] "'"
     }
     token bool_literal {
         'True' | 'False'
