@@ -47,6 +47,7 @@ standard_types = {'Vector': TypeSpecification(members={},
                   'String': TypeSpecification(members={},
                                               methods={"length":  (TypeObject("Int64"), []),
                                                        "append!": (None, [scope.ParameterObject('item', 'look', TypeObject('Char'))]),    #should "append!" take a Char or a string?
+                                                       "insert!": (None, [scope.ParameterObject('index', 'look', TypeObject('Int64')), scope.ParameterObject('item', 'look', TypeObject('Char'))]),
                                                        "delete!": (None, [scope.ParameterObject('index', 'look', TypeObject('Int64'))]),
                                                        "pop!":    (TypeObject("Char"), [])
                                                       }),

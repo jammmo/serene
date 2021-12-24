@@ -1,0 +1,10 @@
+function main() {
+    var a = ""
+    var b = "rats"
+
+    for (x in b) {
+        run a.insert!(0, x)
+    }
+    
+    print a     // star ("rats" backwards)
+}
