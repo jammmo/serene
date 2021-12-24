@@ -421,11 +421,13 @@ class ConstStatement(nodes.Node):
         var_name = self.get_scalar(Symbol.identifier)
 
         if Symbol.type in self:
-            written_type = self[Symbol.type].get_type()
+            written_type = self[Symbol.type].get_type(allow_partial=True)
             expr_type = self[Symbol.expression].get_type(expected_type=written_type)    # expected_type is used only for disambiguating literals
-            if written_type != expr_type:
+            
+            new_type = cosolidify(written_type, expr_type)
+            if new_type is None:
                 raise SereneTypeError(f"Explicit type does not match expression type in declaration at line number {scope.line_number}.")
-            expr_code = self[Symbol.expression].to_code(expected_type=written_type)
+            expr_code = self[Symbol.expression].to_code(expected_type=new_type)
         else:
             expr_type = self[Symbol.expression].get_type()
             expr_code = self[Symbol.expression].to_code()

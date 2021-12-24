@@ -11,6 +11,6 @@ function main() {
     var b: Vector = [0.5, 0.4, 0.3]      // Vector of Float64 should be inferred
     print b
 
-    var c: Vector = [4 as Int16, 5 as Int16]    // Vector of Int64 should be inferred
+    var c: Vector = [4 as Int16, 5 as Int16]    // Vector of Int16 should be inferred
     run test1(c)
 }
