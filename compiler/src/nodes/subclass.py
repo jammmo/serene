@@ -151,6 +151,17 @@ class FunctionNode(nodes.Node):
                     raise SereneTypeError(f"Unknown type: {base}.")
                 x.setup()
 
+    def reset_scope(self):
+        # Since a generic function's statements are processed multiple times (once for each instance of the type parameters),
+        # this function resets all the variables in self.my_scope so there are no duplicates
+        scope.scope_for_setup = self.my_scope
+
+        self.my_scope.bindings.clear()
+        self.my_scope.persistent_bindings.clear()
+
+        for x in self[Symbol.function_parameters]:
+            x.setup(generic=True)
+
     def to_forward_declaration(self):
         if Symbol.type in self:
             if check_solidified(self[Symbol.type]):
@@ -1035,48 +1046,49 @@ class FunctionCallNode(nodes.Node):
                         tparam.type_temp = original_function.my_scope.generic_combos_type_params[i][name]
                     break
             
-            if not already_exists:
-                orig_param_types = [p[Symbol.type].get_type() for p in original_function[Symbol.function_parameters]]
-                for i in range(len(orig_param_types)):
-                    orig_cur = orig_param_types[i]
-                    call_cur = call_param_types[i]
-                    while True:
-                        if check_basetype(orig_cur.base) and orig_cur.params is None:
-                            break
-                        elif check_basetype(orig_cur.base):
-                            if len(orig_cur.params) > 1:
-                                raise NotImplementedError
-                            orig_cur = orig_cur.params[0]
-                            call_cur = call_cur.params[0]
-                        else:
-                            if orig_cur.params is not None:
-                                raise NotImplementedError
-                            if original_function.my_scope.type_parameters[orig_cur.base].type_temp is not None:
-                                if original_function.my_scope.type_parameters[orig_cur.base].type_temp != call_cur:
-                                    raise UnreachableError
-                            reset_type_temp = True
-                            original_function.my_scope.type_parameters[orig_cur.base].type_temp = call_cur
-                            break
-                
-                generic_combos_params_temp = call_param_types
-                original_function.my_scope.generic_combos_params.append(call_param_types)
+            orig_param_types = [p[Symbol.type].get_type() for p in original_function[Symbol.function_parameters]]
+            for i in range(len(orig_param_types)):
+                orig_cur = orig_param_types[i]
+                call_cur = call_param_types[i]
+                while True:
+                    if check_basetype(orig_cur.base) and orig_cur.params is None:
+                        break
+                    elif check_basetype(orig_cur.base):
+                        if len(orig_cur.params) > 1:
+                            raise NotImplementedError
+                        orig_cur = orig_cur.params[0]
+                        call_cur = call_cur.params[0]
+                    else:
+                        if orig_cur.params is not None:
+                            raise NotImplementedError
+                        if original_function.my_scope.type_parameters[orig_cur.base].type_temp is not None:
+                            if original_function.my_scope.type_parameters[orig_cur.base].type_temp != call_cur:
+                                raise UnreachableError
+                        reset_type_temp = True
+                        original_function.my_scope.type_parameters[orig_cur.base].type_temp = call_cur
+                        break
 
-                generic_combos_type_params_temp = {k: v.type_temp for k, v in original_function.my_scope.type_parameters.items()}
+            generic_combos_params_temp = call_param_types
+            generic_combos_type_params_temp = {k: v.type_temp for k, v in original_function.my_scope.type_parameters.items()}
+
+            if not already_exists:
+                original_function.my_scope.generic_combos_params.append(call_param_types)
                 original_function.my_scope.generic_combos_type_params.append(generic_combos_type_params_temp)
 
-                if Symbol.type in original_function:
-                    base = original_function[Symbol.type].get_scalar(Symbol.base_type)
-                    if check_basetype(base):
-                        self.return_type = original_function[Symbol.type].get_type()
-                    else:
-                        if base in original_function.my_scope.type_parameters:
-                            if Symbol.type not in original_function[Symbol.type]:
-                                self.return_type = generic_combos_type_params_temp[base]
-                            else:
-                                raise NotImplementedError   # Generic of a type parameter in return type?
+            if Symbol.type in original_function:
+                base = original_function[Symbol.type].get_scalar(Symbol.base_type)
+                if check_basetype(base):
+                    self.return_type = original_function[Symbol.type].get_type()
+                else:
+                    if base in original_function.my_scope.type_parameters:
+                        if Symbol.type not in original_function[Symbol.type]:
+                            self.return_type = generic_combos_type_params_temp[base]
                         else:
-                            raise SereneTypeError(f"Unknown type: {base}.")
+                            raise NotImplementedError   # Generic of a type parameter in return type?
+                    else:
+                        raise SereneTypeError(f"Unknown type: {base}.")
 
+            if not already_exists:
                 scope.remaining_generic_functions.append((original_function, generic_combos_params_temp, generic_combos_type_params_temp))
 
         for i in range(num_called_params):

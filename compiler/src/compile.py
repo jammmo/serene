@@ -126,6 +126,8 @@ def main(my_yaml, include_path):
         for x in scope.remaining_generic_functions:
             original_function, generic_combos_params_temp, generic_combos_type_params_temp = x
 
+            original_function.reset_scope()
+
             original_function.my_scope.generic_combos_params_temp = generic_combos_params_temp
             original_function.my_scope.generic_combos_type_params_temp = generic_combos_type_params_temp
             scope.current_type_params = generic_combos_type_params_temp
