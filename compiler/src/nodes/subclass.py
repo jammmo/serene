@@ -463,8 +463,8 @@ class SetStatement(nodes.Node):
 
             correct_type = scope.current_scope.get_type_of(var_name)
 
-        expr_code = self[Symbol.expression].to_code()
-        expr_type = self[Symbol.expression].get_type()
+        expr_code = self[Symbol.expression].to_code(expected_type=correct_type)
+        expr_type = self[Symbol.expression].get_type(expected_type=correct_type)
 
         if expr_type != correct_type:
             raise SereneTypeError(f"Incorrect type for assignment to variable '{var_name}' at line number {scope.line_number}. Correct type is '{correct_type}'.")

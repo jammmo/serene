@@ -1,0 +1,29 @@
+function takesUint16(x: Uint16) {
+    var y: Uint16 = 30
+
+    print x > y
+}
+
+function takesVectorOfInt8(x: Vector of Int8) {
+    print x
+}
+
+function main() {
+    var a = 32 as Uint16
+    set a = 10  // should infer Uint16
+
+    print a
+
+    run takesUint16(a)
+    run takesUint16(48)  // should infer Uint16 for literal
+
+    var b = [] as Vector of Vector of Int8
+    set b = [[12, 45, 102], [-12, -45, -102]]   // should infer Vector of Vector of Int8
+    run b[0].append!(115)
+    run b[1].append!(-115)
+
+    print b
+
+    run takesVectorOfInt8(b[0])
+    run takesVectorOfInt8([77, 76, -19])
+}
