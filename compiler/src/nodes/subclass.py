@@ -70,6 +70,7 @@ def check_basetype(base):
     return (base in type_mapping) or (base in typecheck.user_defined_types)
 
 def check_solidified(my_type):
+    assert type(my_type) == TypeNode
     if check_basetype(my_type.get_scalar(Symbol.base_type)):
         if Symbol.type_parameters in my_type:
             return all([check_solidified(x) for x in my_type[Symbol.type_parameters]])
@@ -1031,7 +1032,7 @@ class FunctionCallNode(nodes.Node):
         if original_function.generic:
             call_param_types = []
             for x in self[Symbol.function_call_parameters]:
-                call_param_types.append(x[Symbol.expression].get_type())
+                call_param_types.append(solidify_with_type_params(x[Symbol.expression].get_type()))
             
             already_exists = False
             for i in range(len(original_function.my_scope.generic_combos_params)):
@@ -1065,7 +1066,7 @@ class FunctionCallNode(nodes.Node):
                             if original_function.my_scope.type_parameters[orig_cur.base].type_temp != call_cur:
                                 raise UnreachableError
                         reset_type_temp = True
-                        original_function.my_scope.type_parameters[orig_cur.base].type_temp = call_cur
+                        original_function.my_scope.type_parameters[orig_cur.base].type_temp = solidify_with_type_params(call_cur)
                         break
 
             generic_combos_params_temp = call_param_types
@@ -1233,7 +1234,7 @@ class FunctionCallParameterNode(nodes.Node):
         else:
             my_accessor = 'look'
 
-        if original_type != self[Symbol.expression].get_type(expected_type=original_type):
+        if solidify_with_type_params(original_type) != solidify_with_type_params(self[Symbol.expression].get_type(expected_type=original_type)):
             if method:
                 raise SereneTypeError(f"Incorrect type for parameter '{param_name}' of call to method '{function_name}' at line number {scope.line_number}. Correct type is '{original_type}'.")
             else:

@@ -9,12 +9,12 @@ function popAndPass(mutate vec: Vector of X) on (type X) {
     print compareY(second_last, last)
 }
 
-function addOneAndPass(mutate times: Int64, s: T of Int64) on (type T) {
+function addOneAndPass(mutate times: Int64, s: Array of T) on (type T) {
     set times += 1
     run printAfter50(mutate times, s)
 }
 
-function printAfter50(mutate times: Int64, s: T of Int64) on (type T) {
+function printAfter50(mutate times: Int64, s: Array of T) on (type T) {
     if times >= 50 {
         print s
     } else {
@@ -36,8 +36,8 @@ function main() {
     // run popAndPass(mutate myBoolsBad)   // should not compile (Bools are not currently comparable)
 
     var count = 0
-    run printAfter50(mutate count, [1, 2, 3] as Array)
+    run printAfter50(mutate count, [1, 2, 3])
 
     set count = 0
-    run printAfter50(mutate count, [-2.1, -4.2, -6.3] as Vector)
+    run printAfter50(mutate count, [-2.1, -4.2, -6.3])
 }
