@@ -793,7 +793,6 @@ class MethodCallNode(nodes.Node):
             elif isinstance(method_return_type, typecheck.TypeVar) and (prev_type.base == 'Vector') and (method_name == 'pop!'):
                 return prev_type.params[0]
             else:
-                printerr(type(method_return_type))
                 raise UnreachableError
         else:
             raise SereneTypeError(f"Method '{method_name}' does not exist at line number {scope.line_number}.")
@@ -904,7 +903,7 @@ class BaseExpressionNode(nodes.Node):
                         else:
                             return solidified_type
                     else:
-                        raise NotImplementedError
+                        raise SereneTypeError(f"Incorrect base type for collection literal at line number {scope.line_number}.")
             # If an expected type or type solidifier is passed but is incompatible with the literal, the logic above should
             # "fall through" to the general cases below. The type returned will be based on just the literal, but the incompatibility
             # should throw an error elsewhere.
@@ -1005,9 +1004,6 @@ class BaseExpressionNode(nodes.Node):
 
 class FunctionCallNode(nodes.Node):
     def to_code(self):
-        if hasattr(self, 'code'):
-            return self.code
-
         if self.get_scalar(Symbol.identifier) not in scope.function_names:
             raise SereneScopeError(f"Function '{self.get_scalar(Symbol.identifier)}' is not defined at line number {scope.line_number}.")
         code = 'sn_' + self.get_scalar(Symbol.identifier) + '('
@@ -1052,10 +1048,14 @@ class FunctionCallNode(nodes.Node):
                 call_cur = call_param_types[i]
                 while True:
                     if check_basetype(orig_cur.base) and orig_cur.params is None:
+                        if orig_cur.base != call_cur.base:
+                            raise SereneTypeError(f"Mismatching types in call to generic function at line number {scope.line_number}.")
                         break
                     elif check_basetype(orig_cur.base):
                         if len(orig_cur.params) > 1:
                             raise NotImplementedError
+                        if orig_cur.base != call_cur.base:
+                            raise SereneTypeError(f"Mismatching types in call to generic function at line number {scope.line_number}.")
                         orig_cur = orig_cur.params[0]
                         call_cur = call_cur.params[0]
                     else:
@@ -1115,7 +1115,6 @@ class FunctionCallNode(nodes.Node):
                 x.type_temp = None
 
         code += ', '.join(params_code) + ')'
-        self.code = code
         return code
 
 class ConstructorCallNode(nodes.Node):
