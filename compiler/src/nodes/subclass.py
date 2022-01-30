@@ -948,7 +948,7 @@ class BaseExpressionNode(nodes.Node):
                 original_func_type = original_function[Symbol.type].get_type()
 
                 if original_function.generic and original_func_type.base in original_function.my_scope.type_parameters:
-                    self[Symbol.function_call].to_code()    # Caches return type if it hasn't been computed yet
+                    self[Symbol.function_call].to_code(cache_types_only=True)    # Caches return type if it hasn't been computed yet
                     return self[Symbol.function_call].return_type
                 return original_function[Symbol.type].get_type()
         elif Symbol.constructor_call in self:
@@ -1003,7 +1003,7 @@ class BaseExpressionNode(nodes.Node):
             raise UnreachableError
 
 class FunctionCallNode(nodes.Node):
-    def to_code(self):
+    def to_code(self, cache_types_only=False):
         if self.get_scalar(Symbol.identifier) not in scope.function_names:
             raise SereneScopeError(f"Function '{self.get_scalar(Symbol.identifier)}' is not defined at line number {scope.line_number}.")
         code = 'sn_' + self.get_scalar(Symbol.identifier) + '('
@@ -1071,6 +1071,10 @@ class FunctionCallNode(nodes.Node):
             generic_combos_params_temp = call_param_types
             generic_combos_type_params_temp = {k: v.type_temp for k, v in original_function.my_scope.type_parameters.items()}
 
+            if reset_type_temp:
+                for x in original_function.my_scope.type_parameters.values():
+                    x.type_temp = None
+
             if not already_exists:
                 original_function.my_scope.generic_combos_params.append(call_param_types)
                 original_function.my_scope.generic_combos_type_params.append(generic_combos_type_params_temp)
@@ -1091,6 +1095,9 @@ class FunctionCallNode(nodes.Node):
             if not already_exists:
                 scope.remaining_generic_functions.append((original_function, generic_combos_params_temp, generic_combos_type_params_temp))
 
+        if cache_types_only:
+            return
+
         for i in range(num_called_params):
             o_param = original_function[Symbol.function_parameters][i]
             if Symbol.accessor in o_param:
@@ -1109,10 +1116,6 @@ class FunctionCallNode(nodes.Node):
                                 original_type = o_type,
                                 function_name = self.get_scalar(Symbol.identifier),
                                 param_name = o_param.get_scalar(Symbol.identifier)))
-
-        if reset_type_temp:
-            for x in original_function.my_scope.type_parameters.values():
-                x.type_temp = None
 
         code += ', '.join(params_code) + ')'
         return code
