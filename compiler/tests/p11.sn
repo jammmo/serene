@@ -1,0 +1,10 @@
+// Should this compile?
+
+function gimmeThatBack(move x: Int64) -> Int64 {
+    return x
+}
+
+function main() {
+    var a = 4
+    var a = gimmeThatBack(move a) + 3
+}
